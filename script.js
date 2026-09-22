@@ -1017,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
       price: 12000,
       portion: '1 banka',
       desc: 'Flash Up salqin ichimlik.',
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWYALh_GBpOAYravXlV30SAVJZ6nJtTXzG9KPHd3-ClVH1ZAxZ_6bpdDQ&s=10  ',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWYALh_GBpOAYravXlV30SAVJZ6nJtTXzG9KPHd3-ClVH1ZAxZ_6bpdDQ&s=10',
       tags: ['Energetik'],
       popular: false
     },
@@ -1086,13 +1086,24 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      2. APP STATE & STORAGE
      ========================================================================== */
-  let cart = JSON.parse(localStorage.getItem('iqbol_cart')) || [];
-  let favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || [];
+  let cart = [];
+  try {
+    cart = JSON.parse(localStorage.getItem('iqbol_cart')) || [];
+  } catch(e) {
+    cart = [];
+  }
+  
+  let favorites = [];
+  try {
+    favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || [];
+  } catch(e) {
+    favorites = [];
+  }
+
   let activeCategory = 'all';
   let searchQuery = '';
-  let orderType = 'dine_in'; // 'dine_in' or 'delivery'
+  let orderType = 'dine_in'; 
 
-  // DOM Elements
   const dishesGrid = document.getElementById('dishesGrid');
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
@@ -1118,13 +1129,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
   }
 
-  function showToast(message, icon = 'fa-check-circle') {
+  function showToast(message, icon) {
+    if (!icon) icon = 'fa-check-circle';
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `
-      <i class="fas ${icon} toast-icon"></i>
-      <span class="toast-text">${message}</span>
-    `;
+    toast.innerHTML = '<i class="fas ' + icon + ' toast-icon"></i><span class="toast-text">' + message + '</span>';
     toastContainer.appendChild(toast);
 
     setTimeout(() => {
@@ -1156,47 +1165,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (filtered.length === 0) {
-      dishesGrid.innerHTML = `
-        <div class="no-dishes-found">
-          <i class="fas fa-utensils"></i>
-          <h3>Hech qanday taom topilmadi</h3>
-          <p>Qidiruv so'zini o'zgartiring yoki boshqa toifani tanlang.</p>
-        </div>
-      `;
+      dishesGrid.innerHTML = '<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3><p>Qidiruv so\'zini o\'zgartiring yoki boshqa toifani tanlang.</p></div>';
       return;
     }
 
-    dishesGrid.innerHTML = filtered.map(dish => {
+    let htmlResult = '';
+    filtered.forEach(dish => {
       const isFav = favorites.includes(dish.id);
-      return `
-        <article class="dish-card" data-id="${dish.id}">
-          <div class="dish-img-wrap" onclick="window.openDishModal('${dish.id}')">
-            <img src="${dish.image}" alt="${dish.name}" loading="lazy" />
-            <div class="dish-badges">
-              ${dish.popular ? '<span class="badge badge-gold"><i class="fas fa-star"></i> Hit</span>' : ''}
-              ${dish.portion ? `<span class="badge badge-portion">${dish.portion}</span>` : ''}
-            </div>
-            <button class="dish-fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); window.toggleFavorite('${dish.id}')" aria-label="Sevimlilarga qo'shish">
-              <i class="${isFav ? 'fas' : 'far'} fa-heart"></i>
-            </button>
-          </div>
-          <div class="dish-content">
-            <div class="dish-category">${dish.categoryName}</div>
-            <h3 class="dish-title" onclick="window.openDishModal('${dish.id}')">${dish.name}</h3>
-            <p class="dish-desc">${dish.desc}</p>
-            <div class="dish-footer">
-              <div class="dish-price-box">
-                <span class="price-label">Narxi:</span>
-                <span class="dish-price">${formatPrice(dish.price)}</span>
-              </div>
-              <button class="btn-add-cart" onclick="window.addToCart('${dish.id}')" title="Buyurtma berish" aria-label="Savatga qo'shish">
-                <i class="fas fa-plus"></i>
-              </button>
-            </div>
-          </div>
-        </article>
-      `;
-    }).join('');
+      let hitBadge = dish.popular ? '<span class="badge badge-gold"><i class="fas fa-star"></i> Hit</span>' : '';
+      let portionBadge = dish.portion ? '<span class="badge badge-portion">' + dish.portion + '</span>' : '';
+      let heartIcon = isFav ? 'fas fa-heart' : 'far fa-heart';
+      let favClass = isFav ? 'favorited' : '';
+
+      htmlResult += '<article class="dish-card" data-id="' + dish.id + '">' +
+        '<div class="dish-img-wrap" onclick="window.openDishModal(\'' + dish.id + '\')">' +
+          '<img src="' + dish.image + '" alt="' + dish.name + '" loading="lazy" />' +
+          '<div class="dish-badges">' + hitBadge + portionBadge + '</div>' +
+          '<button class="dish-fav-btn ' + favClass + '" onclick="event.stopPropagation(); window.toggleFavorite(\'' + dish.id + '\')" aria-label="Sevimlilarga qo\'shish">' +
+            '<i class="' + heartIcon + '"></i>' +
+          '</button>' +
+        '</div>' +
+        '<div class="dish-content">' +
+          '<div class="dish-category">' + dish.categoryName + '</div>' +
+          '<h3 class="dish-title" onclick="window.openDishModal(\'' + dish.id + '\')">' + dish.name + '</h3>' +
+          '<p class="dish-desc">' + dish.desc + '</p>' +
+          '<div class="dish-footer">' +
+            '<div class="dish-price-box">' +
+              '<span class="price-label">Narxi:</span>' +
+              '<span class="dish-price">' + formatPrice(dish.price) + '</span>' +
+            '</div>' +
+            '<button class="btn-add-cart" onclick="window.addToCart(\'' + dish.id + '\')" title="Buyurtma berish" aria-label="Savatga qo\'shish">' +
+              '<i class="fas fa-plus"></i>' +
+            '</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    });
+    
+    dishesGrid.innerHTML = htmlResult;
   }
 
   /* ==========================================================================
@@ -1241,12 +1247,14 @@ document.addEventListener('DOMContentLoaded', () => {
   window.toggleFavorite = function(dishId) {
     const idx = favorites.indexOf(dishId);
     const dish = MENU_DATA.find(d => d.id === dishId);
+    let dishName = dish ? dish.name : 'Taom';
+    
     if (idx > -1) {
       favorites.splice(idx, 1);
-      showToast(`"${dish ? dish.name : 'Taom'}" sevimlilardan olib tashlandi`, 'fa-heart-broken');
+      showToast('"' + dishName + '" sevimlilardan olib tashlandi', 'fa-heart-broken');
     } else {
       favorites.push(dishId);
-      showToast(`"${dish ? dish.name : 'Taom'}" sevimlilarga qo'shildi!`, 'fa-heart');
+      showToast('"' + dishName + '" sevimlilarga qo\'shildi!', 'fa-heart');
     }
     localStorage.setItem('iqbol_favorites', JSON.stringify(favorites));
     renderMenu();
@@ -1268,14 +1276,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('modalImg').src = dish.image;
     document.getElementById('modalImg').alt = dish.name;
     document.getElementById('modalTitle').textContent = dish.name;
-    document.getElementById('modalPrice').textContent = formatPrice(dish.price) + (dish.portion ? ` (${dish.portion})` : '');
+    
+    let priceText = formatPrice(dish.price);
+    if (dish.portion) priceText += ' (' + dish.portion + ')';
+    document.getElementById('modalPrice').textContent = priceText;
+    
     document.getElementById('modalDesc').textContent = dish.desc;
     document.getElementById('modalCategoryBadge').textContent = dish.categoryName;
     document.getElementById('modalQtyVal').textContent = modalQuantity;
 
     const tagsWrap = document.getElementById('modalTags');
     if (tagsWrap) {
-      tagsWrap.innerHTML = (dish.tags || []).map(t => `<span class="badge badge-gold"><i class="fas fa-tag"></i> ${t}</span>`).join('');
+      let tagsHtml = '';
+      if (dish.tags) {
+        dish.tags.forEach(t => {
+          tagsHtml += '<span class="badge badge-gold"><i class="fas fa-tag"></i> ' + t + '</span>';
+        });
+      }
+      tagsWrap.innerHTML = tagsHtml;
     }
 
     dishModal.classList.add('open');
@@ -1310,7 +1328,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateCartUI() {
-    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    let totalCount = 0;
+    cart.forEach(item => { totalCount += item.quantity; });
+    
     if (cartBadge) {
       cartBadge.textContent = totalCount;
       cartBadge.style.display = totalCount > 0 ? 'flex' : 'none';
@@ -1319,47 +1339,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cartItemsList) return;
 
     if (cart.length === 0) {
-      cartItemsList.innerHTML = `
-        <div class="empty-cart-view">
-          <i class="fas fa-shopping-basket"></i>
-          <h4>Savat hali bo'sh</h4>
-          <p>Menyudan mazali taomlar tanlab, "Buyurtma berish" tugmasini bosing.</p>
-        </div>
-      `;
+      cartItemsList.innerHTML = '<div class="empty-cart-view"><i class="fas fa-shopping-basket"></i><h4>Savat hali bo\'sh</h4><p>Menyudan mazali taomlar tanlab, "Buyurtma berish" tugmasini bosing.</p></div>';
       if (cartSubtotalEl) cartSubtotalEl.textContent = '0 so\'m';
       if (cartTotalEl) cartTotalEl.textContent = '0 so\'m';
       return;
     }
 
     let subtotal = 0;
+    let itemsHtml = '';
 
-    cartItemsList.innerHTML = cart.map(item => {
+    cart.forEach(item => {
       const dish = MENU_DATA.find(d => d.id === item.id);
-      if (!dish) return '';
+      if (!dish) return;
       const itemTotal = dish.price * item.quantity;
       subtotal += itemTotal;
 
-      return `
-        <div class="cart-item">
-          <img src="${dish.image}" alt="${dish.name}" class="cart-item-thumb" />
-          <div class="cart-item-details">
-            <h5 class="cart-item-name">${dish.name}</h5>
-            <div class="cart-item-price">${formatPrice(dish.price)} &times; ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div>
-          </div>
-          <div class="cart-item-actions">
-            <div class="quantity-control">
-              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button>
-              <span class="qty-val">${item.quantity}</span>
-              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button>
-            </div>
-            <button class="btn-remove-item" onclick="window.removeFromCart('${dish.id}')" title="Olib tashlash">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
+      itemsHtml += '<div class="cart-item">' +
+        '<img src="' + dish.image + '" alt="' + dish.name + '" class="cart-item-thumb" />' +
+        '<div class="cart-item-details">' +
+          '<h5 class="cart-item-name">' + dish.name + '</h5>' +
+          '<div class="cart-item-price">' + formatPrice(dish.price) + ' &times; ' + item.quantity + ' = <strong>' + formatPrice(itemTotal) + '</strong></div>' +
+        '</div>' +
+        '<div class="cart-item-actions">' +
+          '<div class="quantity-control">' +
+            '<button class="qty-btn" onclick="window.changeCartQty(\'' + dish.id + '\', -1)">-</button>' +
+            '<span class="qty-val">' + item.quantity + '</span>' +
+            '<button class="qty-btn" onclick="window.changeCartQty(\'' + dish.id + '\', 1)">+</button>' +
+          '</div>' +
+          '<button class="btn-remove-item" onclick="window.removeFromCart(\'' + dish.id + '\')" title="Olib tashlash">' +
+            '<i class="fas fa-trash-alt"></i>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    });
 
+    cartItemsList.innerHTML = itemsHtml;
     if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(subtotal);
     if (cartTotalEl) cartTotalEl.textContent = formatPrice(subtotal);
   }
@@ -1375,7 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cart.push({ id: dishId, quantity: qty });
     }
     saveCart();
-    showToast(`"${dish.name}" savatga qo'shildi! (${qty}x)`, 'fa-shopping-cart');
+    showToast('"' + dish.name + '" savatga qo\'shildi! (' + qty + 'x)', 'fa-shopping-cart');
   };
 
   window.changeCartQty = function(dishId, delta) {
@@ -1393,7 +1407,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dish = MENU_DATA.find(d => d.id === dishId);
     cart = cart.filter(i => i.id !== dishId);
     saveCart();
-    showToast(`"${dish ? dish.name : 'Taom'}" savatdan olib tashlandi`, 'fa-trash-alt');
+    let dishName = dish ? dish.name : 'Taom';
+    showToast('"' + dishName + '" savatdan olib tashlandi', 'fa-trash-alt');
   };
 
   window.openCart = function() {
@@ -1412,7 +1427,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Order type switcher
   const orderTypeBtns = document.querySelectorAll('.order-type-btn');
   orderTypeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1433,7 +1447,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Checkout modal
   const checkoutModal = document.getElementById('checkoutModal');
 
   window.openCheckout = function() {
@@ -1457,7 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const checkoutForm = document.getElementById('checkoutForm');
   if (checkoutForm) {
-    checkoutForm.addEventListener('submit', (e) => {
+    checkoutForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const name = document.getElementById('checkoutName').value.trim();
@@ -1471,74 +1484,199 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Calculate totals
       let totalSum = 0;
-      let orderLines = cart.map(item => {
+      let orderLinesText = "";
+      
+      cart.forEach(item => {
         const dish = MENU_DATA.find(d => d.id === item.id);
         const lineTotal = dish ? dish.price * item.quantity : 0;
         totalSum += lineTotal;
-        return `• ${dish ? dish.name : ''} x ${item.quantity} = ${formatPrice(lineTotal)}`;
-      }).join('\n');
-
-      const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
-      const deliveryText = orderType === 'delivery' ? `Yetkazib berish (Manzil: ${address || 'Ko\'rsatilmagan'})` : `Restoranda (Stol: ${table || 'Tanlanmagan'})`;
-
-      // Success modal
-      window.closeCheckout();
-      showSuccessModal({
-        title: 'Buyurtmangiz qabul qilindi!',
-        subtitle: `Buyurtma raqami: #${orderId}`,
-        message: `Hurmatli ${name}, buyurtmangiz tez orada tayyorlanadi. Bizning operatorimiz tasdiqlash uchun ${phone} raqamingizga qo'ng'iroq qiladi.`,
-        details: `Yetkazish turi: ${deliveryText}\nJami summa: ${formatPrice(totalSum)}\n\nTaomlar:\n${orderLines}`,
-        telegramLink: `https://t.me/hydrotoxic?text=${encodeURIComponent(`Buyurtma #${orderId}\nMijoz: ${name}\nTel: ${phone}\n${deliveryText}\nJami: ${formatPrice(totalSum)}\n\n${orderLines}`)}`
+        let dName = dish ? dish.name : '';
+        orderLinesText += "• " + dName + " x " + item.quantity + " = " + formatPrice(lineTotal) + "\n";
       });
 
-      // Clear cart
+      const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
+      
+      let deliveryText = "Restoranda (Stol: " + (table ? table : "Tanlanmagan") + ")";
+      if (orderType === 'delivery') {
+        deliveryText = "Yetkazib berish (Manzil: " + (address ? address : "Ko'rsatilmagan") + ")";
+      }
+
+      showToast("Buyurtma yuborilmoqda...", 'fa-spinner');
+      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
+      const TELEGRAM_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
+      const TELEGRAM_CHAT_ID = '7225335915'; 
+      
+      let finalTgText = "📦 *YANGI TAOM BUYURTMASI!* (#" + orderId + ")\n\n" +
+                        "👤 Mijoz: " + name + "\n" +
+                        "📞 Tel: " + phone + "\n" +
+                        "📍 " + deliveryText + "\n\n" +
+                        "🛒 *Buyurtmalar:*\n" + orderLinesText + "\n" +
+                        "💰 *Jami: " + formatPrice(totalSum) + "*\n" +
+                        "📝 Izoh: " + (note ? note : "Yo'q");
+      
+      try {
+        await fetch("https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: finalTgText, parse_mode: 'Markdown' })
+        });
+      } catch (e) {
+        console.log("Telegram xatolik:", e);
+      }
+
+      window.closeCheckout();
+      
+      let finalDetails = "Yetkazish turi: " + deliveryText + "\nJami summa: " + formatPrice(totalSum) + "\n\nTaomlar:\n" + orderLinesText;
+      let tgShareLink = "https://t.me/hydrotoxic?text=" + encodeURIComponent("Buyurtma #" + orderId + "\nMijoz: " + name + "\nTel: " + phone + "\n" + deliveryText + "\nJami: " + formatPrice(totalSum) + "\n\n" + orderLinesText);
+
+      showSuccessModal({
+        title: 'Buyurtmangiz qabul qilindi!',
+        subtitle: 'Buyurtma raqami: #' + orderId,
+        message: 'Hurmatli ' + name + ', buyurtmangiz tez orada tayyorlanadi. Bizning operatorimiz tasdiqlash uchun ' + phone + ' raqamingizga qo\'ng\'iroq qiladi.',
+        details: finalDetails,
+        telegramLink: tgShareLink
+      });
+
       cart = [];
       saveCart();
+      if (submitBtn) submitBtn.disabled = false;
     });
   }
 
   /* ==========================================================================
-     9. TABLE RESERVATION SYSTEM
+     9. TABLE RESERVATION SYSTEM (FAQAT TELEGRAM BOT ORQALI)
      ========================================================================== */
+  
+  const TELEGRAM_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
+  const TELEGRAM_CHAT_ID = '7225335915'; 
+
   const reservationForm = document.getElementById('reservationForm');
+
   if (reservationForm) {
-    // Set min date to today
     const resDateInput = document.getElementById('resDate');
+    const resTimeSelect = document.getElementById('resTime');
+    const tableTypeSelect = document.getElementById('resTableType');
+    const tableNumberSelect = document.getElementById('resTableNumber');
+
     if (resDateInput) {
       const today = new Date().toISOString().split('T')[0];
       resDateInput.min = today;
       resDateInput.value = today;
     }
 
-    reservationForm.addEventListener('submit', (e) => {
+    function updateTablesList() {
+      if (!tableTypeSelect || !tableNumberSelect) return;
+      const type = tableTypeSelect.value;
+      
+      let max = 0;
+      let label = 'Stol';
+
+      switch (type) {
+        case 'asosiy-zal': max = 35; label = 'Stol'; break;
+        case 'zal-2': max = 8; label = 'Stol'; break;
+        case 'vip': max = 9; label = 'Kabina'; break;
+        case 'tashqi': max = 40; label = 'Joy'; break;
+        default: max = 10; label = 'Stol';
+      }
+
+      tableNumberSelect.innerHTML = '';
+      for (let i = 1; i <= max; i++) {
+        const opt = document.createElement('option');
+        opt.value = label + ' #' + i;
+        opt.textContent = label + ' #' + i;
+        tableNumberSelect.appendChild(opt);
+      }
+    }
+
+    if (tableTypeSelect) tableTypeSelect.addEventListener('change', updateTablesList);
+    updateTablesList();
+
+    reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const name = document.getElementById('resName').value.trim();
       const phone = document.getElementById('resPhone').value.trim();
-      const date = document.getElementById('resDate').value;
-      const time = document.getElementById('resTime').value;
+      const date = resDateInput.value;
+      const time = resTimeSelect.value;
       const guests = document.getElementById('resGuests').value;
-      const tableType = document.getElementById('resTableType').value;
+      const tableType = tableTypeSelect.value;
+      const tableNumber = tableNumberSelect.value;
       const notes = document.getElementById('resNotes').value.trim();
 
-      if (!name || !phone || !date || !time) {
-        showToast('Iltimos, barcha majburiy maydonlarni to\'ldiring!', 'fa-exclamation-triangle');
+      if (!name || !phone || !date || !time || !tableNumber) {
+        showToast("Iltimos, barcha majburiy maydonlarni to'ldiring!", 'fa-exclamation-triangle');
         return;
       }
 
+      let tableTypeName = '';
+      switch (tableType) {
+        case 'asosiy-zal': tableTypeName = 'Asosiy zal'; break;
+        case 'zal-2': tableTypeName = '2-zal'; break;
+        case 'vip': tableTypeName = 'VIP kabina'; break;
+        case 'tashqi': tableTypeName = "Ko'cha / Tashqi ayvon"; break;
+        default: tableTypeName = tableType;
+      }
+
+      showToast('Buyurtma yuborilmoqda...', 'fa-spinner');
+      const submitBtn = reservationForm.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+
       const bookingCode = 'STOL-' + Math.floor(1000 + Math.random() * 9000);
 
-      showSuccessModal({
-        title: 'Stol muvaffaqiyatli band qilindi!',
-        subtitle: `Band qilish kodi: #${bookingCode}`,
-        message: `Hurmatli ${name}, sizning buyurtmangiz ro'yxatga olindi. ${date} kuni soat ${time} da sizni IQBOL restoranida kutamiz!`,
-        details: `Mehmonlar: ${guests}\nJoy turi: ${tableType}\nTelefon: ${phone}${notes ? `\nIstaklar: ${notes}` : ''}`,
-        telegramLink: `https://t.me/hydrotoxic?text=${encodeURIComponent(`Stol band qilish #${bookingCode}\nIsm: ${name}\nTel: ${phone}\nSana: ${date} ${time}\nMehmonlar: ${guests}\nZal: ${tableType}`)}`
-      });
+      let messageContent = "🛎 *YANGI STOL BAND QILINDI!* (#" + bookingCode + ")\n\n" +
+                           "👤 Mijoz: " + name + "\n" +
+                           "📞 Tel: " + phone + "\n" +
+                           "📅 Sana: " + date + "\n" +
+                           "⏰ Vaqt: " + time + "\n" +
+                           "👥 Mehmonlar: " + guests + "\n" +
+                           "📍 Zal: " + tableTypeName + "\n" +
+                           "🪑 Joy: " + tableNumber + "\n" +
+                           "📝 Izoh: " + (notes ? notes : "Yo'q");
 
-      reservationForm.reset();
+      const url = "https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendMessage";
+      
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: messageContent,
+            parse_mode: 'Markdown'
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.ok) {
+          let detailsText = "Mehmonlar: " + guests + "\nJoy turi: " + tableTypeName + "\nStol: " + tableNumber + "\nTelefon: " + phone;
+          if (notes) {
+            detailsText += "\nIstaklar: " + notes;
+          }
+
+         
+
+          showSuccessModal({
+            title: 'Stol muvaffaqiyatli band qilindi!',
+            subtitle: 'Kod: #' + bookingCode,
+            message: 'Hurmatli ' + name + ', buyurtmangiz ro\'yxatga olindi. ' + date + ' kuni soat ' + time + ' da sizni IQBOL restoranida kutamiz!',
+            details: detailsText,
+          });
+          reservationForm.reset();
+          updateTablesList();
+        } else {
+          console.error(result);
+          showToast("Xatolik: Botga xabar bormadi.", 'fa-exclamation-triangle');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast("Tarmoq xatosi yuz berdi. Qayta urinib ko'ring.", 'fa-exclamation-triangle');
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   }
 
@@ -1547,17 +1685,17 @@ document.addEventListener('DOMContentLoaded', () => {
      ========================================================================== */
   const successModal = document.getElementById('successModal');
 
-  function showSuccessModal({ title, subtitle, message, details, telegramLink }) {
+  function showSuccessModal(data) {
     if (!successModal) return;
 
-    document.getElementById('successTitle').textContent = title;
-    document.getElementById('successSubtitle').textContent = subtitle;
-    document.getElementById('successMessage').textContent = message;
-    document.getElementById('successDetails').textContent = details;
+    document.getElementById('successTitle').textContent = data.title;
+    document.getElementById('successSubtitle').textContent = data.subtitle;
+    document.getElementById('successMessage').textContent = data.message;
+    document.getElementById('successDetails').textContent = data.details;
     
     const tgBtn = document.getElementById('successTelegramBtn');
-    if (tgBtn && telegramLink) {
-      tgBtn.href = telegramLink;
+    if (tgBtn && data.telegramLink) {
+      tgBtn.href = data.telegramLink;
     }
 
     successModal.classList.add('open');
@@ -1575,54 +1713,14 @@ document.addEventListener('DOMContentLoaded', () => {
      11. GALLERY & LIGHTBOX
      ========================================================================== */
   const GALLERY_IMAGES = [
-    {
-      url: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Qarshi uslubidagi afsonaviy Tandir go\'shti',
-      category: 'taomlar',
-      featured: true
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Cho\'g\'da pishirilgan barra qo\'y shashliklari',
-      category: 'shashlik',
-      featured: false
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Qo\'lda cho\'zilgan qovurma uyg\'ur lag\'moni',
-      category: 'taomlar',
-      featured: false
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1592417817098-8f3d691029c0?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Sarxil Yulduz pomidoridan shakarob va yangi salatlar',
-      category: 'salatlar',
-      featured: false
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop',
-      caption: 'IQBOL restoranining shinam va hashamatli oilaviy zallari',
-      category: 'restoran',
-      featured: true
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Muzdek xushbo\'y mevali kivi moxito va tarxunlar',
-      category: 'ichimliklar',
-      featured: false
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Kechki shinam muhit va mehmondo\'st xizmat',
-      category: 'restoran',
-      featured: false
-    },
-    {
-      url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1200&auto=format&fit=crop',
-      caption: 'Tandirdan uzilgan qatlama issiq somsalar',
-      category: 'taomlar',
-      featured: false
-    }
+    { url: 'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1200&auto=format&fit=crop', caption: 'Qarshi uslubidagi afsonaviy Tandir go\'shti', category: 'taomlar', featured: true },
+    { url: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1200&auto=format&fit=crop', caption: 'Cho\'g\'da pishirilgan barra qo\'y shashliklari', category: 'shashlik', featured: false },
+    { url: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?q=80&w=1200&auto=format&fit=crop', caption: 'Qo\'lda cho\'zilgan qovurma uyg\'ur lag\'moni', category: 'taomlar', featured: false },
+    { url: 'https://images.unsplash.com/photo-1592417817098-8f3d691029c0?q=80&w=1200&auto=format&fit=crop', caption: 'Sarxil Yulduz pomidoridan shakarob va yangi salatlar', category: 'salatlar', featured: false },
+    { url: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1200&auto=format&fit=crop', caption: 'IQBOL restoranining shinam va hashamatli oilaviy zallari', category: 'restoran', featured: true },
+    { url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=1200&auto=format&fit=crop', caption: 'Muzdek xushbo\'y mevali kivi moxito va tarxunlar', category: 'ichimliklar', featured: false },
+    { url: 'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?q=80&w=1200&auto=format&fit=crop', caption: 'Kechki shinam muhit va mehmondo\'st xizmat', category: 'restoran', featured: false },
+    { url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?q=80&w=1200&auto=format&fit=crop', caption: 'Tandirdan uzilgan qatlama issiq somsalar', category: 'taomlar', featured: false }
   ];
 
   let currentGalleryCategory = 'all';
@@ -1636,20 +1734,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGallery() {
     if (!galleryGrid) return;
-
-    activeGalleryItems = currentGalleryCategory === 'all'
-      ? GALLERY_IMAGES
-      : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
-
-    galleryGrid.innerHTML = activeGalleryItems.map((item, index) => `
-      <div class="gallery-item ${item.featured ? 'featured' : ''}" onclick="window.openLightbox(${index})">
-        <img src="${item.url}" alt="${item.caption}" loading="lazy" />
-        <div class="gallery-overlay">
-          <span class="gallery-tag">${item.category}</span>
-          <h4 class="gallery-caption">${item.caption}</h4>
-        </div>
-      </div>
-    `).join('');
+    activeGalleryItems = currentGalleryCategory === 'all' ? GALLERY_IMAGES : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
+    
+    let htmlGallery = '';
+    activeGalleryItems.forEach((item, index) => {
+      let featClass = item.featured ? 'featured' : '';
+      htmlGallery += '<div class="gallery-item ' + featClass + '" onclick="window.openLightbox(' + index + ')">' +
+        '<img src="' + item.url + '" alt="' + item.caption + '" loading="lazy" />' +
+        '<div class="gallery-overlay">' +
+          '<span class="gallery-tag">' + item.category + '</span>' +
+          '<h4 class="gallery-caption">' + item.caption + '</h4>' +
+        '</div>' +
+      '</div>';
+    });
+    galleryGrid.innerHTML = htmlGallery;
   }
 
   const galleryFilterBtns = document.querySelectorAll('.gallery-filter-btn');
@@ -1666,11 +1764,9 @@ document.addEventListener('DOMContentLoaded', () => {
     activeLightboxIndex = index;
     const item = activeGalleryItems[activeLightboxIndex];
     if (!item || !lightboxModal) return;
-
     lightboxImg.src = item.url;
     lightboxImg.alt = item.caption;
     lightboxCaption.textContent = item.caption;
-
     lightboxModal.classList.add('open');
     document.body.style.overflow = 'hidden';
   };
@@ -1685,7 +1781,6 @@ document.addEventListener('DOMContentLoaded', () => {
     activeLightboxIndex += step;
     if (activeLightboxIndex < 0) activeLightboxIndex = activeGalleryItems.length - 1;
     if (activeLightboxIndex >= activeGalleryItems.length) activeLightboxIndex = 0;
-
     const item = activeGalleryItems[activeLightboxIndex];
     if (item) {
       lightboxImg.src = item.url;
@@ -1726,25 +1821,16 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', () => {
     const scrollY = window.scrollY;
 
-    // Header sticky transformation
     if (header) {
-      if (scrollY > 50) {
-        header.classList.add('scrolled');
-      } else {
-        header.classList.remove('scrolled');
-      }
+      if (scrollY > 50) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
     }
 
-    // Back to top button
     if (backToTopBtn) {
-      if (scrollY > 400) {
-        backToTopBtn.classList.add('visible');
-      } else {
-        backToTopBtn.classList.remove('visible');
-      }
+      if (scrollY > 400) backToTopBtn.classList.add('visible');
+      else backToTopBtn.classList.remove('visible');
     }
 
-    // Active nav link spy
     const sections = document.querySelectorAll('section[id]');
     const navLinks = document.querySelectorAll('.nav-link');
 
@@ -1759,7 +1845,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navLinks.forEach(link => {
       link.classList.remove('active');
-      if (link.getAttribute('href') === `#${currentSectionId}`) {
+      if (link.getAttribute('href') === '#' + currentSectionId) {
         link.classList.add('active');
       }
     });
@@ -1771,7 +1857,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Mobile drawer
   if (hamburgerBtn) {
     hamburgerBtn.addEventListener('click', () => {
       mobileNavDrawer.classList.add('open');
@@ -1788,7 +1873,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // Keyboard accessibility
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       window.closeDishModal();
