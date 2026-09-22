@@ -68,7 +68,7 @@ bot.action(/^free_(.+)$/, (ctx) => {
 // Tizimlarni ishga tushirish
 bot.launch();
 app.listen(PORT, () => {
-    console.log(`✅ Server http://localhost:${PORT} manzilida muammosiz ishlamoqda...`);
+    console.log(`✅ Server https://iqbol.onrender.com/api${PORT} manzilida muammosiz ishlamoqda...`);
 });
 
 // Dastur to'xtatilganda botni ham xavfsiz to'xtatish

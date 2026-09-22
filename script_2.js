@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      9. TABLE RESERVATION SYSTEM (SERVER_2.JS ORQALI ISHLAYDI)
      ========================================================================== */
-  const API_URL = 'http://localhost:3000/api';
+  const API_URL = 'https://iqbol.onrender.com/api';
   const reservationForm = document.getElementById('reservationForm');
 
   if (reservationForm) {
