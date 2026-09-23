@@ -4,7 +4,7 @@ const { Telegraf } = require('telegraf');
 
 // === SOZLAMALAR ===
 const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-const ADMIN_CHAT_ID = '7225335915'; 
+const ADMIN_CHAT_ID = ['7225335915', '8072569639' ] ; 
 const PORT = 3000;
 
 // Zamonaviy Telegraf botni ishga tushirish
