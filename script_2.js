@@ -1,5 +1,5 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (YETKAZISH 15K VA OBSLUJIVANIYE BILAN)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (FINAL WITH DELIVERY ZONES)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -162,13 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
     cartItemsList.innerHTML = itemsHtml; 
     if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(subtotal);
 
-    // Qo'shimcha haqni hisoblash (Yetkazish 15,000 yoki Obslujivaniye VIP 10% / Qolgani 7%)
     let extraFee = 0;
     let feeDescription = '';
 
     if (orderType === 'delivery') {
-      extraFee = 15000; // Yetkazib berish (shahar ichi)
-      feeDescription = 'Yetkazib berish: 15 000 so\'m';
+      const zoneSelect = document.getElementById('deliveryZone');
+      const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
+      extraFee = zoneVal === 'tashqi' ? 15000 : 10000;
+      feeDescription = zoneVal === 'tashqi' ? 'Yetkazish (Tashqari): 15 000 so\'m' : 'Yetkazish (Shahar ichi): 10 000 so\'m';
     } else {
       let serviceFeePercent = 0.07;
       const tableInputVal = document.getElementById('checkoutTable') ? document.getElementById('checkoutTable').value.toLowerCase() : '';
@@ -196,8 +197,27 @@ document.addEventListener('DOMContentLoaded', () => {
      4. CHECKOUT & TELEGRAM (OVQAT BUYURTMASI -> 8072569639)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
-  window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; } };
+  window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; ensureDeliveryZoneSelect(); updateCartUI(); } };
   window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
+
+  // Dinamik ravishda yetkazish zonasini tanlash select elementini qo'shish
+  function ensureDeliveryZoneSelect() {
+    const addressGroup = document.getElementById('checkoutAddressGroup');
+    if (addressGroup && !document.getElementById('deliveryZone')) {
+      const zoneDiv = document.createElement('div');
+      zoneDiv.className = 'form-group';
+      zoneDiv.style.marginTop = '10px';
+      zoneDiv.innerHTML = `
+        <label for="deliveryZone">Yetkazish hududi *</label>
+        <select id="deliveryZone" style="width:150px; padding:6px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);">
+          <option value="ichki">Shahar ichi (10 000 so'm)</option>
+          <option value="tashqi">Shahar tashqari (15 000 so'm)</option>
+        </select>
+      `;
+      addressGroup.appendChild(zoneDiv);
+      document.getElementById('deliveryZone').addEventListener('change', updateCartUI);
+    }
+  }
 
   const orderTypeBtns = document.querySelectorAll('.order-type-btn');
   orderTypeBtns.forEach(btn => {
@@ -207,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       orderType = btn.dataset.type; 
       document.getElementById('checkoutAddressGroup').style.display = orderType === 'delivery' ? 'flex' : 'none'; 
       document.getElementById('checkoutTableGroup').style.display = orderType === 'delivery' ? 'none' : 'flex'; 
+      if (orderType === 'delivery') ensureDeliveryZoneSelect();
       updateCartUI();
     });
   });
@@ -241,8 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
       let feeTitle = '';
 
       if (orderType === 'delivery') {
-        extraFee = 15000;
-        feeTitle = 'Yetkazib berish (shahar ichi)';
+        const zoneSelect = document.getElementById('deliveryZone');
+        const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
+        extraFee = zoneVal === 'tashqi' ? 15000 : 10000;
+        feeTitle = zoneVal === 'tashqi' ? 'Yetkazish (Shahar tashqari)' : 'Yetkazish (Shahar ichi)';
       } else {
         let serviceFeePercent = 0.07;
         if (table.toLowerCase().includes('vip') || table.toLowerCase().includes('kabina')) {
@@ -255,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let totalSum = subtotal + extraFee;
 
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
-      const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address}` : `Restoranda: ${table || 'Tanlanmagan'}`;
+      const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
       
       showToast("Yuborilmoqda...", 'fa-spinner');
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
