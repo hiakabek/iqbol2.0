@@ -4,9 +4,6 @@ const https = require('https');
 
 const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
 const RESERVATION_CHAT_ID = '7225335915'; 
-
-// Render beradigan ssilkani avtomatik olish yoki o'zingiznikini yozish uchun:
-// RENDER_EXTERNAL_URL ni Render o'zi avtomatik beradi
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://iqbol.onrender.com';
 
 const PORT = process.env.PORT || 3000;
@@ -17,13 +14,17 @@ app.use(express.json());
 
 let bookedTables = {}; 
 
-// Telegramga xabar yuborish funksiyasi
-function sendTelegramMessage(chatId, text, replyMarkup = null) {
-    const data = JSON.stringify({
+// Telegramga xabar va tugmani yuborishning eng kafolatlangan funksiyasi
+function sendTelegramMessage(chatId, text, bookingKey) {
+    const postData = JSON.stringify({
         chat_id: chatId,
         text: text,
         parse_mode: 'Markdown',
-        reply_markup: replyMarkup
+        reply_markup: {
+            inline_keyboard: [
+                [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
+            ]
+        }
     });
 
     const options = {
@@ -31,20 +32,24 @@ function sendTelegramMessage(chatId, text, replyMarkup = null) {
         port: 443,
         path: `/bot${TOKEN}/sendMessage`,
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': data.length }
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData)
+        }
     };
 
     const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (chunk) => body += chunk);
-        res.on('end', () => console.log("Xabar yuborildi:", body));
+        res.on('end', () => console.log("Telegram javobi:", body));
     });
-    req.on('error', (err) => console.error("Xato:", err));
-    req.write(data);
+
+    req.on('error', (err) => console.error("Telegram xatosi:", err));
+    req.write(postData);
     req.end();
 }
 
-// 1. Stol band qilish va tugma yuborish
+// 1. Stol band qilish va tugma bilan xabar yuborish
 app.post('/api/book', (req, res) => {
     const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
@@ -57,13 +62,9 @@ app.post('/api/book', (req, res) => {
 
     const messageText = `🛎 *YANGI BUYURTMA!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
 
-    const replyMarkup = {
-        inline_keyboard: [
-            [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
-        ]
-    };
+    // Funksiya orqali xabar va tugmani yuboramiz
+    sendTelegramMessage(RESERVATION_CHAT_ID, messageText, bookingKey);
 
-    sendTelegramMessage(RESERVATION_CHAT_ID, messageText, replyMarkup);
     res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
 });
 
@@ -72,11 +73,11 @@ app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
 });
 
-// 3. Telegramdan tugma bosilganda ishlaydigan qism
-app.post('/api/telegram-webhook', async (req, res) => {
+// 3. Telegramdan tugma bosilganda ishlaydigan webhook
+app.post('/api/telegram-webhook', (req, res) => {
     const update = req.body;
     
-    if (update.callback_query) {
+    if (update && update.callback_query) {
         const callbackData = update.callback_query.data;
         const chatId = update.callback_query.message.chat.id;
         const messageId = update.callback_query.message.message_id;
@@ -88,7 +89,7 @@ app.post('/api/telegram-webhook', async (req, res) => {
             // Stolni bazadan o'chiramiz (Saytda darhol ochiladi)
             delete bookedTables[bookingKey];
 
-            // Telegramga bildirishnoma
+            // 1. Pop-up xabar ko'rsatish
             const answerData = JSON.stringify({
                 callback_query_id: callbackQueryId,
                 text: "Stol bo'shatildi va saytda ochildi!"
@@ -96,20 +97,21 @@ app.post('/api/telegram-webhook', async (req, res) => {
             https.request({
                 hostname: 'api.telegram.org', port: 443,
                 path: `/bot${TOKEN}/answerCallbackQuery`, method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Content-Length': answerData.length }
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(answerData) }
             }).end(answerData);
 
-            // Xabarni tahrirlash
+            // 2. Xabarni yangilab, tugmani olib tashlash va holatni yozish
+            const originalText = update.callback_query.message.text;
             const editData = JSON.stringify({
                 chat_id: chatId,
                 message_id: messageId,
-                text: update.callback_query.message.text + `\n\n🟢 *HOLAT:* Yopilgan (Stol bo'shatildi)`,
+                text: originalText + `\n\n🟢 *HOLAT:* Yopilgan (Stol bo'shatildi)`,
                 parse_mode: 'Markdown'
             });
             https.request({
                 hostname: 'api.telegram.org', port: 443,
                 path: `/bot${TOKEN}/editMessageText`, method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Content-Length': editData.length }
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(editData) }
             }).end(editData);
         }
     }
@@ -119,14 +121,14 @@ app.post('/api/telegram-webhook', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`✅ Server port ${PORT} da ishlamoqda...`);
 
-    // AVTOMATIK WEBHOOK O'RNATISH (Qo'lda ssilka ochib o'tirish shart emas)
+    // Avtomatik Webhook ulanishi
     const webhookUrl = `${RENDER_URL}/api/telegram-webhook`;
     const setWebhookUrl = `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${webhookUrl}`;
     
     https.get(setWebhookUrl, (res) => {
         let data = '';
         res.on('data', chunk => data += chunk);
-        res.on('end', () => console.log("Webhook avto-ulanish natijasi:", data));
+        res.on('end', () => console.log("Webhook ulanish natijasi:", data));
     }).on('error', err => {
         console.error("Webhook ulanishda xato:", err);
     });
