@@ -56,9 +56,10 @@ app.post('/api/book', (req, res) => {
 
     bookedTables[bookingKey] = true;
 
-    const messageText = `🛎 *STOL BRON QILINDI!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
+    // Matnni o'zing xohlagan ko'rinishga moslab qo'ydik
+    const messageText = `🛎 *YANGI BUYURTMA!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
 
-    // 👉 Tugma qo'shilgan qism
+    // Stolni bo'shatish tugmasi
     const replyMarkup = {
         inline_keyboard: [
             [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
@@ -75,7 +76,7 @@ app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
 });
 
-// 3. TELEGRAMDAN KELGAN TUGMA BOSISHNI QABUL QILISH (Webhook)
+// 3. TELEGRAMDAN KELGAN TUGMA BOSISHNI QABUL QILISH (Stolni bo'shatish)
 app.post('/api/telegram-webhook', async (req, res) => {
     const update = req.body;
     
@@ -91,7 +92,7 @@ app.post('/api/telegram-webhook', async (req, res) => {
             // Stolni bazadan o'chiramiz (Saytda avtomat ochiladi)
             delete bookedTables[bookingKey];
 
-            // Telegramdagi xabarga javob berish (popup chiqarish)
+            // Telegramdagi xabarga javob berish (popup)
             const answerData = JSON.stringify({
                 callback_query_id: callbackQueryId,
                 text: "Stol bo'shatildi va saytda ochildi!"
