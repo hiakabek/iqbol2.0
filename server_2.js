@@ -4,11 +4,10 @@ const { Telegraf } = require('telegraf');
 
 // === SOZLAMALAR ===
 const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-
-// ➔ FAQAT STOL BRON QILISH XABARI KELADIGAN ADMIN ID'SI:
 const RESERVATION_CHAT_ID = '7225335915'; 
 
-const PORT = 3000;
+// Render beradigan portni avtomatik olish uchun muhim qism:
+const PORT = process.env.PORT || 3000;
 
 const bot = new Telegraf(TOKEN);
 const app = express();
@@ -63,7 +62,7 @@ bot.action(/^free_(.+)$/, (ctx) => {
 
 bot.launch();
 app.listen(PORT, () => {
-    console.log(`✅ Server https://iqbol.onrender.com/api ${PORT}-portda ishlamoqda...`);
+    console.log(`✅ Server port ${PORT} da muammosiz ishlamoqda...`);
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
