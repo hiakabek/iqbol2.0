@@ -17,7 +17,8 @@ app.use(express.json());
 let bookedTables = {}; 
 
 // 1. SAYTDAN SO'ROVNI QABUL QILISH
-app.post('/api/book', (req, res) => {
+// 1. SAYTDAN SO'ROVNI QABUL QILISH
+app.post('/api/book', async (req, res) => {
     const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
 
@@ -29,18 +30,23 @@ app.post('/api/book', (req, res) => {
 
     const messageText = `🛎 *YANGI BUYURTMA!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
 
-    bot.telegram.sendMessage(ADMIN_CHAT_ID, messageText, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
-            ]
+    try {
+        // Massivdagi har bir admin ID ga alohida xabar yuborish
+        for (const chatId of ADMIN_CHAT_ID) {
+            await bot.telegram.sendMessage(chatId, messageText, {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
+                    ]
+                }
+            });
         }
-    }).then(() => res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' }))
-      .catch(err => {
-          console.error("Bot xatosi:", err);
-          res.status(500).json({ success: false, message: 'Botda xatolik yuz berdi' });
-      });
+        res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
+    } catch (err) {
+        console.error("Bot xatosi:", err);
+        res.status(500).json({ success: false, message: 'Botda xatolik yuz berdi' });
+    }
 });
 
 // 2. SAYTGA BAND STOLLARNI YUBORISH
