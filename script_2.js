@@ -200,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; ensureDeliveryZoneSelect(); updateCartUI(); } };
   window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
 
-  // Dinamik ravishda yetkazish zonasini tanlash select elementini qo'shish
   function ensureDeliveryZoneSelect() {
     const addressGroup = document.getElementById('checkoutAddressGroup');
     if (addressGroup && !document.getElementById('deliveryZone')) {
@@ -285,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitBtn) submitBtn.disabled = true;
 
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-      const FOOD_CHAT_ID = '8072569639'; // Ovqat buyurtmalari keladigan admin ID
+      const FOOD_CHAT_ID = '8072569639';
       
       const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
       
@@ -312,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     5. TABLE RESERVATION SYSTEM
+     5. TABLE RESERVATION SYSTEM (TO'G'RILANGAN QISM)
      ========================================================================== */
   const API_URL = 'https://iqbol.onrender.com/api';
   const reservationForm = document.getElementById('reservationForm');
@@ -359,8 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (bookedTables[bookingKey]) {
             opt.disabled = true;
-            opt.textContent = makeStrikethrough(optionValue) + " (BAND)";
+            opt.textContent = `${optionValue} (BAND)`;
             opt.style.color = "red";
+            opt.style.backgroundColor = "#ffe6e6";
           } else {
             opt.textContent = optionValue;
           }
