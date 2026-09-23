@@ -1,5 +1,10 @@
 const express = require('express');
 const cors = require('cors');
+const https = require('https');
+
+// === SOZLAMALAR ===
+const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
+const RESERVATION_CHAT_ID = '7225335915'; // Stol bron xabari boradigan admin ID
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -9,7 +14,43 @@ app.use(express.json());
 
 let bookedTables = {}; 
 
-// 1. STOL BAND QILISH SO'ROVINI QABUL QILISH
+// Telegramga xabar yuboruvchi yordamchi funksiya
+function sendTelegramMessage(chatId, text, replyMarkup = null) {
+    const data = JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: replyMarkup
+    });
+
+    const options = {
+        hostname: 'api.telegram.org',
+        port: 443,
+        path: `/bot${TOKEN}/sendMessage`,
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length
+        }
+    };
+
+    const req = https.request(options, (res) => {
+        let responseBody = '';
+        res.on('data', (chunk) => { responseBody += chunk; });
+        res.on('end', () => {
+            console.log("Telegram javobi:", responseBody);
+        });
+    });
+
+    req.on('error', (error) => {
+        console.error("Telegramga yuborishda xato:", error);
+    });
+
+    req.write(data);
+    req.end();
+}
+
+// 1. STOL BAND QILISH VA TELEGRAMGA XABAR YUBORISH
 app.post('/api/book', (req, res) => {
     const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
@@ -19,19 +60,24 @@ app.post('/api/book', (req, res) => {
     }
 
     bookedTables[bookingKey] = true;
+
+    const messageText = `🛎 *STOL BRON QILINDI!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
+
+    const replyMarkup = {
+        inline_keyboard: [
+            [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
+        ]
+    };
+
+    // Telegramga xabar yuborish
+    sendTelegramMessage(RESERVATION_CHAT_ID, messageText, replyMarkup);
+
     res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
 });
 
 // 2. SAYTGA BAND STOLLARNI YUBORISH
 app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
-});
-
-// 3. STOLNI BO'SHATISH (ADMIN UCHUN)
-app.post('/api/free', (req, res) => {
-    const { bookingKey } = req.body;
-    delete bookedTables[bookingKey];
-    res.json({ success: true, message: "Stol bo'shatildi!" });
 });
 
 app.listen(PORT, () => {
