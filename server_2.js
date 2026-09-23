@@ -1,15 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const { Telegraf } = require('telegraf');
+const https = require('https');
 
-// === SOZLAMALAR ===
 const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-const RESERVATION_CHAT_ID = '7225335915'; // Stol bron xabari boradigan admin ID
+const RESERVATION_CHAT_ID = '7225335915'; 
+
+// Render beradigan ssilkani avtomatik olish yoki o'zingiznikini yozish uchun:
+// RENDER_EXTERNAL_URL ni Render o'zi avtomatik beradi
+const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://iqbol.onrender.com';
 
 const PORT = process.env.PORT || 3000;
-
-// Telegraf botni ishga tushiramiz
-const bot = new Telegraf(TOKEN);
 const app = express();
 
 app.use(cors());
@@ -17,8 +17,35 @@ app.use(express.json());
 
 let bookedTables = {}; 
 
-// 1. STOL BAND QILISH VA TELEGRAMGA TUGMA BILAN XABAR YUBORISH
-app.post('/api/book', async (req, res) => {
+// Telegramga xabar yuborish funksiyasi
+function sendTelegramMessage(chatId, text, replyMarkup = null) {
+    const data = JSON.stringify({
+        chat_id: chatId,
+        text: text,
+        parse_mode: 'Markdown',
+        reply_markup: replyMarkup
+    });
+
+    const options = {
+        hostname: 'api.telegram.org',
+        port: 443,
+        path: `/bot${TOKEN}/sendMessage`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': data.length }
+    };
+
+    const req = https.request(options, (res) => {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => console.log("Xabar yuborildi:", body));
+    });
+    req.on('error', (err) => console.error("Xato:", err));
+    req.write(data);
+    req.end();
+}
+
+// 1. Stol band qilish va tugma yuborish
+app.post('/api/book', (req, res) => {
     const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
 
@@ -30,54 +57,77 @@ app.post('/api/book', async (req, res) => {
 
     const messageText = `🛎 *YANGI BUYURTMA!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
 
-    try {
-        // Telegraf yordamida tugmali xabar yuborish
-        await bot.telegram.sendMessage(RESERVATION_CHAT_ID, messageText, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
-                ]
-            }
-        });
-        res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
-    } catch (err) {
-        console.error("Bot xatosi:", err);
-        res.status(500).json({ success: false, message: 'Botda xatolik yuz berdi' });
-    }
+    const replyMarkup = {
+        inline_keyboard: [
+            [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
+        ]
+    };
+
+    sendTelegramMessage(RESERVATION_CHAT_ID, messageText, replyMarkup);
+    res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
 });
 
-// 2. SAYTGA BAND STOLLARNI YUBORISH
+// 2. Saytga band stollarni berish
 app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
 });
 
-// 3. ADMIN "STOL BO'SHADI" TUGMASINI BOSGANDA
-bot.action(/^free_(.+)$/, async (ctx) => {
-    const bookingKey = ctx.match[1];
+// 3. Telegramdan tugma bosilganda ishlaydigan qism
+app.post('/api/telegram-webhook', async (req, res) => {
+    const update = req.body;
     
-    // Stolni bazadan o'chiramiz (Saytda avtomat ochiladi)
-    delete bookedTables[bookingKey];
+    if (update.callback_query) {
+        const callbackData = update.callback_query.data;
+        const chatId = update.callback_query.message.chat.id;
+        const messageId = update.callback_query.message.message_id;
+        const callbackQueryId = update.callback_query.id;
 
-    try {
-        await ctx.answerCbQuery("Stol bo'shatildi va saytda ochildi!");
-        
-        const originalText = ctx.callbackQuery.message.text;
-        await ctx.editMessageText(`${originalText}\n\n🟢 *HOLAT:* Yopilgan (Stol bo'shatildi)`, {
-            parse_mode: 'Markdown'
-        });
-    } catch (e) {
-        console.log("Tugmani bosishda xatolik:", e);
+        if (callbackData && callbackData.startsWith('free_')) {
+            const bookingKey = callbackData.replace('free_', '');
+            
+            // Stolni bazadan o'chiramiz (Saytda darhol ochiladi)
+            delete bookedTables[bookingKey];
+
+            // Telegramga bildirishnoma
+            const answerData = JSON.stringify({
+                callback_query_id: callbackQueryId,
+                text: "Stol bo'shatildi va saytda ochildi!"
+            });
+            https.request({
+                hostname: 'api.telegram.org', port: 443,
+                path: `/bot${TOKEN}/answerCallbackQuery`, method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Content-Length': answerData.length }
+            }).end(answerData);
+
+            // Xabarni tahrirlash
+            const editData = JSON.stringify({
+                chat_id: chatId,
+                message_id: messageId,
+                text: update.callback_query.message.text + `\n\n🟢 *HOLAT:* Yopilgan (Stol bo'shatildi)`,
+                parse_mode: 'Markdown'
+            });
+            https.request({
+                hostname: 'api.telegram.org', port: 443,
+                path: `/bot${TOKEN}/editMessageText`, method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Content-Length': editData.length }
+            }).end(editData);
+        }
     }
+    res.sendStatus(200);
 });
-
-// Botni va serverni birgalikda ishga tushiramiz
-bot.launch().catch(err => console.log("Botni ishga tushirishda xato:", err));
 
 app.listen(PORT, () => {
-    console.log(`✅ Server port ${PORT} da muammosiz ishlamoqda...`);
-});
+    console.log(`✅ Server port ${PORT} da ishlamoqda...`);
 
-// Xavfsiz to'xtatish
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+    // AVTOMATIK WEBHOOK O'RNATISH (Qo'lda ssilka ochib o'tirish shart emas)
+    const webhookUrl = `${RENDER_URL}/api/telegram-webhook`;
+    const setWebhookUrl = `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${webhookUrl}`;
+    
+    https.get(setWebhookUrl, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => console.log("Webhook avto-ulanish natijasi:", data));
+    }).on('error', err => {
+        console.error("Webhook ulanishda xato:", err);
+    });
+});
