@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & TELEGRAM (MULTIPLE CHAT IDS)
+     4. CHECKOUT & TELEGRAM (OVQAT BUYURTMASI -> 8072569639)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; } };
@@ -188,20 +188,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitBtn) submitBtn.disabled = true;
 
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-      const CHAT_IDS = ['7225335915', '8072569639']; // Bir nechta admin ID'lari
+      const FOOD_CHAT_ID = '8072569639'; // Faqat ovqat buyurtmalari keladigan admin ID
       
       const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n💰 *Jami: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
       
-      for (let i = 0; i < CHAT_IDS.length; i++) {
-        try {
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CHAT_IDS[i], text: tgText, parse_mode: 'Markdown' })
-          });
-        } catch (e) {
-          console.log("Telegram xatolik:", e);
-        }
+      try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
+        });
+      } catch (e) {
+        console.log("Telegram xatolik:", e);
       }
 
       window.closeCheckout(); 
@@ -344,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     6. SUCCESS MODAL (KO'K TUGMA O'CHirilgan)
+     6. SUCCESS MODAL
      ========================================================================== */
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
@@ -366,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     7. THEME TOGGLE (DARK / LIGHT MODE - TO'LIQ ISHLAYDIGAN)
+     7. THEME TOGGLE (DARK / LIGHT MODE)
      ========================================================================== */
   const savedTheme = localStorage.getItem('iqbol_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
