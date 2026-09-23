@@ -1,6 +1,5 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * Location: Qarshi, Uzbekistan
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (FINAL VERSION)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,14 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      2. APP STATE & STORAGE
      ========================================================================== */
-  let cart = [];
-  try { cart = JSON.parse(localStorage.getItem('iqbol_cart')) || []; } catch(e) { cart = []; }
-  let favorites = [];
-  try { favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || []; } catch(e) { favorites = []; }
+  let cart = []; try { cart = JSON.parse(localStorage.getItem('iqbol_cart')) || []; } catch(e) { cart = []; }
+  let favorites = []; try { favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || []; } catch(e) { favorites = []; }
 
-  let activeCategory = 'all';
-  let searchQuery = '';
-  let orderType = 'dine_in'; 
+  let activeCategory = 'all'; let searchQuery = ''; let orderType = 'dine_in'; 
 
   const dishesGrid = document.getElementById('dishesGrid');
   const searchInput = document.getElementById('searchInput');
@@ -54,15 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const hamburgerBtn = document.getElementById('hamburgerBtn');
 
-  /* ==========================================================================
-     3. UTILITIES
-     ========================================================================== */
-  function formatPrice(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
-  }
+  function formatPrice(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm"; }
 
-  function showToast(message, icon) {
-    if (!icon) icon = 'fa-check-circle';
+  function showToast(message, icon = 'fa-check-circle') {
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span class="toast-text">${message}</span>`;
@@ -70,29 +59,23 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3200);
   }
 
-  // YANILIK: Ustidan chiziq tortish funksiyasi (Strikethrough)
   function makeStrikethrough(text) {
     return text.split('').map(char => char + '\u0336').join('');
   }
 
   /* ==========================================================================
-     4. RENDER MENU
+     3. RENDER MENU
      ========================================================================== */
   function renderMenu() {
     if (!dishesGrid) return;
     let filtered = MENU_DATA;
 
-    if (activeCategory !== 'all') {
-      filtered = filtered.filter(item => item.category === activeCategory);
-    }
+    if (activeCategory !== 'all') { filtered = filtered.filter(item => item.category === activeCategory); }
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(item => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || item.categoryName.toLowerCase().includes(q));
     }
-    if (filtered.length === 0) {
-      dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3></div>`;
-      return;
-    }
+    if (filtered.length === 0) { dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3></div>`; return; }
 
     let htmlResult = '';
     filtered.forEach(dish => {
@@ -122,22 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
     dishesGrid.innerHTML = htmlResult;
   }
 
-  /* ==========================================================================
-     5. CART, MODAL & SEARCH SYSTEM
-     ========================================================================== */
   categoryTabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-      categoryTabs.forEach(b => b.classList.remove('active')); btn.classList.add('active'); activeCategory = btn.dataset.category; renderMenu();
-    });
+    btn.addEventListener('click', () => { categoryTabs.forEach(b => b.classList.remove('active')); btn.classList.add('active'); activeCategory = btn.dataset.category; renderMenu(); });
   });
 
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0); renderMenu(); });
-  }
-
-  if (clearSearchBtn) {
-    clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; searchQuery = ''; clearSearchBtn.classList.remove('visible'); renderMenu(); searchInput.focus(); });
-  }
+  if (searchInput) searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0); renderMenu(); });
+  if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; searchQuery = ''; clearSearchBtn.classList.remove('visible'); renderMenu(); searchInput.focus(); });
 
   window.toggleFavorite = function(dishId) {
     const idx = favorites.indexOf(dishId);
@@ -188,6 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; } };
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
+  /* ==========================================================================
+     4. CHECKOUT & TELEGRAM (MULTIPLE CHAT IDS)
+     ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; } };
   window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
@@ -206,17 +182,37 @@ document.addEventListener('DOMContentLoaded', () => {
       let totalSum = 0; let orderLinesText = cart.map(item => { const dish = MENU_DATA.find(d => d.id === item.id); const lineTotal = dish ? dish.price * item.quantity : 0; totalSum += lineTotal; return `• ${dish ? dish.name : ''} x ${item.quantity} = ${formatPrice(lineTotal)}`; }).join('\n');
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address}` : `Restoranda: ${table || 'Tanlanmagan'}`;
+      
       showToast("Yuborilmoqda...", 'fa-spinner');
-      const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; const CHAT_ID = '7225335915'; 
+      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
+      const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
+      const CHAT_IDS = ['7225335915', '8072569639']; // Bir nechta admin ID'lari
+      
       const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n💰 *Jami: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
-      try { await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: CHAT_ID, text: tgText, parse_mode: 'Markdown' }) }); } catch (e) {}
-      window.closeCheckout(); showSuccessModal({ title: 'Buyurtmangiz qabul qilindi!', subtitle: `Raqam: #${orderId}`, message: `Tez orada operator aloqaga chiqadi.`, details: `${deliveryText}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` });
+      
+      for (let i = 0; i < CHAT_IDS.length; i++) {
+        try {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: CHAT_IDS[i], text: tgText, parse_mode: 'Markdown' })
+          });
+        } catch (e) {
+          console.log("Telegram xatolik:", e);
+        }
+      }
+
+      window.closeCheckout(); 
+      showSuccessModal({ title: 'Buyurtmangiz qabul qilindi!', subtitle: `Raqam: #${orderId}`, message: `Tez orada operator aloqaga chiqadi.`, details: `${deliveryText}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` });
       cart = []; saveCart();
+      if (submitBtn) submitBtn.disabled = false;
     });
   }
 
   /* ==========================================================================
-     9. TABLE RESERVATION SYSTEM (SERVER_2.JS ORQALI ISHLAYDI)
+     5. TABLE RESERVATION SYSTEM
      ========================================================================== */
   const API_URL = 'https://iqbol.onrender.com/api';
   const reservationForm = document.getElementById('reservationForm');
@@ -232,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
       resDateInput.value = new Date().toISOString().split('T')[0];
     }
 
-    // SERVERDAN "BAND" STOLLARNI TEKSHIRIB QULFLASH VA CHIZIQ TORTISH
     async function checkAndFilterBookedTables() {
       if (!tableTypeSelect || !tableNumberSelect || !resDateInput || !resTimeSelect) return;
 
@@ -262,10 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
           
           const bookingKey = `${date}_${time}_${tableTypeName}_${optionValue}`;
 
-          // Agar backend'da band bo'lsa: ustidan chiziq tortamiz va qulflaymiz
           if (bookedTables[bookingKey]) {
             opt.disabled = true;
-            // Unicode orqali ustidan chiziq tortish va (BAND) yozish:
             opt.textContent = makeStrikethrough(optionValue) + " (BAND)";
             opt.style.color = "red";
           } else {
@@ -274,17 +267,12 @@ document.addEventListener('DOMContentLoaded', () => {
           tableNumberSelect.appendChild(opt);
         }
 
-        // Birinchi bo'shini tanlash
         if (tableNumberSelect.options.length > 0 && tableNumberSelect.options[tableNumberSelect.selectedIndex]?.disabled) {
           const firstAvailable = Array.from(tableNumberSelect.options).find(o => !o.disabled);
-          if (firstAvailable) {
-            tableNumberSelect.value = firstAvailable.value;
-          } else {
-            tableNumberSelect.innerHTML = '<option value="" disabled selected>Hamma joy band</option>';
-          }
+          if (firstAvailable) { tableNumberSelect.value = firstAvailable.value; } 
+          else { tableNumberSelect.innerHTML = '<option value="" disabled selected>Hamma joy band</option>'; }
         }
       } catch (err) {
-        console.log(err);
         tableNumberSelect.innerHTML = '<option value="">Server ishga tushmagan!</option>';
       }
     }
@@ -295,10 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     checkAndFilterBookedTables();
 
-    // FORMA JO'NATILGANDA SERVERGA YOZISH (TUGMA CHIQISHI UCHUN)
     reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const name = document.getElementById('resName').value.trim();
       const phone = document.getElementById('resPhone').value.trim();
       const date = resDateInput.value;
@@ -309,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const notes = document.getElementById('resNotes').value.trim();
 
       if (!name || !phone || !date || !time || !tableNumber) {
-        showToast("Iltimos, barcha majburiy maydonlarni to'ldiring!", 'fa-exclamation-triangle');
+        showToast("Iltimos, barcha maydonlarni to'ldiring!", 'fa-exclamation-triangle');
         return;
       }
 
@@ -348,10 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         reservationForm.reset();
-        checkAndFilterBookedTables(); // Jadvalni srazu "BAND" qilib ustiga chizadi
+        checkAndFilterBookedTables(); 
       } catch (err) {
-        console.error(err);
-        showToast("Server yoniq emas! Terminalda 'node server_2.js' ni tushiring.", 'fa-wifi');
+        showToast("Server yoniq emas!", 'fa-wifi');
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -359,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     10. SUCCESS MODAL
+     6. SUCCESS MODAL (KO'K TUGMA O'CHirilgan)
      ========================================================================== */
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
@@ -368,28 +353,46 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('successSubtitle').textContent = data.subtitle;
     document.getElementById('successMessage').textContent = data.message;
     document.getElementById('successDetails').textContent = data.details;
+
+    const tgBtn = document.getElementById('successTelegramBtn');
+    if (tgBtn) tgBtn.style.display = 'none';
+
     successModal.classList.add('open');
     document.body.style.overflow = 'hidden';
   }
+
   window.closeSuccessModal = function() {
     if (successModal) { successModal.classList.remove('open'); document.body.style.overflow = ''; }
   };
 
   /* ==========================================================================
-     11. GALLERY & SCROLL
+     7. THEME TOGGLE (DARK / LIGHT MODE - TO'LIQ ISHLAYDIGAN)
      ========================================================================== */
   const savedTheme = localStorage.getItem('iqbol_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+
   if (themeToggleBtn) {
-    themeToggleBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun" style="color: #f3d889;"></i>' : '<i class="fas fa-moon"></i>';
     themeToggleBtn.addEventListener('click', () => {
-      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('iqbol_theme', next);
-      themeToggleBtn.innerHTML = next === 'dark' ? '<i class="fas fa-sun" style="color: #f3d889;"></i>' : '<i class="fas fa-moon"></i>';
+      updateThemeIcon(next);
+      showToast(next === 'dark' ? 'Tungi rejim yoqildi' : 'Kunduzgi rejim yoqildi', next === 'dark' ? 'fa-moon' : 'fa-sun');
     });
   }
 
+  function updateThemeIcon(theme) {
+    if (!themeToggleBtn) return;
+    themeToggleBtn.innerHTML = theme === 'dark'
+      ? '<i class="fas fa-sun" style="color: #f3d889;"></i>'
+      : '<i class="fas fa-moon"></i>';
+  }
+
+  /* ==========================================================================
+     8. SCROLL & MOBILE NAV
+     ========================================================================== */
   const header = document.getElementById('header');
   window.addEventListener('scroll', () => {
     const scrollY = window.scrollY;
@@ -398,10 +401,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   if (backToTopBtn) backToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
-  if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => { mobileNavDrawer.classList.add('open'); mobileNavOverlay.classList.add('open'); });
-  window.closeMobileNav = function() { if (mobileNavDrawer) { mobileNavDrawer.classList.remove('open'); mobileNavOverlay.classList.remove('open'); } };
+  if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => { mobileNavDrawer.classList.add('open'); mobileNavOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; });
+  window.closeMobileNav = function() { if (mobileNavDrawer) { mobileNavDrawer.classList.remove('open'); mobileNavOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); }});
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav();
+    }
+  });
 
   renderMenu();
   updateCartUI();
