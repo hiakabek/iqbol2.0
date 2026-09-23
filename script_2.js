@@ -1,5 +1,5 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (FINAL VERSION)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (OBSLUJIVANIYE BILAN)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -134,14 +134,19 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addModalDishToCart = function() { if (!selectedModalDish) return; window.addToCart(selectedModalDish.id, modalQuantity); window.closeDishModal(); };
 
   function saveCart() { localStorage.setItem('iqbol_cart', JSON.stringify(cart)); updateCartUI(); }
+  
   function updateCartUI() {
     let totalCount = 0; cart.forEach(item => { totalCount += item.quantity; });
     if (cartBadge) { cartBadge.textContent = totalCount; cartBadge.style.display = totalCount > 0 ? 'flex' : 'none'; }
     if (!cartItemsList) return;
+    
     if (cart.length === 0) {
       cartItemsList.innerHTML = `<div class="empty-cart-view"><i class="fas fa-shopping-basket"></i><h4>Savat bo'sh</h4></div>`;
-      if (cartSubtotalEl) cartSubtotalEl.textContent = '0 so\'m'; if (cartTotalEl) cartTotalEl.textContent = '0 so\'m'; return;
+      if (cartSubtotalEl) cartSubtotalEl.textContent = '0 so\'m'; 
+      if (cartTotalEl) cartTotalEl.textContent = '0 so\'m'; 
+      return;
     }
+    
     let subtotal = 0; let itemsHtml = '';
     cart.forEach(item => {
       const dish = MENU_DATA.find(d => d.id === item.id); if (!dish) return;
@@ -153,8 +158,25 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="cart-item-actions"><div class="quantity-control"><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button><span class="qty-val">${item.quantity}</span><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button></div><button class="btn-remove-item" onclick="window.removeFromCart('${dish.id}')"><i class="fas fa-trash-alt"></i></button></div>
         </div>`;
     });
-    cartItemsList.innerHTML = itemsHtml; if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(subtotal); if (cartTotalEl) cartTotalEl.textContent = formatPrice(subtotal);
+    
+    cartItemsList.innerHTML = itemsHtml; 
+    if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(subtotal);
+
+    // Obslujivaniye (VIP 10%, Qolgani 7%)
+    let serviceFeePercent = 0.07;
+    const tableInputVal = document.getElementById('checkoutTable') ? document.getElementById('checkoutTable').value.toLowerCase() : '';
+    if (tableInputVal.includes('vip') || tableInputVal.includes('kabina')) {
+      serviceFeePercent = 0.10;
+    }
+
+    let serviceFee = Math.round(subtotal * serviceFeePercent);
+    let grandTotal = subtotal + serviceFee;
+
+    if (cartTotalEl) {
+      cartTotalEl.innerHTML = `${formatPrice(grandTotal)} <br><small style="font-size:0.75rem; color:var(--accent-gold);">(Xizmat haqi ${serviceFeePercent * 100}%: ${formatPrice(serviceFee)})</small>`;
+    }
   }
+
   window.addToCart = function(dishId, qty = 1) { const dish = MENU_DATA.find(d => d.id === dishId); if (!dish) return; const existing = cart.find(item => item.id === dishId); if (existing) existing.quantity += qty; else cart.push({ id: dishId, quantity: qty }); saveCart(); showToast(`"${dish.name}" savatga qo'shildi!`, 'fa-shopping-cart'); };
   window.changeCartQty = function(dishId, delta) { const item = cart.find(i => i.id === dishId); if (!item) return; item.quantity += delta; if (item.quantity <= 0) cart = cart.filter(i => i.id !== dishId); saveCart(); };
   window.removeFromCart = function(dishId) { cart = cart.filter(i => i.id !== dishId); saveCart(); };
@@ -165,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
      4. CHECKOUT & TELEGRAM (OVQAT BUYURTMASI -> 8072569639)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
-  window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; } };
+  window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; updateCartUI(); } };
   window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
 
   const orderTypeBtns = document.querySelectorAll('.order-type-btn');
@@ -173,13 +195,39 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => { orderTypeBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); orderType = btn.dataset.type; document.getElementById('checkoutAddressGroup').style.display = orderType === 'delivery' ? 'flex' : 'none'; document.getElementById('checkoutTableGroup').style.display = orderType === 'delivery' ? 'none' : 'flex'; });
   });
 
+  // Stol yozilganda ham obslujivaniye o'zgarishi uchun listener qo'shamiz
+  const checkoutTableInput = document.getElementById('checkoutTable');
+  if (checkoutTableInput) {
+    checkoutTableInput.addEventListener('input', updateCartUI);
+  }
+
   const checkoutForm = document.getElementById('checkoutForm');
   if (checkoutForm) {
     checkoutForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const name = document.getElementById('checkoutName').value.trim(); const phone = document.getElementById('checkoutPhone').value.trim(); const address = document.getElementById('checkoutAddress').value.trim(); const table = document.getElementById('checkoutTable').value.trim(); const note = document.getElementById('checkoutNote').value.trim();
+      const name = document.getElementById('checkoutName').value.trim(); 
+      const phone = document.getElementById('checkoutPhone').value.trim(); 
+      const address = document.getElementById('checkoutAddress').value.trim(); 
+      const table = document.getElementById('checkoutTable').value.trim(); 
+      const note = document.getElementById('checkoutNote').value.trim();
+      
       if (!name || !phone) { showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle'); return; }
-      let totalSum = 0; let orderLinesText = cart.map(item => { const dish = MENU_DATA.find(d => d.id === item.id); const lineTotal = dish ? dish.price * item.quantity : 0; totalSum += lineTotal; return `• ${dish ? dish.name : ''} x ${item.quantity} = ${formatPrice(lineTotal)}`; }).join('\n');
+      
+      let subtotal = 0; 
+      let orderLinesText = cart.map(item => { 
+        const dish = MENU_DATA.find(d => d.id === item.id); 
+        const lineTotal = dish ? dish.price * item.quantity : 0; 
+        subtotal += lineTotal; 
+        return `• ${dish ? dish.name : ''} x ${item.quantity} = ${formatPrice(lineTotal)}`; 
+      }).join('\n');
+
+      let serviceFeePercent = 0.07;
+      if (table.toLowerCase().includes('vip') || table.toLowerCase().includes('kabina')) {
+        serviceFeePercent = 0.10;
+      }
+      let serviceFee = Math.round(subtotal * serviceFeePercent);
+      let totalSum = subtotal + serviceFee;
+
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address}` : `Restoranda: ${table || 'Tanlanmagan'}`;
       
@@ -188,9 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (submitBtn) submitBtn.disabled = true;
 
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-      const FOOD_CHAT_ID = '8072569639'; // Faqat ovqat buyurtmalari keladigan admin ID
+      const FOOD_CHAT_ID = '8072569639'; // Ovqat buyurtmalari keladigan admin ID
       
-      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n💰 *Jami: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
+      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\nXizmat haqi (${serviceFeePercent * 100}%): ${formatPrice(serviceFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
       
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -203,7 +251,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       window.closeCheckout(); 
-      showSuccessModal({ title: 'Buyurtmangiz qabul qilindi!', subtitle: `Raqam: #${orderId}`, message: `Tez orada operator aloqaga chiqadi.`, details: `${deliveryText}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` });
+      showSuccessModal({ 
+        title: 'Buyurtmangiz qabul qilindi!', 
+        subtitle: `Raqam: #${orderId}`, 
+        message: `Tez orada operator aloqaga chiqadi.`, 
+        details: `${deliveryText}\nTaomlar: ${formatPrice(subtotal)}\nXizmat haqi (${serviceFeePercent * 100}%): ${formatPrice(serviceFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` 
+      });
       cart = []; saveCart();
       if (submitBtn) submitBtn.disabled = false;
     });

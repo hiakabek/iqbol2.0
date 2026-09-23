@@ -10,7 +10,6 @@ const RESERVATION_CHAT_ID = '7225335915';
 
 const PORT = 3000;
 
-// Zamonaviy Telegraf botni ishga tushirish
 const bot = new Telegraf(TOKEN);
 const app = express();
 
@@ -19,7 +18,6 @@ app.use(express.json());
 
 let bookedTables = {}; 
 
-// 1. SAYTDAN STOL BRON QILISHNI QABUL QILISH
 app.post('/api/book', async (req, res) => {
     const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
@@ -48,12 +46,10 @@ app.post('/api/book', async (req, res) => {
     }
 });
 
-// 2. SAYTGA BAND STOLLARNI YUBORISH
 app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
 });
 
-// 3. ADMIN "STOL BO'SHADI" TUGMASINI BOSGANDA
 bot.action(/^free_(.+)$/, (ctx) => {
     const bookingKey = ctx.match[1];
     delete bookedTables[bookingKey];
@@ -65,12 +61,10 @@ bot.action(/^free_(.+)$/, (ctx) => {
     }).catch(e => console.log("E'tibor bermang:", e));
 });
 
-// Tizimlarni ishga tushirish
 bot.launch();
 app.listen(PORT, () => {
     console.log(`✅ Server https://iqbol.onrender.com/api ${PORT}-portda ishlamoqda...`);
 });
 
-// Dastur to'xtatilganda botni ham xavfsiz to'xtatish
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));
