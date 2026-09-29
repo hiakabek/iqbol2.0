@@ -1,14 +1,14 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (FINAL MENU & PRICES MATCHED)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (FINAL MENU & RESERVATION FIXED)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     1. MENU DATABASE (RASMDAGI ANIQ NARX VA TAOMLAR BILAN YANGILANDI)
+     1. MENU DATABASE
      ========================================================================== */
   const MENU_DATA = [
     // --- BIRINCHI TAOMLAR ---
-    { id: 'bt-1', name: 'Борщ', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 30000, portion: '1 porsiya', desc: 'An\'anaviy mol go\'shti, sabzi, lavlagi va ko\'katlar bilan to\'yimli sho\'rva.', image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=800&auto=format&fit=crop', tags: ['Issiq taom', 'Mol go\'shti'], popular: false },
+    { id: 'bt-1', name: 'Борщи', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 30000, portion: '1 porsiya', desc: 'An\'anaviy mol go\'shti, sabzi, lavlagi va ko\'katlar bilan to\'yimli sho\'rva.', image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=800&auto=format&fit=crop', tags: ['Issiq taom', 'Mol go\'shti'], popular: false },
     { id: 'bt-2', name: 'Мастава', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 35000, portion: '1 porsiya', desc: 'O\'zbekcha suyuq guruchli taom, barra go\'sht, qatiq va xushbo\'y ziravorlar uyg\'unligi.', image: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?q=80&w=800&auto=format&fit=crop', tags: ['Milliy', 'Mashhur'], popular: true },
     { id: 'bt-3', name: 'Суп с лапшой', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 35000, portion: '1 porsiya', desc: 'Qo\'lda cho\'zilgan yupqa ugra, tiniq go\'shtli bulyon va sarxil sabzavotlar.', image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?q=80&w=800&auto=format&fit=crop', tags: ['Qo\'l ugrasi', 'Tiniq bulyon'], popular: false },
     { id: 'bt-4', name: 'Ковурма лагман', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 35000, portion: '1 porsiya', desc: 'Uyg\'urcha qo\'lda cho\'zilgan lazzatli lag\'mon, qovurilgan go\'sht va sarxil qalampirlar.', image: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?q=80&w=800&auto=format&fit=crop', tags: ['Uyg\'ur oshxonasi', 'Tavsiya'], popular: true },
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- SHASHLIK & ASSORTI ---
     { id: 'sh-1', name: 'Овощной шашлык', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Ko\'mirda pishirilgan sarxil sabzavotlar shashligi.', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop', tags: ['Sabzavot'], popular: false },
-    { id: 'sh-2', name: 'Помидор шашлык', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Sharbatli pomidordan tayyorlangan issiq shashlik.', image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?q=80&w=800&auto=format&fit=crop', tags: ['Pomid'], popular: false },
+    { id: 'sh-2', name: 'Помидор шашлык', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Sharbatli pomidordan tayyorlangan issiq shashlik.', image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?q=80&w=800&auto=format&fit=crop', tags: ['Pomidor'], popular: false },
     { id: 'sh-3', name: 'Грибной шашлык', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 50000, portion: '1 porsiya', desc: 'Qo\'ziqorindan tayyorlangan mazali kabob.', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop', tags: ['Qo\'ziqorin'], popular: false },
     { id: 'sh-4', name: 'Думба', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Saralangan dumba yog\'idan six kabob.', image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?q=80&w=800&auto=format&fit=crop', tags: ['Dumba'], popular: false },
     { id: 'sh-5', name: 'Печень', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Tvorogli va yumshoq jigar shashligi.', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=800&auto=format&fit=crop', tags: ['Jigar'], popular: false },
@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3200);
   }
 
+  // 👉 Chiziq tortish funksiyasi (Band stollar ustidan chizish uchun)
   function makeStrikethrough(text) {
     return text.split('').map(char => char + '\u0336').join('');
   }
@@ -403,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     5. TABLE RESERVATION SYSTEM
+     5. TABLE RESERVATION SYSTEM (TUZATILGAN: USTIDAN CHIZISH BILAN)
      ========================================================================== */
   const API_URL = 'https://iqbol.onrender.com/api';
   const reservationForm = document.getElementById('reservationForm');
@@ -450,7 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (bookedTables[bookingKey]) {
             opt.disabled = true;
-            opt.textContent = `${optionValue} (BAND)`;
+            // 👉 Ustidan chizish (strikethrough) va BAND so'zi
+            opt.textContent = makeStrikethrough(optionValue) + " (BAND)";
             opt.style.color = "red";
             opt.style.backgroundColor = "#ffe6e6";
           } else {
