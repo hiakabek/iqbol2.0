@@ -612,7 +612,9 @@ h1, h2, h3, h4, .font-display {
   visibility: visible;
 }
 
-/* 6. HERO SECTION */
+/* ========================================================================
+   6. HERO SECTION (YANGI VIDEO FON)
+   ======================================================================== */
 .hero-section {
   position: relative;
   min-height: 100vh;
@@ -624,22 +626,27 @@ h1, h2, h3, h4, .font-display {
   overflow: hidden;
 }
 
-.hero-section .hero-bg {
+/* Video Fon uchun klasslar */
+.hero-bg-video {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=1920&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
-  transform: scale(1.04);
-  filter: brightness(0.6);
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   z-index: 1;
-  animation: zoomPulse 24s ease-in-out infinite alternate;
 }
 
-@keyframes zoomPulse {
-  0% { transform: scale(1.0); }
-  100% { transform: scale(1.08); }
+.hero-bg-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6);
+  pointer-events: none;
 }
+
+/* Eski rasm foni olib tashlandi.
+.hero-section .hero-bg { ... } 
+*/
 
 .hero-section .hero-overlay {
   position: absolute;
