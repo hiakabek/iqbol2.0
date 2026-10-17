@@ -1,10 +1,10 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (TO'LIQ YANGILANGAN BAZA VA URL RASMLAR)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (TO'LIQ YANGILANGAN BAZA, GALEREYA VA AVTO-VIDEO)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     1. MENU DATABASE (BARRCHA HAQIQIY RASM URL VA TAOMLAR)
+     1. MENU DATABASE (BARCHA HAQIQIY RASM URL VA TAOMLAR)
      ========================================================================== */
   const MENU_DATA = [
     // --- BIRINCHI TAOMLAR ---
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'it-10', name: 'Қизилча', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 250000, portion: '1 kg', desc: 'Maxsus qizilcha taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1567_t8AkDY3_FRhAnBK.jpg', tags: ['1 kg'], popular: false },
     { id: 'it-11', name: 'Уйгурча жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 240000, portion: '1 kg', desc: 'Uyg\'ur uslubidagi mazali jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', tags: ['Uyg\'ur', '1 kg'], popular: true },
     { id: 'it-12', name: 'Манти', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 7000, portion: '1 dona', desc: 'Bug\'da pishirilgan shirador manti.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1526.jpg', tags: ['Manti'], popular: true },
+    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
 
     // --- SALATLAR ---
     { id: 'sal-1', name: 'Свежий', category: 'salatlar', categoryName: 'Salatlar', price: 18000, portion: '1 porsiya', desc: 'Pomidor va bodringdan yig\'ilgan yangi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1529_Enmxvpq.jpg', tags: ['Yengil'], popular: false },
@@ -39,16 +40,15 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sal-8', name: 'Под водочку', category: 'salatlar', categoryName: 'Salatlar', price: 44000, portion: '1 porsiya', desc: 'Maxsus zakuska salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1522.jpg', tags: ['Zakuska'], popular: false },
     { id: 'sal-9', name: 'Японский', category: 'salatlar', categoryName: 'Salatlar', price: 46000, portion: '1 porsiya', desc: 'Yaponcha uslubdagi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1527.jpg', tags: ['Yapon'], popular: false },
     { id: 'sal-10', name: 'Французский', category: 'salatlar', categoryName: 'Salatlar', price: 48000, portion: '1 porsiya', desc: 'Fransuzcha nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1548_W2vkC83.jpg', tags: ['Fransuz'], popular: false },
-    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'qoshimcha', categoryName: 'Qo\'shimcha taomlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
 
     // --- ICHIMLIKLAR & MOXITO ---
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
     { id: 'ich-2', name: 'KARLOVY VARY', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 12000, portion: '1 litr', desc: 'Shifobaxsh mineral suv.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1587_j9z8Wv3_zGxwjgk.jpg', tags: ['Mineral suv'], popular: false },
     { id: 'ich-3', name: 'Черноголовка', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 14000, portion: '1 litr', desc: 'Mazali Tarxun / limonad.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1593_rJiNON9.jpg', tags: ['Limonad'], popular: false },
     { id: 'ich-4', name: 'BLANC BLUE', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 15000, portion: '1 litr', desc: 'Blanc Blue limonad.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1596_DqDuOH0.jpg', tags: ['Limonad'], popular: false },
-    { id: 'ich-5', name: 'RED BULL enrgy drink', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 20000, portion: '0.25 litr', desc: 'Red Bull energetik ichimligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1592_1iwuHz7.jpg', tags: ['Energetik'], popular: true },
+    { id: 'ich-5', name: 'RED BULL energy drink', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 20000, portion: '0.25 litr', desc: 'Red Bull energetik ichimligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1592_1iwuHz7.jpg', tags: ['Energetik'], popular: true },
     { id: 'ich-6', name: 'Sayhun', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 5000, portion: '1 litr', desc: 'Toza ichimlik suvi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1591_lxwiL7V.jpg', tags: ['Suv'], popular: false },
-    { id: 'ich-7', name: 'GORILLA enirgy drink', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 15000, portion: '0.5 litr', desc: 'Gorilla energetik ichimligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1600_3CtcD64.jpg', tags: ['Energetik'], popular: false },
+    { id: 'ich-7', name: 'GORILLA energy drink', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 15000, portion: '0.5 litr', desc: 'Gorilla energetik ichimligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1600_3CtcD64.jpg', tags: ['Energetik'], popular: false },
     { id: 'ich-8', name: 'Аш-ТАУ', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 17000, portion: '0.45 litr', desc: 'Ash-Tau mineral suvi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1598_Bt0R3UE.jpg', tags: ['Mineral suv'], popular: false },
     { id: 'ich-9', name: 'Adrenaline Rush', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 15000, portion: '0.5 litr', desc: 'Adrenaline Rush energetik ichimligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1599_Z7szmMV.jpg', tags: ['Energetik'], popular: false },
     { id: 'ich-10', name: 'Fanta', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 12000, portion: '1 litr', desc: 'Apelsin ta\'mli Fanta.', image: 'https://admin.easymenu.uz/media/menu/items/Screenshot_20260316_111839_Google.jpg', tags: ['Gazli'], popular: false },
@@ -60,17 +60,17 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'ich-16', name: 'Мохито клубничный', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 60000, portion: '1 litr', desc: 'Qulupnayli shirin moxito.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1535.jpg', tags: ['Moxito'], popular: false },
 
     // --- DESERTLAR ---
-    { id: 'des-1', name: 'San sebastian', category: 'gazli', categoryName: 'Dessertlar', price: 60000, portion: '1 dona', desc: 'Ispancha shokoladli/karamelli San-Sebastyan cheyzkeyki.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1608.jpg', tags: ['Desert'], popular: true },
-    { id: 'des-2', name: 'Yagidniy opera', category: 'gazli', categoryName: 'Dessertlar', price: 50000, portion: '1 dona', desc: 'Mevali nafis opera torti bo\'lagi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1609.jpg', tags: ['Desert'], popular: false },
-    { id: 'des-3', name: 'Орешки safia', category: 'gazli', categoryName: 'Dessertlar', price: 60000, portion: '1 quti', desc: 'Qaynatma shokoladli safia yong\'oqlari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1605.jpg', tags: ['Shirinlik'], popular: true },
-    { id: 'des-4', name: 'MILLENNIUM air bubble', category: 'gazli', categoryName: 'Dessertlar', price: 20000, portion: '1 dona', desc: 'G\'ovakli shokolad плиткаси.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1603.jpg', tags: ['Shokolad'], popular: false },
+    { id: 'des-1', name: 'San sebastian', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 dona', desc: 'Ispancha shokoladli/karamelli San-Sebastyan cheyzkeyki.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1608.jpg', tags: ['Desert'], popular: true },
+    { id: 'des-2', name: 'Yagodniy opera', category: 'gazli', categoryName: 'Desertlar', price: 50000, portion: '1 dona', desc: 'Mevali nafis opera torti bo\'lagi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1609.jpg', tags: ['Desert'], popular: false },
+    { id: 'des-3', name: 'Орешки safia', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 quti', desc: 'Qaynatma shokoladli safia yong\'oqlari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1605.jpg', tags: ['Shirinlik'], popular: true },
+    { id: 'des-4', name: 'MILLENNIUM air bubble', category: 'gazli', categoryName: 'Desertlar', price: 20000, portion: '1 dona', desc: 'G\'ovakli shokolad plitkasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1603.jpg', tags: ['Shokolad'], popular: false },
 
     // --- SHASHLIK & ASSORTI ---
     { id: 'sh-1', name: 'Жигар шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Jigar va dumbadan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1625_KrM9pRk.jpg', tags: ['Jigar'], popular: true },
     { id: 'sh-2', name: 'Товуқ кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 28000, portion: '1 porsiya', desc: 'Tovuq go\'shtidan Kavkazcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1623_fszUNpw.jpg', tags: ['Tovuq'], popular: false },
     { id: 'sh-3', name: 'Нон шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 5000, portion: '1 dona', desc: 'Ko\'mirda pishirilgan mazali non shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1622_gb9FC5R_HfLbXcj_KNOk2b7.jpg', tags: ['Non'], popular: false },
     { id: 'sh-4', name: 'Кавказ кусковой (қўй гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 85000, portion: '1 porsiya', desc: 'Qo\'y go\'shtidan Kavkazcha parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', tags: ['Qo\'y go\'shti'], popular: true },
-    { id: 'sh-5', name: 'Кусковой (мол гушти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 79000, portion: '1 porsiya', desc: 'Mol go\'shtidan lahm parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Mol go\'shti'], popular: true },
+    { id: 'sh-5', name: 'Кусковой (мол гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 79000, portion: '1 porsiya', desc: 'Mol go\'shtidan lahm parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Mol go\'shti'], popular: true },
     { id: 'sh-6', name: 'Шашлик гиждуван', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 68000, portion: '1 porsiya', desc: 'An\'anaviy G\'ijduvon qiyma shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', tags: ['G\'ijduvon'], popular: true },
     { id: 'sh-7', name: 'Гиждуван Кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 dona', desc: 'Maxsus G\'ijduvon-Kavkaz kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1631.jpg', tags: ['Kabob'], popular: false },
     { id: 'sh-8', name: 'Сосиска сладкий', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 15000, portion: '1 dona', desc: 'Shirin sasiska shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1545_GKuqMgp.jpg', tags: ['Sasiska'], popular: false },
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dishesGrid = document.getElementById('dishesGrid');
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
-  const categoryTabs = document.querySelectorAll('.cat-tab-btn');
+  const categoryTabs = document.querySelectorAll('.menu-categories-tabs .cat-tab-btn');
   const cartBadge = document.getElementById('cartBadge');
   const cartDrawer = document.getElementById('cartDrawer');
   const cartOverlay = document.getElementById('cartOverlay');
@@ -557,10 +557,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav();
+      window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox();
     }
   });
 
+  /* ==========================================================================
+     7. GALLERY VA VIDEONI MAJBURIY YOQISH
+     ========================================================================== */
+  const GALLERY_IMAGES = [
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg', caption: 'Tandir go\'shti', category: 'taomlar', featured: true },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', caption: 'Kavkaz shashlik', category: 'shashlik', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', caption: 'Uyg\'urcha jiz', category: 'taomlar', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg', caption: 'Iqbol firma salati', category: 'salatlar', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', caption: 'G\'ijduvon kabob', category: 'shashlik', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1573.jpg', caption: 'Muzdek Moxito', category: 'ichimliklar', featured: false }
+  ];
+
+  let currentGalleryCategory = 'all'; let activeLightboxIndex = 0; let activeGalleryItems = [];
+  const galleryGrid = document.getElementById('galleryGrid');
+  const lightboxModal = document.getElementById('lightboxModal');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+
+  function renderGallery() {
+    if (!galleryGrid) return;
+    activeGalleryItems = currentGalleryCategory === 'all' ? GALLERY_IMAGES : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
+    galleryGrid.innerHTML = activeGalleryItems.map((item, index) => `
+      <div class="gallery-item ${item.featured ? 'featured' : ''}" onclick="window.openLightbox(${index})">
+        <img src="${item.url}" alt="${item.caption}" loading="lazy" />
+        <div class="gallery-overlay">
+          <span class="gallery-tag">${item.category}</span>
+          <h4 class="gallery-caption">${item.caption}</h4>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGalleryCategory = btn.dataset.category;
+      renderGallery();
+    });
+  });
+
+  window.openLightbox = function(index) {
+    activeLightboxIndex = index;
+    const item = activeGalleryItems[activeLightboxIndex];
+    if (!item || !lightboxModal) return;
+    lightboxImg.src = item.url;
+    lightboxCaption.textContent = item.caption;
+    lightboxModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeLightbox = function() {
+    if (!lightboxModal) return;
+    lightboxModal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+  window.changeLightbox = function(step) {
+    activeLightboxIndex += step;
+    if (activeLightboxIndex < 0) activeLightboxIndex = activeGalleryItems.length - 1;
+    if (activeLightboxIndex >= activeGalleryItems.length) activeLightboxIndex = 0;
+    const item = activeGalleryItems[activeLightboxIndex];
+    if (item) { lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; }
+  };
+
+  // Orqa fondagi videoni majburan o'ynatish
+  const heroVideo = document.getElementById('heroVideo');
+  if (heroVideo) {
+    heroVideo.muted = true;
+    heroVideo.play().catch(err => console.log("Video avto-yonish xatosi:", err));
+  }
+
   renderMenu();
   updateCartUI();
+  renderGallery();
 });
