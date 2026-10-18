@@ -1,35 +1,49 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (TO'LIQ YANGILANGAN BAZA, GALEREYA VA AVTO-VIDEO)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (XATOLARSIZ FINAL VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     1. MENU DATABASE (BARCHA HAQIQIY RASM URL VA TAOMLAR)
+     1. MENU DATABASE (RASMLAR VA TAOMLAR 100% TO'G'RILANGAN)
      ========================================================================== */
   const MENU_DATA = [
     // --- BIRINCHI TAOMLAR ---
-    { id: 'bt-1', name: 'Тушёка (хашлама)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 40000, portion: '1 porsiya', desc: 'Mazali va to\'yimli tushonka (xashlama) sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1566_JFVMaw1_OiyJoRv.jpg', tags: ['Issiq taom'], popular: true },
+    { id: 'bt-1', name: 'Тушёнка (хашлама)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 40000, portion: '1 porsiya', desc: 'Mazali va to\'yimli tushonka (xashlama) sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1566_JFVMaw1_OiyJoRv.jpg', tags: ['Issiq taom'], popular: true },
     { id: 'bt-2', name: 'Мастава', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 35000, portion: '1 porsiya', desc: 'An\'anaviy o\'zbekcha guruchli mastava sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1514_ZlX2FhI.jpg', tags: ['Milliy'], popular: true },
-    { id: 'bt-3', name: 'Борш', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 30000, portion: '1 porsiya', desc: 'Klassik qizil borsh sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1515_XhkBdxt_s4FDJwk.jpg', tags: ['Sho\'rva'], popular: false },
+    { id: 'bt-3', name: 'Борщ', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 30000, portion: '1 porsiya', desc: 'Klassik qizil borsh sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1515_XhkBdxt_s4FDJwk.jpg', tags: ['Sho\'rva'], popular: false },
     { id: 'bt-4', name: 'Шўрва (мол гўшт)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 29000, portion: '1 porsiya', desc: 'Mol go\'shtidan tayyorlangan mazali sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1549_m8tgXEs.jpg', tags: ['Mol go\'shti'], popular: false },
-    { id: 'bt-5', name: 'Тифтел', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 29000, portion: '1 porsiya', desc: 'Tiftel solingan to\'yimli birinchi taom.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1550_zst6bIR_QraUR3a.jpg', tags: ['Teftel'], popular: false },
+    { id: 'bt-5', name: 'Тефтель шўрва', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 29000, portion: '1 porsiya', desc: 'Teftel solingan to\'yimli birinchi taom.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1550_zst6bIR_QraUR3a.jpg', tags: ['Teftel'], popular: false },
 
     // --- IKKINCHI TAOMLAR ---
     { id: 'it-1', name: 'Мушак жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 210000, portion: '1 porsiya', desc: 'Maxsus usulda pishirilgan mushak jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1588_vqt1uS2.jpg', tags: ['Jiz'], popular: true },
     { id: 'it-2', name: 'Олот сомса', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 10000, portion: '1 dona', desc: 'Haqiqiy mazali Olot somsasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1613.jpg', tags: ['Samsa'], popular: true },
     { id: 'it-3', name: 'Умакай жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 190000, portion: '1 porsiya', desc: 'Umakai jiz tansiq taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1611_IZss6f5.jpg', tags: ['Jiz'], popular: true },
-    { id: 'it-4', name: 'Тандыр', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 300000, portion: '1 kg', desc: 'Haqiqiy tandirda pishirilgan xushbo\'y go\'sht.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg', tags: ['Tandir', '1 kg'], popular: true },
+    { id: 'it-4', name: 'Тандыр гўшт', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 300000, portion: '1 kg', desc: 'Haqiqiy tandirda pishirilgan xushbo\'y go\'sht.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg', tags: ['Tandir', '1 kg'], popular: true },
     { id: 'it-5', name: 'Жареные крылышки', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 80000, portion: '1 kg', desc: 'Qarsildoq qovurilgan tovuq qanotchalari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1562_evu0zuO.jpg', tags: ['Tovuq'], popular: false },
-    { id: 'it-6', name: 'Фири', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 25000, portion: '1 porsiya', desc: 'Qarsildoq fri kartoshkasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1525.jpg', tags: ['Fri'], popular: false },
-    { id: 'it-7', name: 'Хасиб мол гўшти', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 170000, portion: '1 porsiya', desc: 'Mol go\'shtidan tayyorlangan hasib.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1565_yA2Dqxy_zJlUJ12.jpg', tags: ['Hasib'], popular: false },
+    { id: 'it-6', name: 'Картошка фри', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 25000, portion: '1 porsiya', desc: 'Qarsildoq fri kartoshkasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1525.jpg', tags: ['Fri'], popular: false },
+    { id: 'it-7', name: 'Хасип мол гўшти', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 170000, portion: '1 porsiya', desc: 'Mol go\'shtidan tayyorlangan milliy hasip.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1565_yA2Dqxy_zJlUJ12.jpg', tags: ['Hasib'], popular: false },
     { id: 'it-8', name: 'Манчури', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 220000, portion: '1 kg', desc: 'Manchuri uslubidagi go\'shtli taom.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1571_K8pdRQY.jpg', tags: ['Manchuri', '1 kg'], popular: false },
     { id: 'it-9', name: 'Бўйрак жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 240000, portion: '1 kg', desc: 'Buyrakdan tayyorlangan maxsus jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1564_5lGoSMd.jpg', tags: ['Buyrak', '1 kg'], popular: false },
-    { id: 'it-10', name: 'Қизилча', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 250000, portion: '1 kg', desc: 'Maxsus qizilcha taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1567_t8AkDY3_FRhAnBK.jpg', tags: ['1 kg'], popular: false },
-    { id: 'it-11', name: 'Уйгурча жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 240000, portion: '1 kg', desc: 'Uyg\'ur uslubidagi mazali jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', tags: ['Uyg\'ur', '1 kg'], popular: true },
+    { id: 'it-10', name: 'Қозонча (Қизилча)', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 250000, portion: '1 kg', desc: 'Maxsus qizilcha go\'shtli taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1567_t8AkDY3_FRhAnBK.jpg', tags: ['1 kg'], popular: false },
+    { id: 'it-11', name: 'Уйғурча жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 240000, portion: '1 kg', desc: 'Uyg\'ur uslubidagi mazali jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', tags: ['Uyg\'ur', '1 kg'], popular: true },
     { id: 'it-12', name: 'Манти', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 7000, portion: '1 dona', desc: 'Bug\'da pishirilgan shirador manti.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1526.jpg', tags: ['Manti'], popular: true },
-    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
+
+    // --- SHASHLIK & ASSORTI ---
+    { id: 'sh-1', name: 'Жигар шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Jigar va dumbadan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1631.jpg', tags: ['Jigar'], popular: true },
+    { id: 'sh-2', name: 'Товуқ кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 28000, portion: '1 porsiya', desc: 'Tovuq go\'shtidan Kavkazcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1545_GKuqMgp.jpg', tags: ['Tovuq'], popular: false },
+    { id: 'sh-3', name: 'Нон шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 5000, portion: '1 dona', desc: 'Ko\'mirda pishirilgan mazali non va dumba shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1542.jpg', tags: ['Non'], popular: false },
+    { id: 'sh-4', name: 'Кавказ кусковой (қўй гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 85000, portion: '1 porsiya', desc: 'Qo\'y go\'shtidan Kavkazcha parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1546_pEeqfr3.jpg', tags: ['Qo\'y go\'shti'], popular: true },
+    { id: 'sh-5', name: 'Кусковой (мол гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 79000, portion: '1 porsiya', desc: 'Mol go\'shtidan lahm va dumba parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1540_gbbl3GL_dL6Bmkm_FAvbp8N.jpg', tags: ['Mol go\'shti'], popular: true },
+    { id: 'sh-6', name: 'Шашлик Ғиждувон', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 68000, portion: '1 porsiya', desc: 'An\'anaviy G\'ijduvon qiyma shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1544_9UVbHU1_x6uvel1_4Vitamw_Bg6I9sS.jpg', tags: ['G\'ijduvon'], popular: true },
+    { id: 'sh-7', name: 'Рулет шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 70000, portion: '1 porsiya', desc: 'Maxsus go\'shtli rulet kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1622_gb9FC5R_HfLbXcj_KNOk2b7.jpg', tags: ['Kabob'], popular: false },
+    { id: 'sh-8', name: 'Сосиска сладкий', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 15000, portion: '1 dona', desc: 'Shirin sosiska shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1625_KrM9pRk.jpg', tags: ['Sosiska'], popular: false },
+    { id: 'sh-9', name: 'Сосиска острый', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 15000, portion: '1 dona', desc: 'Achchiq sosiska shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1623_fszUNpw.jpg', tags: ['Sosiska'], popular: false },
+    { id: 'sh-10', name: 'Наполеон', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 72000, portion: '1 porsiya', desc: 'Maxsus qatlamali Napoleon kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', tags: ['Kabob'], popular: true },
+    { id: 'sh-11', name: 'Помидор шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Ko\'mirda pishirilgan suvli pomidor shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', tags: ['Pomidor'], popular: false },
+    { id: 'sh-12', name: 'Думба шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Saralangan dumba yog\'idan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Dumba'], popular: false },
 
     // --- SALATLAR ---
+    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'salatlar', categoryName: 'Salatlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
     { id: 'sal-1', name: 'Свежий', category: 'salatlar', categoryName: 'Salatlar', price: 18000, portion: '1 porsiya', desc: 'Pomidor va bodringdan yig\'ilgan yangi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1529_Enmxvpq.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-2', name: 'Шакароб', category: 'salatlar', categoryName: 'Salatlar', price: 19000, portion: '1 porsiya', desc: 'An\'anaviy piyoz va pomidor shakarobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1530_bt4dHZM.jpg', tags: ['Milliy'], popular: true },
     { id: 'sal-3', name: 'Иқбол', category: 'salatlar', categoryName: 'Salatlar', price: 53000, portion: '1 porsiya', desc: 'Restoranning maxsus firma salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg', tags: ['Firma'], popular: true },
@@ -63,30 +77,30 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'des-1', name: 'San sebastian', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 dona', desc: 'Ispancha shokoladli/karamelli San-Sebastyan cheyzkeyki.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1608.jpg', tags: ['Desert'], popular: true },
     { id: 'des-2', name: 'Yagodniy opera', category: 'gazli', categoryName: 'Desertlar', price: 50000, portion: '1 dona', desc: 'Mevali nafis opera torti bo\'lagi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1609.jpg', tags: ['Desert'], popular: false },
     { id: 'des-3', name: 'Орешки safia', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 quti', desc: 'Qaynatma shokoladli safia yong\'oqlari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1605.jpg', tags: ['Shirinlik'], popular: true },
-    { id: 'des-4', name: 'MILLENNIUM air bubble', category: 'gazli', categoryName: 'Desertlar', price: 20000, portion: '1 dona', desc: 'G\'ovakli shokolad plitkasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1603.jpg', tags: ['Shokolad'], popular: false },
-
-    // --- SHASHLIK & ASSORTI ---
-    { id: 'sh-1', name: 'Жигар шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Jigar va dumbadan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1625_KrM9pRk.jpg', tags: ['Jigar'], popular: true },
-    { id: 'sh-2', name: 'Товуқ кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 28000, portion: '1 porsiya', desc: 'Tovuq go\'shtidan Kavkazcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1623_fszUNpw.jpg', tags: ['Tovuq'], popular: false },
-    { id: 'sh-3', name: 'Нон шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 5000, portion: '1 dona', desc: 'Ko\'mirda pishirilgan mazali non shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1622_gb9FC5R_HfLbXcj_KNOk2b7.jpg', tags: ['Non'], popular: false },
-    { id: 'sh-4', name: 'Кавказ кусковой (қўй гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 85000, portion: '1 porsiya', desc: 'Qo\'y go\'shtidan Kavkazcha parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', tags: ['Qo\'y go\'shti'], popular: true },
-    { id: 'sh-5', name: 'Кусковой (мол гўшти)', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 79000, portion: '1 porsiya', desc: 'Mol go\'shtidan lahm parcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Mol go\'shti'], popular: true },
-    { id: 'sh-6', name: 'Шашлик гиждуван', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 68000, portion: '1 porsiya', desc: 'An\'anaviy G\'ijduvon qiyma shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', tags: ['G\'ijduvon'], popular: true },
-    { id: 'sh-7', name: 'Гиждуван Кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 dona', desc: 'Maxsus G\'ijduvon-Kavkaz kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1631.jpg', tags: ['Kabob'], popular: false },
-    { id: 'sh-8', name: 'Сосиска сладкий', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 15000, portion: '1 dona', desc: 'Shirin sasiska shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1545_GKuqMgp.jpg', tags: ['Sasiska'], popular: false },
-    { id: 'sh-9', name: 'Сосиска острый', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 15000, portion: '1 dona', desc: 'Achchiq sasiska shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1542.jpg', tags: ['Sasiska'], popular: false },
-    { id: 'sh-10', name: 'Наполеон', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 72000, portion: '1 porsiya', desc: 'Maxsus Napoleon kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1546_pEeqfr3.jpg', tags: ['Kabob'], popular: false },
-    { id: 'sh-11', name: 'Помидор шашлык', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Ko\'mirda pishirilgan pomidor shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1540_gbbl3GL_dL6Bmkm_FAvbp8N.jpg', tags: ['Pomidor'], popular: false },
-    { id: 'sh-12', name: 'Думба', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Dumba yog\'idan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1544_9UVbHU1_x6uvel1_4Vitamw_Bg6I9sS.jpg', tags: ['Dumba'], popular: false }
+    { id: 'des-4', name: 'MILLENNIUM air bubble', category: 'gazli', categoryName: 'Desertlar', price: 20000, portion: '1 dona', desc: 'G\'ovakli shokolad plitkasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1603.jpg', tags: ['Shokolad'], popular: false }
   ];
 
   /* ==========================================================================
      2. APP STATE & STORAGE
      ========================================================================== */
-  let cart = []; try { cart = JSON.parse(localStorage.getItem('iqbol_cart')) || []; } catch(e) { cart = []; }
-  let favorites = []; try { favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || []; } catch(e) { favorites = []; }
+  let cart = [];
+  try {
+    const rawCart = JSON.parse(localStorage.getItem('iqbol_cart')) || [];
+    cart = rawCart.filter(item => item && MENU_DATA.some(d => d.id === item.id));
+  } catch(e) {
+    cart = [];
+  }
 
-  let activeCategory = 'all'; let searchQuery = ''; let orderType = 'dine_in'; 
+  let favorites = [];
+  try {
+    favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || [];
+  } catch(e) {
+    favorites = [];
+  }
+
+  let activeCategory = 'all';
+  let searchQuery = '';
+  let orderType = 'dine_in'; 
 
   const dishesGrid = document.getElementById('dishesGrid');
   const searchInput = document.getElementById('searchInput');
@@ -106,14 +120,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const hamburgerBtn = document.getElementById('hamburgerBtn');
 
-  function formatPrice(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm"; }
+  function formatPrice(num) {
+    return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
+  }
 
   function showToast(message, icon = 'fa-check-circle') {
+    if (!toastContainer) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span class="toast-text">${message}</span>`;
     toastContainer.appendChild(toast);
-    setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3200);
+    setTimeout(() => {
+      toast.classList.add('removing');
+      setTimeout(() => toast.remove(), 300);
+    }, 3200);
   }
 
   function makeStrikethrough(text) {
@@ -127,12 +147,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dishesGrid) return;
     let filtered = MENU_DATA;
 
-    if (activeCategory !== 'all') { filtered = filtered.filter(item => item.category === activeCategory); }
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(item => item.category === activeCategory);
+    }
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || item.categoryName.toLowerCase().includes(q));
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(q) ||
+        item.desc.toLowerCase().includes(q) ||
+        item.categoryName.toLowerCase().includes(q)
+      );
     }
-    if (filtered.length === 0) { dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3></div>`; return; }
+    if (filtered.length === 0) {
+      dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3></div>`;
+      return;
+    }
 
     let htmlResult = '';
     filtered.forEach(dish => {
@@ -163,38 +192,88 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   categoryTabs.forEach(btn => {
-    btn.addEventListener('click', () => { categoryTabs.forEach(b => b.classList.remove('active')); btn.classList.add('active'); activeCategory = btn.dataset.category; renderMenu(); });
+    btn.addEventListener('click', () => {
+      categoryTabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.category;
+      renderMenu();
+    });
   });
 
-  if (searchInput) searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0); renderMenu(); });
-  if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; searchQuery = ''; clearSearchBtn.classList.remove('visible'); renderMenu(); searchInput.focus(); });
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0);
+      renderMenu();
+    });
+  }
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      searchQuery = '';
+      clearSearchBtn.classList.remove('visible');
+      renderMenu();
+      searchInput.focus();
+    });
+  }
 
   window.toggleFavorite = function(dishId) {
     const idx = favorites.indexOf(dishId);
-    if (idx > -1) { favorites.splice(idx, 1); showToast('Sevimlilardan olib tashlandi', 'fa-heart-broken'); } 
-    else { favorites.push(dishId); showToast('Sevimlilarga qo\'shildi!', 'fa-heart'); }
-    localStorage.setItem('iqbol_favorites', JSON.stringify(favorites)); renderMenu();
+    if (idx > -1) {
+      favorites.splice(idx, 1);
+      showToast('Sevimlilardan olib tashlandi', 'fa-heart-broken');
+    } else {
+      favorites.push(dishId);
+      showToast('Sevimlilarga qo\'shildi!', 'fa-heart');
+    }
+    localStorage.setItem('iqbol_favorites', JSON.stringify(favorites));
+    renderMenu();
   };
 
-  let selectedModalDish = null; let modalQuantity = 1;
+  let selectedModalDish = null;
+  let modalQuantity = 1;
   window.openDishModal = function(dishId) {
-    const dish = MENU_DATA.find(d => d.id === dishId); if (!dish || !dishModal) return;
-    selectedModalDish = dish; modalQuantity = 1;
-    document.getElementById('modalImg').src = dish.image; document.getElementById('modalTitle').textContent = dish.name;
+    const dish = MENU_DATA.find(d => d.id === dishId);
+    if (!dish || !dishModal) return;
+    selectedModalDish = dish;
+    modalQuantity = 1;
+    document.getElementById('modalImg').src = dish.image;
+    document.getElementById('modalTitle').textContent = dish.name;
     document.getElementById('modalPrice').textContent = formatPrice(dish.price) + (dish.portion ? ` (${dish.portion})` : '');
-    document.getElementById('modalDesc').textContent = dish.desc; document.getElementById('modalCategoryBadge').textContent = dish.categoryName;
+    document.getElementById('modalDesc').textContent = dish.desc;
+    document.getElementById('modalCategoryBadge').textContent = dish.categoryName;
     document.getElementById('modalQtyVal').textContent = modalQuantity;
-    dishModal.classList.add('open'); document.body.style.overflow = 'hidden';
+    dishModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
   };
-  window.closeDishModal = function() { if (!dishModal) return; dishModal.classList.remove('open'); document.body.style.overflow = ''; };
-  window.updateModalQty = function(delta) { modalQuantity += delta; if (modalQuantity < 1) modalQuantity = 1; document.getElementById('modalQtyVal').textContent = modalQuantity; };
-  window.addModalDishToCart = function() { if (!selectedModalDish) return; window.addToCart(selectedModalDish.id, modalQuantity); window.closeDishModal(); };
+  window.closeDishModal = function() {
+    if (!dishModal) return;
+    dishModal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+  window.updateModalQty = function(delta) {
+    modalQuantity += delta;
+    if (modalQuantity < 1) modalQuantity = 1;
+    document.getElementById('modalQtyVal').textContent = modalQuantity;
+  };
+  window.addModalDishToCart = function() {
+    if (!selectedModalDish) return;
+    window.addToCart(selectedModalDish.id, modalQuantity);
+    window.closeDishModal();
+  };
 
-  function saveCart() { localStorage.setItem('iqbol_cart', JSON.stringify(cart)); updateCartUI(); }
+  function saveCart() {
+    localStorage.setItem('iqbol_cart', JSON.stringify(cart));
+    updateCartUI();
+  }
   
   function updateCartUI() {
-    let totalCount = 0; cart.forEach(item => { totalCount += item.quantity; });
-    if (cartBadge) { cartBadge.textContent = totalCount; cartBadge.style.display = totalCount > 0 ? 'flex' : 'none'; }
+    let totalCount = 0;
+    cart.forEach(item => { totalCount += item.quantity; });
+    if (cartBadge) {
+      cartBadge.textContent = totalCount;
+      cartBadge.style.display = totalCount > 0 ? 'flex' : 'none';
+    }
     if (!cartItemsList) return;
     
     if (cart.length === 0) {
@@ -204,15 +283,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    let subtotal = 0; let itemsHtml = '';
+    let subtotal = 0;
+    let itemsHtml = '';
     cart.forEach(item => {
-      const dish = MENU_DATA.find(d => d.id === item.id); if (!dish) return;
-      const itemTotal = dish.price * item.quantity; subtotal += itemTotal;
+      const dish = MENU_DATA.find(d => d.id === item.id);
+      if (!dish) return;
+      const itemTotal = dish.price * item.quantity;
+      subtotal += itemTotal;
       itemsHtml += `
         <div class="cart-item">
           <img src="${dish.image}" class="cart-item-thumb" />
-          <div class="cart-item-details"><h5 class="cart-item-name">${dish.name}</h5><div class="cart-item-price">${formatPrice(dish.price)} x ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div></div>
-          <div class="cart-item-actions"><div class="quantity-control"><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button><span class="qty-val">${item.quantity}</span><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button></div><button class="btn-remove-item" onclick="window.removeFromCart('${dish.id}')"><i class="fas fa-trash-alt"></i></button></div>
+          <div class="cart-item-details">
+            <h5 class="cart-item-name">${dish.name}</h5>
+            <div class="cart-item-price">${formatPrice(dish.price)} x ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div>
+          </div>
+          <div class="cart-item-actions">
+            <div class="quantity-control">
+              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button>
+              <span class="qty-val">${item.quantity}</span>
+              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button>
+            </div>
+            <button class="btn-remove-item" onclick="window.removeFromCart('${dish.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
         </div>`;
     });
     
@@ -234,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
         serviceFeePercent = 0.10;
       }
       extraFee = Math.round(subtotal * serviceFeePercent);
-      feeDescription = `Xizmat haqi (${serviceFeePercent * 100}%): ${formatPrice(extraFee)}`;
+      feeDescription = `Xizmat haqi (${Math.round(serviceFeePercent * 100)}%): ${formatPrice(extraFee)}`;
     }
 
     let grandTotal = subtotal + extraFee;
@@ -244,18 +336,65 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  window.addToCart = function(dishId, qty = 1) { const dish = MENU_DATA.find(d => d.id === dishId); if (!dish) return; const existing = cart.find(item => item.id === dishId); if (existing) existing.quantity += qty; else cart.push({ id: dishId, quantity: qty }); saveCart(); showToast(`"${dish.name}" savatga qo'shildi!`, 'fa-shopping-cart'); };
-  window.changeCartQty = function(dishId, delta) { const item = cart.find(i => i.id === dishId); if (!item) return; item.quantity += delta; if (item.quantity <= 0) cart = cart.filter(i => i.id !== dishId); saveCart(); };
-  window.removeFromCart = function(dishId) { cart = cart.filter(i => i.id !== dishId); saveCart(); };
-  window.openCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; updateCartUI(); } };
-  window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
+  window.addToCart = function(dishId, qty = 1) {
+    const dish = MENU_DATA.find(d => d.id === dishId);
+    if (!dish) return;
+    const existing = cart.find(item => item.id === dishId);
+    if (existing) existing.quantity += qty;
+    else cart.push({ id: dishId, quantity: qty });
+    saveCart();
+    showToast(`"${dish.name}" savatga qo'shildi!`, 'fa-shopping-cart');
+  };
+  window.changeCartQty = function(dishId, delta) {
+    const item = cart.find(i => i.id === dishId);
+    if (!item) return;
+    item.quantity += delta;
+    if (item.quantity <= 0) cart = cart.filter(i => i.id !== dishId);
+    saveCart();
+  };
+  window.removeFromCart = function(dishId) {
+    cart = cart.filter(i => i.id !== dishId);
+    saveCart();
+  };
+  window.openCart = function() {
+    if (cartDrawer && cartOverlay) {
+      cartDrawer.classList.add('open');
+      cartOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      updateCartUI();
+    }
+  };
+  window.closeCart = function() {
+    if (cartDrawer && cartOverlay) {
+      cartDrawer.classList.remove('open');
+      cartOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  };
 
   /* ==========================================================================
      4. CHECKOUT & TELEGRAM (OVQAT BUYURTMASI)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
-  window.openCheckout = function() { if (cart.length === 0) { showToast('Savat bo\'sh!', 'fa-exclamation-circle'); return; } window.closeCart(); if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; ensureDeliveryZoneSelect(); updateCartUI(); } };
-  window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
+  window.openCheckout = function() {
+    if (cart.length === 0) {
+      showToast('Savat bo\'sh!', 'fa-exclamation-circle');
+      return;
+    }
+    window.closeCart();
+    if (checkoutModal) {
+      checkoutModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      ensureDeliveryZoneSelect();
+      updateCartUI();
+    }
+  };
+  window.closeCheckout = function() {
+    if (checkoutModal) {
+      checkoutModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  };
 
   function ensureDeliveryZoneSelect() {
     const addressGroup = document.getElementById('checkoutAddressGroup');
@@ -265,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       zoneDiv.style.marginTop = '10px';
       zoneDiv.innerHTML = `
         <label for="deliveryZone">Yetkazish hududi *</label>
-        <select id="deliveryZone" style="width:150px; padding:6px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);">
+        <select id="deliveryZone" style="width:100%; padding:0.8rem 1rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);">
           <option value="ichki">Shahar ichi (10 000 so'm)</option>
           <option value="tashqi">Shahar tashqari (15 000 so'm)</option>
         </select>
@@ -301,10 +440,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const phone = document.getElementById('checkoutPhone').value.trim(); 
       const address = document.getElementById('checkoutAddress').value.trim(); 
       const table = document.getElementById('checkoutTable').value.trim(); 
-      const note = document.getElementById('checkoutNote').value.trim();
+      const noteEl = document.getElementById('checkoutNote');
+      const note = noteEl ? noteEl.value.trim() : '';
       
-      if (!name || !phone) { showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle'); return; }
-      if (orderType === 'delivery' && !address) { showToast('Yetkazish manzilini kiriting!', 'fa-exclamation-triangle'); return; }
+      if (!name || !phone) {
+        showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle');
+        return;
+      }
+      if (orderType === 'delivery' && !address) {
+        showToast('Yetkazish manzilini kiriting!', 'fa-exclamation-triangle');
+        return;
+      }
       
       let subtotal = 0; 
       let orderLinesText = cart.map(item => { 
@@ -328,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
           serviceFeePercent = 0.10;
         }
         extraFee = Math.round(subtotal * serviceFeePercent);
-        feeTitle = `Xizmat haqi (${serviceFeePercent * 100}%)`;
+        feeTitle = `Xizmat haqi (${Math.round(serviceFeePercent * 100)}%)`;
       }
 
       let totalSum = subtotal + extraFee;
@@ -351,8 +497,8 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
         });
-      } catch (e) {
-        console.log("Telegram xatolik:", e);
+      } catch (err) {
+        console.log("Telegram xatolik:", err);
       }
 
       window.closeCheckout(); 
@@ -362,7 +508,8 @@ document.addEventListener('DOMContentLoaded', () => {
         message: `Tez orada operator aloqaga chiqadi.`, 
         details: `${deliveryText}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` 
       });
-      cart = []; saveCart();
+      cart = [];
+      saveCart();
       if (submitBtn) submitBtn.disabled = false;
     });
   }
@@ -430,7 +577,14 @@ document.addEventListener('DOMContentLoaded', () => {
           else { tableNumberSelect.innerHTML = '<option value="" disabled selected>Hamma joy band</option>'; }
         }
       } catch (err) {
-        tableNumberSelect.innerHTML = '<option value="">Server ishga tushmagan!</option>';
+        tableNumberSelect.innerHTML = '';
+        for (let i = 1; i <= max; i++) {
+          const optionValue = `${label} #${i}`;
+          const opt = document.createElement('option');
+          opt.value = optionValue;
+          opt.textContent = optionValue;
+          tableNumberSelect.appendChild(opt);
+        }
       }
     }
 
@@ -449,7 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const guests = document.getElementById('resGuests').value;
       const tableType = tableTypeSelect.value;
       const tableNumber = tableNumberSelect.value;
-      const notes = document.getElementById('resNotes').value.trim();
+      const notesEl = document.getElementById('resNotes');
+      const notes = notesEl ? notesEl.value.trim() : '';
 
       if (!name || !phone || !date || !time || !tableNumber) {
         showToast("Iltimos, barcha maydonlarni to'ldiring!", 'fa-exclamation-triangle');
@@ -493,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reservationForm.reset();
         checkAndFilterBookedTables(); 
       } catch (err) {
-        showToast("Server yoniq emas!", 'fa-wifi');
+        showToast("Server bilan aloqa yo'q!", 'fa-wifi');
       } finally {
         if (submitBtn) submitBtn.disabled = false;
       }
@@ -506,10 +661,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
     if (!successModal) return;
-    document.getElementById('successTitle').textContent = data.title;
-    document.getElementById('successSubtitle').textContent = data.subtitle;
-    document.getElementById('successMessage').textContent = data.message;
-    document.getElementById('successDetails').textContent = data.details;
+    const titleEl = document.getElementById('successTitle');
+    const subEl = document.getElementById('successSubtitle');
+    const msgEl = document.getElementById('successMessage');
+    const detEl = document.getElementById('successDetails');
+
+    if (titleEl) titleEl.textContent = data.title || '';
+    if (subEl) subEl.textContent = data.subtitle || '';
+    if (msgEl) msgEl.textContent = data.message || '';
+    if (detEl) detEl.textContent = data.details || '';
 
     const tgBtn = document.getElementById('successTelegramBtn');
     if (tgBtn) tgBtn.style.display = 'none';
@@ -519,7 +679,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.closeSuccessModal = function() {
-    if (successModal) { successModal.classList.remove('open'); document.body.style.overflow = ''; }
+    if (successModal) {
+      successModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
   };
 
   const savedTheme = localStorage.getItem('iqbol_theme') || 'light';
@@ -550,30 +713,40 @@ document.addEventListener('DOMContentLoaded', () => {
     if (header) header.classList.toggle('scrolled', scrollY > 50);
     if (backToTopBtn) backToTopBtn.classList.toggle('visible', scrollY > 400);
   });
-  if (backToTopBtn) backToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  if (backToTopBtn) {
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 
-  if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => { mobileNavDrawer.classList.add('open'); mobileNavOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; });
-  window.closeMobileNav = function() { if (mobileNavDrawer) { mobileNavDrawer.classList.remove('open'); mobileNavOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox();
-    }
-  });
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', () => {
+      if (mobileNavDrawer) mobileNavDrawer.classList.add('open');
+      if (mobileNavOverlay) mobileNavOverlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+  window.closeMobileNav = function() {
+    if (mobileNavDrawer) mobileNavDrawer.classList.remove('open');
+    if (mobileNavOverlay) mobileNavOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  };
 
   /* ==========================================================================
      7. GALLERY VA VIDEONI MAJBURIY YOQISH
      ========================================================================== */
   const GALLERY_IMAGES = [
     { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg', caption: 'Tandir go\'shti', category: 'taomlar', featured: true },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', caption: 'Kavkaz shashlik', category: 'shashlik', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1546_pEeqfr3.jpg', caption: 'Kavkaz shashlik', category: 'shashlik', featured: false },
     { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', caption: 'Uyg\'urcha jiz', category: 'taomlar', featured: false },
     { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg', caption: 'Iqbol firma salati', category: 'salatlar', featured: false },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', caption: 'G\'ijduvon kabob', category: 'shashlik', featured: false },
+    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1544_9UVbHU1_x6uvel1_4Vitamw_Bg6I9sS.jpg', caption: 'G\'ijduvon kabob', category: 'shashlik', featured: false },
     { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1573.jpg', caption: 'Muzdek Moxito', category: 'ichimliklar', featured: false }
   ];
 
-  let currentGalleryCategory = 'all'; let activeLightboxIndex = 0; let activeGalleryItems = [];
+  let currentGalleryCategory = 'all';
+  let activeLightboxIndex = 0;
+  let activeGalleryItems = [];
   const galleryGrid = document.getElementById('galleryGrid');
   const lightboxModal = document.getElementById('lightboxModal');
   const lightboxImg = document.getElementById('lightboxImg');
@@ -581,7 +754,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGallery() {
     if (!galleryGrid) return;
-    activeGalleryItems = currentGalleryCategory === 'all' ? GALLERY_IMAGES : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
+    activeGalleryItems = currentGalleryCategory === 'all'
+      ? GALLERY_IMAGES
+      : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
     galleryGrid.innerHTML = activeGalleryItems.map((item, index) => `
       <div class="gallery-item ${item.featured ? 'featured' : ''}" onclick="window.openLightbox(${index})">
         <img src="${item.url}" alt="${item.caption}" loading="lazy" />
@@ -621,8 +796,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (activeLightboxIndex < 0) activeLightboxIndex = activeGalleryItems.length - 1;
     if (activeLightboxIndex >= activeGalleryItems.length) activeLightboxIndex = 0;
     const item = activeGalleryItems[activeLightboxIndex];
-    if (item) { lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; }
+    if (item) {
+      lightboxImg.src = item.url;
+      lightboxCaption.textContent = item.caption;
+    }
   };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeDishModal();
+      window.closeCart();
+      window.closeCheckout();
+      window.closeSuccessModal();
+      window.closeMobileNav();
+      window.closeLightbox();
+    }
+  });
 
   // Orqa fondagi videoni majburan o'ynatish
   const heroVideo = document.getElementById('heroVideo');
