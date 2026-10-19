@@ -1,12 +1,13 @@
-/**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (60 TA TAOM + 9 TA GALEREYA RASMI + UZ/RU/EN + NAQD VA KARTA RAQAMI 9860 BILAN)
- */
-
 document.addEventListener('DOMContentLoaded', () => {
   // RESTORAN KARTA RAQAMI
   const RESTAURANT_CARD = '9860 1701 1569 3682';
   const RESTAURANT_CARD_RAW = '9860170115693682';
+
+  // GOOGLE CLIENT ID (O'zingizniki)
+  const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
+  const GOOGLE_AUTH_API = 'https://iqbol.onrender.com/api/auth/google';
+  let currentUser = null;
+  try { currentUser = JSON.parse(localStorage.getItem('iqbol_user')) || null; } catch(e) { currentUser = null; }
 
   /* ==========================================================================
      0. AVTOMATIK CSS VA HTML ELEMENTLARNI QO'SHISH
@@ -14,125 +15,47 @@ document.addEventListener('DOMContentLoaded', () => {
   const customStyle = document.createElement('style');
   customStyle.textContent = `
     .lang-switcher {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 999px;
-      padding: 3px;
-      gap: 2px;
+      display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; padding: 3px; gap: 2px;
     }
-    .header.scrolled .lang-switcher {
-      background: var(--bg-card);
-      border-color: var(--border-color);
-    }
+    .header.scrolled .lang-switcher { background: var(--bg-card); border-color: var(--border-color); }
     .lang-btn {
-      background: transparent;
-      border: none;
-      color: #ffffff;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 5px 9px;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      background: transparent; border: none; color: #ffffff; font-size: 0.75rem; font-weight: 700;
+      padding: 5px 9px; border-radius: 999px; cursor: pointer; transition: all 0.2s ease;
     }
-    .header.scrolled .lang-btn {
-      color: var(--text-main);
-    }
+    .header.scrolled .lang-btn { color: var(--text-main); }
     .lang-btn.active {
       background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
-      color: #112219 !important;
-      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
+      color: #112219 !important; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
     }
-    .payment-methods-box {
-      margin: 0.5rem 0;
-      padding: 1rem;
-      border-radius: 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border-gold);
-    }
-    .payment-methods-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 0.65rem;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .payment-methods-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.5rem;
-    }
-    .pay-option-btn {
-      padding: 0.65rem 0.5rem;
-      border-radius: 8px;
-      border: 1.5px solid var(--border-color);
-      background: var(--bg-surface);
-      color: var(--text-main);
-      font-weight: 700;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .pay-option-btn.active {
-      border-color: var(--accent-gold);
-      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
-      color: #112219;
-    }
-    .card-Display-box {
-      margin-top: 0.85rem;
-      padding: 0.85rem;
-      border-radius: 10px;
-      background: var(--bg-surface);
-      border: 1.5px dashed var(--accent-gold);
-      display: none;
-      flex-direction: column;
-      gap: 0.6rem;
-      text-align: center;
-    }
-    .card-Display-box.visible {
-      display: flex;
-    }
-    .card-number-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-card);
-      padding: 0.55rem 0.85rem;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-    .card-number-val {
-      font-family: monospace;
-      font-size: 1.05rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      color: var(--accent-gold);
-    }
-    .btn-copy-card {
-      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
-      color: #112219;
-      border: none;
-      border-radius: 6px;
-      padding: 0.35rem 0.65rem;
-      font-size: 0.75rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-    @media (max-width: 576px) {
-      .lang-btn { padding: 4px 6px; font-size: 0.68rem; }
-      .card-number-val { font-size: 0.92rem; }
-    }
+    .payment-methods-box { margin: 0.5rem 0; padding: 1rem; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-gold); }
+    .payment-methods-title { font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem; }
+    .payment-methods-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .pay-option-btn { padding: 0.65rem 0.5rem; border-radius: 8px; border: 1.5px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s ease; }
+    .pay-option-btn.active { border-color: var(--accent-gold); background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark)); color: #112219; }
+    .card-Display-box { margin-top: 0.85rem; padding: 0.85rem; border-radius: 10px; background: var(--bg-surface); border: 1.5px dashed var(--accent-gold); display: none; flex-direction: column; gap: 0.6rem; text-align: center; }
+    .card-Display-box.visible { display: flex; }
+    .card-number-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); padding: 0.55rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); }
+    .card-number-val { font-family: monospace; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; color: var(--accent-gold); }
+    .btn-copy-card { background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark)); color: #112219; border: none; border-radius: 6px; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+    @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
+
+    /* GOOGLE SIGN-IN STYLES */
+    .google-signin-wrap { display: flex; align-items: center; justify-content: center; }
+    .user-profile-chip { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.7rem 0.3rem 0.3rem; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; }
+    .header.scrolled .user-profile-chip { background: var(--bg-card); border-color: var(--border-color); }
+    .user-profile-chip .user-avatar, .mobile-user-chip .user-avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-gold); }
+    .user-profile-chip .user-info { display: flex; align-items: center; gap: 0.4rem; }
+    .user-profile-chip .user-name { font-size: 0.8rem; font-weight: 600; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .header.scrolled .user-profile-chip .user-name { color: var(--text-main); }
+    .user-profile-chip .btn-logout { background: transparent; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; }
+    .user-profile-chip .btn-logout:hover { background: rgba(220, 53, 69, 0.9); }
+    .header.scrolled .user-profile-chip .btn-logout { color: var(--text-main); }
+    .mobile-google { width: 100%; margin-bottom: 1rem; }
+    .mobile-user-chip { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 12px; margin-bottom: 1rem; }
+    .mobile-user-chip .user-name-mobile { font-weight: 700; color: var(--text-main); font-size: 0.95rem; }
+    .mobile-user-chip .btn-logout-mobile { background: transparent; color: #c9405b; font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0; margin-top: 2px; }
+    @media (max-width: 900px) { #googleSignInContainer:not(.mobile-google), #userProfileChip { display: none !important; } }
   `;
   document.head.appendChild(customStyle);
 
@@ -141,28 +64,94 @@ document.addEventListener('DOMContentLoaded', () => {
   if (headerActions && !document.querySelector('.lang-switcher')) {
     const langDiv = document.createElement('div');
     langDiv.className = 'lang-switcher';
-    langDiv.innerHTML = `
-      <button type="button" class="lang-btn active" data-lang="uz">UZ</button>
-      <button type="button" class="lang-btn" data-lang="ru">RU</button>
-      <button type="button" class="lang-btn" data-lang="en">EN</button>
-    `;
+    langDiv.innerHTML = `<button type="button" class="lang-btn active" data-lang="uz">UZ</button><button type="button" class="lang-btn" data-lang="ru">RU</button><button type="button" class="lang-btn" data-lang="en">EN</button>`;
     headerActions.insertBefore(langDiv, headerActions.firstChild);
   }
 
   window.copyRestaurantCard = function() {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
-    }
-    const msg = currentLang === 'ru'
-      ? `Номер карты скопирован: ${RESTAURANT_CARD}`
-      : currentLang === 'en'
-      ? `Card number copied: ${RESTAURANT_CARD}`
-      : `Karta raqami nusxalandi: ${RESTAURANT_CARD}`;
+    if (navigator.clipboard) navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
+    const msg = currentLang === 'ru' ? `Номер карты скопирован: ${RESTAURANT_CARD}` : currentLang === 'en' ? `Card number copied: ${RESTAURANT_CARD}` : `Karta raqami nusxalandi: ${RESTAURANT_CARD}`;
     showToast(msg, 'fa-copy');
   };
 
   /* ==========================================================================
-     1. MENU DATABASE
+     GOOGLE SIGN-IN LOGIKASI
+     ========================================================================== */
+  const handleGoogleCredential = async (response) => {
+    try {
+      showToast('Tekshirilmoqda...', 'fa-spinner');
+      const res = await fetch(GOOGLE_AUTH_API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        currentUser = data.user;
+        localStorage.setItem('iqbol_user', JSON.stringify(currentUser));
+        renderUserUI();
+        showToast(data.isNewUser ? `Xush kelibsiz, ${currentUser.name || currentUser.email}!` : `Qaytganingizdan xursandmiz!`, 'fa-check-circle');
+      } else {
+        showToast('Kirish amalga oshmadi: ' + (data.message || 'Xatolik'), 'fa-exclamation-triangle');
+      }
+    } catch (err) { showToast("Server bilan aloqa yo'q", 'fa-wifi'); }
+  };
+
+  function renderUserUI() {
+    const chip = document.getElementById('userProfileChip');
+    const mobileChip = document.getElementById('mobileUserChip');
+    const googleWrap = document.getElementById('googleSignInContainer');
+    const mobileGoogle = document.getElementById('mobileGoogleContainer');
+    const checkoutNotice = document.getElementById('checkoutLoginNotice');
+
+    if (currentUser) {
+      if (chip) { chip.style.display = 'flex'; document.getElementById('userAvatar').src = currentUser.picture || ''; document.getElementById('userName').textContent = (currentUser.name || currentUser.email || '').split(' ')[0]; }
+      if (mobileChip) { mobileChip.style.display = 'flex'; document.getElementById('mobileUserAvatar').src = currentUser.picture || ''; document.getElementById('mobileUserName').textContent = currentUser.name || currentUser.email; }
+      if (googleWrap) googleWrap.style.display = 'none';
+      if (mobileGoogle) mobileGoogle.style.display = 'none';
+      if (checkoutNotice) checkoutNotice.style.display = 'none';
+    } else {
+      if (chip) chip.style.display = 'none';
+      if (mobileChip) mobileChip.style.display = 'none';
+      if (googleWrap) googleWrap.style.display = 'flex';
+      if (mobileGoogle) mobileGoogle.style.display = 'flex';
+      if (checkoutNotice) checkoutNotice.style.display = 'block';
+    }
+  }
+
+  window.logoutUser = function() {
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) { try { google.accounts.id.disableAutoSelect(); } catch(e) {} }
+    currentUser = null;
+    localStorage.removeItem('iqbol_user');
+    renderUserUI();
+    showToast('Hisobdan chiqdingiz', 'fa-sign-out-alt');
+  };
+
+  function initGoogleSignIn() {
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) { setTimeout(initGoogleSignIn, 400); return; }
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.startsWith('YOUR_')) return;
+
+    try {
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+      const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'en' };
+      
+      const headerContainer = document.getElementById('googleSignInContainer');
+      if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
+
+      const mobileContainer = document.getElementById('mobileGoogleContainer');
+      if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 300 });
+
+      const checkoutContainer = document.getElementById('checkoutGoogleContainer');
+      if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
+
+      renderUserUI();
+    } catch (err) { console.error('[Google Auth] Init xatosi:', err); }
+  }
+  setTimeout(initGoogleSignIn, 100);
+  window.addEventListener('load', initGoogleSignIn);
+
+  /* ==========================================================================
+     1. MENU DATABASE (Barcha 60 ta taom joyida)
      ========================================================================== */
   const MENU_DATA = [
     { id: 'bt-1', name: 'Тушёнка (хашлама)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 40000, portion: '1 porsiya', desc: 'Mazali va to\'yimli tushonka (xashlama) sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1566_JFVMaw1_OiyJoRv.jpg', tags: ['Issiq taom'], popular: true },
@@ -238,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   /* ==========================================================================
-     1.1 KO'P TILLILIK LUG'ATI (UZ, RU, EN)
+     1.1 KO'P TILLILIK
      ========================================================================== */
   let currentLang = localStorage.getItem('iqbol_lang') || 'uz';
   let selectedPaymentMethod = 'Naqd';
@@ -261,27 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'bt-3': { ru: ['Борщ', 'Классический красный борщ со свежей зеленью.'], en: ['Borscht', 'Classic red beetroot soup with beef.'] }
   };
 
-  function getDishName(dish) {
-    if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) {
-      return DISH_TRANSLATIONS[dish.id][currentLang][0];
-    }
-    return dish.name;
-  }
-
-  function getDishDesc(dish) {
-    if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) {
-      return DISH_TRANSLATIONS[dish.id][currentLang][1];
-    }
-    return dish.desc;
-  }
-
-  function getCategoryName(catName) {
-    return (CATEGORY_TRANSLATIONS[currentLang] && CATEGORY_TRANSLATIONS[currentLang][catName]) || catName;
-  }
-
-  function getPortionName(portion) {
-    return (PORTION_TRANSLATIONS[currentLang] && PORTION_TRANSLATIONS[currentLang][portion]) || portion;
-  }
+  function getDishName(dish) { if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) return DISH_TRANSLATIONS[dish.id][currentLang][0]; return dish.name; }
+  function getDishDesc(dish) { if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) return DISH_TRANSLATIONS[dish.id][currentLang][1]; return dish.desc; }
+  function getCategoryName(catName) { return (CATEGORY_TRANSLATIONS[currentLang] && CATEGORY_TRANSLATIONS[currentLang][catName]) || catName; }
+  function getPortionName(portion) { return (PORTION_TRANSLATIONS[currentLang] && PORTION_TRANSLATIONS[currentLang][portion]) || portion; }
 
   const PAGE_SELECTORS_I18N = [
     { sel: '.logo-sub', uz: 'Oilaviy restoran', ru: 'Семейный ресторан', en: 'Family Restaurant' },
@@ -317,9 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentLang = lang;
     localStorage.setItem('iqbol_lang', lang);
 
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === lang);
-    });
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
 
     PAGE_SELECTORS_I18N.forEach(item => {
       document.querySelectorAll(item.sel).forEach(el => {
@@ -329,64 +299,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const sInput = document.getElementById('searchInput');
-    if (sInput) {
-      sInput.placeholder = lang === 'ru'
-        ? 'Поиск блюда по названию...'
-        : lang === 'en'
-        ? 'Search dish by name...'
-        : "Taom nomi yoki tarkibini qidiring...";
-    }
+    if (sInput) sInput.placeholder = lang === 'ru' ? 'Поиск блюда по названию...' : lang === 'en' ? 'Search dish by name...' : "Taom nomi yoki tarkibini qidiring...";
 
     const payTitleEl = document.getElementById('payMethodsTitleText');
-    if (payTitleEl) {
-      payTitleEl.textContent = lang === 'ru' ? 'Способ оплаты (Наличные / КАРТА):' : lang === 'en' ? 'Payment Method (Cash / CARD):' : "To'lov usulini tanlang:";
-    }
+    if (payTitleEl) payTitleEl.textContent = lang === 'ru' ? 'Способ оплаты (Наличные / КАРТА):' : lang === 'en' ? 'Payment Method (Cash / CARD):' : "To'lov usulini tanlang:";
 
     const cashBtnEl = document.getElementById('payBtnCashText');
-    if (cashBtnEl) {
-      cashBtnEl.textContent = lang === 'ru' ? 'Наличные' : lang === 'en' ? 'Cash' : 'Naqd';
-    }
+    if (cashBtnEl) cashBtnEl.textContent = lang === 'ru' ? 'Наличные' : lang === 'en' ? 'Cash' : 'Naqd';
 
     const cardBtnEl = document.getElementById('payBtnCardText');
-    if (cardBtnEl) {
-      cardBtnEl.textContent = lang === 'ru' ? 'На карту' : lang === 'en' ? 'To Card' : 'Karta orqali';
-    }
+    if (cardBtnEl) cardBtnEl.textContent = lang === 'ru' ? 'На карту' : lang === 'en' ? 'To Card' : 'Karta orqali';
 
     const cardHintEl = document.getElementById('cardTransferHint');
-    if (cardHintEl) {
-      cardHintEl.textContent = lang === 'ru'
-        ? `Номер карты для перевода (Click / Payme / Paynet):`
-        : lang === 'en'
-        ? `Card number for transfer (Click / Payme / Paynet):`
-        : `To'lov uchun karta raqami (Click / Payme / Paynet):`;
-    }
+    if (cardHintEl) cardHintEl.textContent = lang === 'ru' ? `Номер карты для перевода (Click / Payme / Paynet):` : lang === 'en' ? `Card number for transfer (Click / Payme / Paynet):` : `To'lov uchun karta raqami (Click / Payme / Paynet):`;
 
-    renderMenu();
-    updateCartUI();
-    renderGallery();
+    renderMenu(); updateCartUI(); renderGallery();
   };
 
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.addEventListener('click', () => window.changeLanguage(btn.dataset.lang));
-  });
+  document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', () => window.changeLanguage(btn.dataset.lang)));
 
   /* ==========================================================================
      2. APP STATE & STORAGE
      ========================================================================== */
   let cart = [];
-  try {
-    const rawCart = JSON.parse(localStorage.getItem('iqbol_cart')) || [];
-    cart = rawCart.filter(item => item && MENU_DATA.some(d => d.id === item.id));
-  } catch(e) {
-    cart = [];
-  }
-
+  try { const rawCart = JSON.parse(localStorage.getItem('iqbol_cart')) || []; cart = rawCart.filter(item => item && MENU_DATA.some(d => d.id === item.id)); } catch(e) { cart = []; }
   let favorites = [];
-  try {
-    favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || [];
-  } catch(e) {
-    favorites = [];
-  }
+  try { favorites = JSON.parse(localStorage.getItem('iqbol_favorites')) || []; } catch(e) { favorites = []; }
 
   let activeCategory = 'all';
   let searchQuery = '';
@@ -407,27 +345,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const backToTopBtn = document.getElementById('backToTop');
   const themeToggleBtn = document.getElementById('themeToggle');
   const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const mobileNavDrawer = document.getElementById('mobileNavDrawer');
+  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
 
-  function formatPrice(num) {
-    const unit = currentLang === 'ru' ? ' сум' : currentLang === 'en' ? ' UZS' : " so'm";
-    return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + unit;
-  }
-
-  function showToast(message, icon = 'fa-check-circle') {
-    if (!toastContainer) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span class="toast-text">${message}</span>`;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.classList.add('removing');
-      setTimeout(() => toast.remove(), 300);
-    }, 3200);
-  }
-
-  function makeStrikethrough(text) {
-    return text.split('').map(char => char + '\u0336').join('');
-  }
+  function formatPrice(num) { const unit = currentLang === 'ru' ? ' сум' : currentLang === 'en' ? ' UZS' : " so'm"; return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + unit; }
+  function showToast(message, icon = 'fa-check-circle') { if (!toastContainer) return; const toast = document.createElement('div'); toast.className = 'toast'; toast.innerHTML = `<i class="fas ${icon} toast-icon"></i><span class="toast-text">${message}</span>`; toastContainer.appendChild(toast); setTimeout(() => { toast.classList.add('removing'); setTimeout(() => toast.remove(), 300); }, 3200); }
+  function makeStrikethrough(text) { return text.split('').map(char => char + '\u0336').join(''); }
 
   /* ==========================================================================
      3. RENDER MENU
@@ -435,19 +358,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMenu() {
     if (!dishesGrid) return;
     let filtered = MENU_DATA;
-
-    if (activeCategory !== 'all') {
-      filtered = filtered.filter(item => item.category === activeCategory);
-    }
+    if (activeCategory !== 'all') filtered = filtered.filter(item => item.category === activeCategory);
     if (searchQuery.trim() !== '') {
       const q = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item =>
-        item.name.toLowerCase().includes(q) ||
-        getDishName(item).toLowerCase().includes(q) ||
-        item.desc.toLowerCase().includes(q) ||
-        getDishDesc(item).toLowerCase().includes(q) ||
-        item.categoryName.toLowerCase().includes(q)
-      );
+      filtered = filtered.filter(item => item.name.toLowerCase().includes(q) || getDishName(item).toLowerCase().includes(q) || item.desc.toLowerCase().includes(q) || getDishDesc(item).toLowerCase().includes(q) || item.categoryName.toLowerCase().includes(q));
     }
     if (filtered.length === 0) {
       const emptyTxt = currentLang === 'ru' ? 'Блюда не найдены' : currentLang === 'en' ? 'No dishes found' : 'Hech qanday taom topilmadi';
@@ -468,10 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <article class="dish-card" data-id="${dish.id}">
           <div class="dish-img-wrap" onclick="window.openDishModal('${dish.id}')">
             <img src="${dish.image}" alt="${dName}" loading="lazy" />
-            <div class="dish-badges">
-              ${dish.popular ? '<span class="badge badge-gold"><i class="fas fa-star"></i> Hit</span>' : ''}
-              ${dish.portion ? `<span class="badge badge-portion">${dPortion}</span>` : ''}
-            </div>
+            <div class="dish-badges">${dish.popular ? '<span class="badge badge-gold"><i class="fas fa-star"></i> Hit</span>' : ''}${dish.portion ? `<span class="badge badge-portion">${dPortion}</span>` : ''}</div>
             <button class="dish-fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); window.toggleFavorite('${dish.id}')"><i class="${isFav ? 'fas' : 'far'} fa-heart"></i></button>
           </div>
           <div class="dish-content">
@@ -489,89 +400,40 @@ document.addEventListener('DOMContentLoaded', () => {
     dishesGrid.innerHTML = htmlResult;
   }
 
-  categoryTabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-      categoryTabs.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeCategory = btn.dataset.category;
-      renderMenu();
-    });
-  });
+  categoryTabs.forEach(btn => btn.addEventListener('click', () => { categoryTabs.forEach(b => b.classList.remove('active')); btn.classList.add('active'); activeCategory = btn.dataset.category; renderMenu(); }));
 
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0);
-      renderMenu();
-    });
-  }
-  if (clearSearchBtn) {
-    clearSearchBtn.addEventListener('click', () => {
-      searchInput.value = '';
-      searchQuery = '';
-      clearSearchBtn.classList.remove('visible');
-      renderMenu();
-      searchInput.focus();
-    });
-  }
+  if (searchInput) searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; if (clearSearchBtn) clearSearchBtn.classList.toggle('visible', searchQuery.length > 0); renderMenu(); });
+  if (clearSearchBtn) clearSearchBtn.addEventListener('click', () => { searchInput.value = ''; searchQuery = ''; clearSearchBtn.classList.remove('visible'); renderMenu(); searchInput.focus(); });
 
   window.toggleFavorite = function(dishId) {
     const idx = favorites.indexOf(dishId);
-    if (idx > -1) {
-      favorites.splice(idx, 1);
-      showToast(currentLang === 'ru' ? 'Удалено из избранного' : currentLang === 'en' ? 'Removed from favorites' : 'Sevimlilardan olib tashlandi', 'fa-heart-broken');
-    } else {
-      favorites.push(dishId);
-      showToast(currentLang === 'ru' ? 'Добавлено в избранное!' : currentLang === 'en' ? 'Added to favorites!' : 'Sevimlilarga qo\'shildi!', 'fa-heart');
-    }
+    if (idx > -1) { favorites.splice(idx, 1); showToast(currentLang === 'ru' ? 'Удалено из избранного' : currentLang === 'en' ? 'Removed from favorites' : 'Sevimlilardan olib tashlandi', 'fa-heart-broken'); }
+    else { favorites.push(dishId); showToast(currentLang === 'ru' ? 'Добавлено в избранное!' : currentLang === 'en' ? 'Added to favorites!' : 'Sevimlilarga qo\'shildi!', 'fa-heart'); }
     localStorage.setItem('iqbol_favorites', JSON.stringify(favorites));
     renderMenu();
   };
 
-  let selectedModalDish = null;
-  let modalQuantity = 1;
+  let selectedModalDish = null; let modalQuantity = 1;
   window.openDishModal = function(dishId) {
-    const dish = MENU_DATA.find(d => d.id === dishId);
-    if (!dish || !dishModal) return;
-    selectedModalDish = dish;
-    modalQuantity = 1;
+    const dish = MENU_DATA.find(d => d.id === dishId); if (!dish || !dishModal) return;
+    selectedModalDish = dish; modalQuantity = 1;
     document.getElementById('modalImg').src = dish.image;
     document.getElementById('modalTitle').textContent = getDishName(dish);
     document.getElementById('modalPrice').textContent = formatPrice(dish.price) + (dish.portion ? ` (${getPortionName(dish.portion)})` : '');
     document.getElementById('modalDesc').textContent = getDishDesc(dish);
     document.getElementById('modalCategoryBadge').textContent = getCategoryName(dish.categoryName);
     document.getElementById('modalQtyVal').textContent = modalQuantity;
-    dishModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    dishModal.classList.add('open'); document.body.style.overflow = 'hidden';
   };
-  window.closeDishModal = function() {
-    if (!dishModal) return;
-    dishModal.classList.remove('open');
-    document.body.style.overflow = '';
-  };
-  window.updateModalQty = function(delta) {
-    modalQuantity += delta;
-    if (modalQuantity < 1) modalQuantity = 1;
-    document.getElementById('modalQtyVal').textContent = modalQuantity;
-  };
-  window.addModalDishToCart = function() {
-    if (!selectedModalDish) return;
-    window.addToCart(selectedModalDish.id, modalQuantity);
-    window.closeDishModal();
-  };
+  window.closeDishModal = function() { if (!dishModal) return; dishModal.classList.remove('open'); document.body.style.overflow = ''; };
+  window.updateModalQty = function(delta) { modalQuantity += delta; if (modalQuantity < 1) modalQuantity = 1; document.getElementById('modalQtyVal').textContent = modalQuantity; };
+  window.addModalDishToCart = function() { if (!selectedModalDish) return; window.addToCart(selectedModalDish.id, modalQuantity); window.closeDishModal(); };
 
-  function saveCart() {
-    localStorage.setItem('iqbol_cart', JSON.stringify(cart));
-    updateCartUI();
-  }
+  function saveCart() { localStorage.setItem('iqbol_cart', JSON.stringify(cart)); updateCartUI(); }
   
   function updateCartUI() {
-    let totalCount = 0;
-    cart.forEach(item => { totalCount += item.quantity; });
-    if (cartBadge) {
-      cartBadge.textContent = totalCount;
-      cartBadge.style.display = totalCount > 0 ? 'flex' : 'none';
-    }
+    let totalCount = 0; cart.forEach(item => { totalCount += item.quantity; });
+    if (cartBadge) { cartBadge.textContent = totalCount; cartBadge.style.display = totalCount > 0 ? 'flex' : 'none'; }
     if (!cartItemsList) return;
     
     if (cart.length === 0) {
@@ -582,26 +444,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    let subtotal = 0;
-    let itemsHtml = '';
+    let subtotal = 0; let itemsHtml = '';
     cart.forEach(item => {
-      const dish = MENU_DATA.find(d => d.id === item.id);
-      if (!dish) return;
-      const itemTotal = dish.price * item.quantity;
-      subtotal += itemTotal;
+      const dish = MENU_DATA.find(d => d.id === item.id); if (!dish) return;
+      const itemTotal = dish.price * item.quantity; subtotal += itemTotal;
       itemsHtml += `
         <div class="cart-item">
           <img src="${dish.image}" class="cart-item-thumb" />
-          <div class="cart-item-details">
-            <h5 class="cart-item-name">${getDishName(dish)}</h5>
-            <div class="cart-item-price">${formatPrice(dish.price)} x ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div>
-          </div>
+          <div class="cart-item-details"><h5 class="cart-item-name">${getDishName(dish)}</h5><div class="cart-item-price">${formatPrice(dish.price)} x ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div></div>
           <div class="cart-item-actions">
-            <div class="quantity-control">
-              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button>
-              <span class="qty-val">${item.quantity}</span>
-              <button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button>
-            </div>
+            <div class="quantity-control"><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', -1)">-</button><span class="qty-val">${item.quantity}</span><button class="qty-btn" onclick="window.changeCartQty('${dish.id}', 1)">+</button></div>
             <button class="btn-remove-item" onclick="window.removeFromCart('${dish.id}')"><i class="fas fa-trash-alt"></i></button>
           </div>
         </div>`;
@@ -610,9 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cartItemsList.innerHTML = itemsHtml; 
     if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(subtotal);
 
-    let extraFee = 0;
-    let feeDescription = '';
-
+    let extraFee = 0; let feeDescription = '';
     if (orderType === 'delivery') {
       const zoneSelect = document.getElementById('deliveryZone');
       const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
@@ -621,130 +471,60 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       let serviceFeePercent = 0.07;
       const tableInputVal = document.getElementById('checkoutTable') ? document.getElementById('checkoutTable').value.toLowerCase() : '';
-      if (tableInputVal.includes('vip') || tableInputVal.includes('kabina')) {
-        serviceFeePercent = 0.10;
-      }
+      if (tableInputVal.includes('vip') || tableInputVal.includes('kabina')) serviceFeePercent = 0.10;
       extraFee = Math.round(subtotal * serviceFeePercent);
       feeDescription = `Xizmat haqi (${Math.round(serviceFeePercent * 100)}%): ${formatPrice(extraFee)}`;
     }
 
     let grandTotal = subtotal + extraFee;
-
-    if (cartTotalEl) {
-      cartTotalEl.innerHTML = `${formatPrice(grandTotal)} <br><small style="font-size:0.75rem; color:var(--accent-gold);">(${feeDescription})</small>`;
-    }
+    if (cartTotalEl) cartTotalEl.innerHTML = `${formatPrice(grandTotal)} <br><small style="font-size:0.75rem; color:var(--accent-gold);">(${feeDescription})</small>`;
   }
 
   window.addToCart = function(dishId, qty = 1) {
-    const dish = MENU_DATA.find(d => d.id === dishId);
-    if (!dish) return;
+    const dish = MENU_DATA.find(d => d.id === dishId); if (!dish) return;
     const existing = cart.find(item => item.id === dishId);
-    if (existing) existing.quantity += qty;
-    else cart.push({ id: dishId, quantity: qty });
-    saveCart();
-    showToast(`"${getDishName(dish)}" savatga qo'shildi!`, 'fa-shopping-cart');
+    if (existing) existing.quantity += qty; else cart.push({ id: dishId, quantity: qty });
+    saveCart(); showToast(`"${getDishName(dish)}" savatga qo'shildi!`, 'fa-shopping-cart');
   };
-  window.changeCartQty = function(dishId, delta) {
-    const item = cart.find(i => i.id === dishId);
-    if (!item) return;
-    item.quantity += delta;
-    if (item.quantity <= 0) cart = cart.filter(i => i.id !== dishId);
-    saveCart();
-  };
-  window.removeFromCart = function(dishId) {
-    cart = cart.filter(i => i.id !== dishId);
-    saveCart();
-  };
-  window.openCart = function() {
-    if (cartDrawer && cartOverlay) {
-      cartDrawer.classList.add('open');
-      cartOverlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      updateCartUI();
-    }
-  };
-  window.closeCart = function() {
-    if (cartDrawer && cartOverlay) {
-      cartDrawer.classList.remove('open');
-      cartOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  };
+  window.changeCartQty = function(dishId, delta) { const item = cart.find(i => i.id === dishId); if (!item) return; item.quantity += delta; if (item.quantity <= 0) cart = cart.filter(i => i.id !== dishId); saveCart(); };
+  window.removeFromCart = function(dishId) { cart = cart.filter(i => i.id !== dishId); saveCart(); };
+  window.openCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; updateCartUI(); } };
+  window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & TELEGRAM (NAQD VA KARTA 9860, CLICK/PAYME/PAYNET ESLATMASI BILAN)
+     4. CHECKOUT & TELEGRAM (Majburiy Google tekshiruvi bilan)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
-    if (cart.length === 0) {
-      showToast('Savat bo\'sh!', 'fa-exclamation-circle');
-      return;
-    }
+    if (cart.length === 0) return showToast('Savat bo\'sh!', 'fa-exclamation-circle');
     window.closeCart();
-    if (checkoutModal) {
-      checkoutModal.classList.add('open');
-      document.body.style.overflow = 'hidden';
-      ensureDeliveryZoneSelect();
-      ensurePaymentSelectorUI();
-      updateCartUI();
-    }
+    if (checkoutModal) { checkoutModal.classList.add('open'); document.body.style.overflow = 'hidden'; ensureDeliveryZoneSelect(); ensurePaymentSelectorUI(); updateCartUI(); }
   };
-  window.closeCheckout = function() {
-    if (checkoutModal) {
-      checkoutModal.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  };
+  window.closeCheckout = function() { if (checkoutModal) { checkoutModal.classList.remove('open'); document.body.style.overflow = ''; } };
 
   function ensureDeliveryZoneSelect() {
     const addressGroup = document.getElementById('checkoutAddressGroup');
     if (addressGroup && !document.getElementById('deliveryZone')) {
-      const zoneDiv = document.createElement('div');
-      zoneDiv.className = 'form-group';
-      zoneDiv.style.marginTop = '10px';
-      zoneDiv.innerHTML = `
-        <label for="deliveryZone">Yetkazish hududi *</label>
-        <select id="deliveryZone" style="width:100%; padding:0.8rem 1rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);">
-          <option value="ichki">Shahar ichi (10 000 so'm)</option>
-          <option value="tashqi">Shahar tashqari (15 000 so'm)</option>
-        </select>
-      `;
+      const zoneDiv = document.createElement('div'); zoneDiv.className = 'form-group'; zoneDiv.style.marginTop = '10px';
+      zoneDiv.innerHTML = `<label for="deliveryZone">Yetkazish hududi *</label><select id="deliveryZone" style="width:100%; padding:0.8rem 1rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main);"><option value="ichki">Shahar ichi (10 000 so'm)</option><option value="tashqi">Shahar tashqari (15 000 so'm)</option></select>`;
       addressGroup.appendChild(zoneDiv);
       document.getElementById('deliveryZone').addEventListener('change', updateCartUI);
     }
   }
 
   function ensurePaymentSelectorUI() {
-    const checkoutFormEl = document.getElementById('checkoutForm');
-    if (!checkoutFormEl || document.getElementById('paymentMethodsBox')) return;
-
+    const checkoutFormEl = document.getElementById('checkoutForm'); if (!checkoutFormEl || document.getElementById('paymentMethodsBox')) return;
     const submitBtn = checkoutFormEl.querySelector('button[type="submit"]');
-    const payBox = document.createElement('div');
-    payBox.id = 'paymentMethodsBox';
-    payBox.className = 'payment-methods-box';
+    const payBox = document.createElement('div'); payBox.id = 'paymentMethodsBox'; payBox.className = 'payment-methods-box';
     payBox.innerHTML = `
-      <div class="payment-methods-title">
-        <i class="fas fa-wallet" style="color:var(--accent-gold);"></i>
-        <span id="payMethodsTitleText">To'lov usulini tanlang:</span>
-      </div>
+      <div class="payment-methods-title"><i class="fas fa-wallet" style="color:var(--accent-gold);"></i><span id="payMethodsTitleText">To'lov usulini tanlang:</span></div>
       <div class="payment-methods-grid">
-        <button type="button" class="pay-option-btn active" data-pay="Naqd">
-          <i class="fas fa-money-bill-wave"></i> <span id="payBtnCashText">Naqd</span>
-        </button>
-        <button type="button" class="pay-option-btn" data-pay="Karta">
-          <i class="fas fa-credit-card"></i> <span id="payBtnCardText">Karta orqali</span>
-        </button>
+        <button type="button" class="pay-option-btn active" data-pay="Naqd"><i class="fas fa-money-bill-wave"></i> <span id="payBtnCashText">Naqd</span></button>
+        <button type="button" class="pay-option-btn" data-pay="Karta"><i class="fas fa-credit-card"></i> <span id="payBtnCardText">Karta orqali</span></button>
       </div>
       <div id="cardDisplayBox" class="card-Display-box">
-        <span style="font-size:0.78rem; color:var(--text-muted);" id="cardTransferHint">
-          To'lov uchun karta raqami (Click / Payme / Paynet):
-        </span>
-        <div class="card-number-row">
-          <span class="card-number-val">${RESTAURANT_CARD}</span>
-          <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()">
-            <i class="fas fa-copy"></i> Nusxalash
-          </button>
-        </div>
+        <span style="font-size:0.78rem; color:var(--text-muted);" id="cardTransferHint">To'lov uchun karta raqami (Click / Payme / Paynet):</span>
+        <div class="card-number-row"><span class="card-number-val">${RESTAURANT_CARD}</span><button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()"><i class="fas fa-copy"></i> Nusxalash</button></div>
       </div>
     `;
     checkoutFormEl.insertBefore(payBox, submitBtn);
@@ -752,16 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardBox = document.getElementById('cardDisplayBox');
     payBox.querySelectorAll('.pay-option-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
         selectedPaymentMethod = btn.dataset.pay;
-        const isCard = selectedPaymentMethod === 'Karta';
-        if (cardBox) {
-          cardBox.classList.toggle('visible', isCard);
-        }
-        if (isCard) {
-          window.copyRestaurantCard();
-        }
+        const isCard = selectedPaymentMethod === 'Karta'; if (cardBox) cardBox.classList.toggle('visible', isCard); if (isCard) window.copyRestaurantCard();
       });
     });
   }
@@ -769,75 +542,53 @@ document.addEventListener('DOMContentLoaded', () => {
   const orderTypeBtns = document.querySelectorAll('.order-type-btn');
   orderTypeBtns.forEach(btn => {
     btn.addEventListener('click', () => { 
-      orderTypeBtns.forEach(b => b.classList.remove('active')); 
-      btn.classList.add('active'); 
-      orderType = btn.dataset.type; 
+      orderTypeBtns.forEach(b => b.classList.remove('active')); btn.classList.add('active'); orderType = btn.dataset.type; 
       document.getElementById('checkoutAddressGroup').style.display = orderType === 'delivery' ? 'flex' : 'none'; 
       document.getElementById('checkoutTableGroup').style.display = orderType === 'delivery' ? 'none' : 'flex'; 
-      if (orderType === 'delivery') ensureDeliveryZoneSelect();
-      updateCartUI();
+      if (orderType === 'delivery') ensureDeliveryZoneSelect(); updateCartUI();
     });
   });
 
-  const checkoutTableInput = document.getElementById('checkoutTable');
-  if (checkoutTableInput) {
-    checkoutTableInput.addEventListener('input', updateCartUI);
-  }
+  const checkoutTableInput = document.getElementById('checkoutTable'); if (checkoutTableInput) checkoutTableInput.addEventListener('input', updateCartUI);
 
   const checkoutForm = document.getElementById('checkoutForm');
   if (checkoutForm) {
-    let isSubmitting = false; // DOUBLE CLICK HIMOYASI
+    let isSubmitting = false;
     checkoutForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (isSubmitting) return;
+
+      // GOOGLE TEKSHIRUVI (Majburiy)
+      if (!currentUser) {
+        showToast('Iltimos, avval Google bilan kiring!', 'fa-exclamation-triangle');
+        document.getElementById('checkoutLoginNotice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return; // Buyurtma ketmaydi
+      }
 
       const name = document.getElementById('checkoutName').value.trim(); 
       const phone = document.getElementById('checkoutPhone').value.trim(); 
       const address = document.getElementById('checkoutAddress').value.trim(); 
       const table = document.getElementById('checkoutTable').value.trim(); 
-      const noteEl = document.getElementById('checkoutNote');
-      const note = noteEl ? noteEl.value.trim() : '';
+      const noteEl = document.getElementById('checkoutNote'); const note = noteEl ? noteEl.value.trim() : '';
       
-      if (!name || !phone) {
-        showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle');
-        return;
-      }
-      if (orderType === 'delivery' && !address) {
-        showToast('Yetkazish manzilini kiriting!', 'fa-exclamation-triangle');
-        return;
-      }
+      if (!name || !phone) return showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle');
+      if (orderType === 'delivery' && !address) return showToast('Yetkazish manzilini kiriting!', 'fa-exclamation-triangle');
       
-      isSubmitting = true;
-      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
+      isSubmitting = true; const submitBtn = checkoutForm.querySelector('button[type="submit"]'); if (submitBtn) submitBtn.disabled = true;
 
       let subtotal = 0; 
-      let orderLinesText = cart.map(item => { 
-        const dish = MENU_DATA.find(d => d.id === item.id); 
-        const lineTotal = dish ? dish.price * item.quantity : 0; 
-        subtotal += lineTotal; 
-        return `• ${getDishName(dish)} x ${item.quantity} = ${formatPrice(lineTotal)}`; 
-      }).join('\n');
+      let orderLinesText = cart.map(item => { const dish = MENU_DATA.find(d => d.id === item.id); const lineTotal = dish ? dish.price * item.quantity : 0; subtotal += lineTotal; return `• ${getDishName(dish)} x ${item.quantity} = ${formatPrice(lineTotal)}`; }).join('\n');
 
-      let extraFee = 0;
-      let feeTitle = '';
-
+      let extraFee = 0; let feeTitle = '';
       if (orderType === 'delivery') {
-        const zoneSelect = document.getElementById('deliveryZone');
-        const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
-        extraFee = zoneVal === 'tashqi' ? 15000 : 10000;
-        feeTitle = zoneVal === 'tashqi' ? 'Yetkazish (Shahar tashqari)' : 'Yetkazish (Shahar ichi)';
+        const zoneSelect = document.getElementById('deliveryZone'); const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
+        extraFee = zoneVal === 'tashqi' ? 15000 : 10000; feeTitle = zoneVal === 'tashqi' ? 'Yetkazish (Shahar tashqari)' : 'Yetkazish (Shahar ichi)';
       } else {
-        let serviceFeePercent = 0.07;
-        if (table.toLowerCase().includes('vip') || table.toLowerCase().includes('kabina')) {
-          serviceFeePercent = 0.10;
-        }
-        extraFee = Math.round(subtotal * serviceFeePercent);
-        feeTitle = `Xizmat haqi (${Math.round(serviceFeePercent * 100)}%)`;
+        let serviceFeePercent = 0.07; if (table.toLowerCase().includes('vip') || table.toLowerCase().includes('kabina')) serviceFeePercent = 0.10;
+        extraFee = Math.round(subtotal * serviceFeePercent); feeTitle = `Xizmat haqi (${Math.round(serviceFeePercent * 100)}%)`;
       }
 
       let totalSum = subtotal + extraFee;
-
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
       const payInfoLine = selectedPaymentMethod === 'Naqd' ? 'Naqd' : `Karta orqali (${RESTAURANT_CARD} - Click/Payme/Paynet)`;
@@ -847,31 +598,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
       const FOOD_CHAT_ID = '8072569639';
       
-      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n💳 To'lov usuli: *${payInfoLine}*\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
+      const userInfoLine = `\n📧 Google Email: *${currentUser.email}*`;
+      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}${userInfoLine}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n💳 To'lov usuli: *${payInfoLine}*\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
       
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText, parse_mode: 'Markdown' })
         });
-      } catch (err) {
-        console.log("Telegram xatolik:", err);
-      }
+      } catch (err) { console.log("Telegram xatolik:", err); }
 
       window.closeCheckout(); 
       showSuccessModal({ 
         title: selectedPaymentMethod === 'Naqd' ? 'Buyurtmangiz qabul qilindi!' : 'Buyurtma va Karta orqali to\'lov!', 
         subtitle: `Raqam: #${orderId} | To'lov: ${selectedPaymentMethod}`, 
-        message: selectedPaymentMethod === 'Naqd'
-          ? `Tez orada operator aloqaga chiqadi.`
-          : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Iltimos, ${formatPrice(totalSum)} ni Click, Payme yoki Paynet orqali ushbu kartaga o'tkazing:`, 
+        message: selectedPaymentMethod === 'Naqd' ? `Tez orada operator aloqaga chiqadi.` : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Iltimos, ${formatPrice(totalSum)} ni Click, Payme yoki Paynet orqali ushbu kartaga o'tkazing:`, 
         details: `${deliveryText}\nTo'lov turi: ${payInfoLine}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`
       });
-      cart = [];
-      saveCart();
-      isSubmitting = false;
-      if (submitBtn) submitBtn.disabled = false;
+      cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
     });
   }
 
@@ -882,23 +625,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const reservationForm = document.getElementById('reservationForm');
 
   if (reservationForm) {
-    const resDateInput = document.getElementById('resDate');
-    const resTimeSelect = document.getElementById('resTime');
-    const tableTypeSelect = document.getElementById('resTableType');
-    const tableNumberSelect = document.getElementById('resTableNumber');
+    const resDateInput = document.getElementById('resDate'); const resTimeSelect = document.getElementById('resTime');
+    const tableTypeSelect = document.getElementById('resTableType'); const tableNumberSelect = document.getElementById('resTableNumber');
 
-    if (resDateInput) {
-      resDateInput.min = new Date().toISOString().split('T')[0];
-      resDateInput.value = new Date().toISOString().split('T')[0];
-    }
+    if (resDateInput) { resDateInput.min = new Date().toISOString().split('T')[0]; resDateInput.value = new Date().toISOString().split('T')[0]; }
 
     async function checkAndFilterBookedTables() {
       if (!tableTypeSelect || !tableNumberSelect || !resDateInput || !resTimeSelect) return;
-
-      const type = tableTypeSelect.value;
-      const date = resDateInput.value;
-      const time = resTimeSelect.value;
-
+      const type = tableTypeSelect.value; const date = resDateInput.value; const time = resTimeSelect.value;
       let max = 0; let label = 'Stol'; let tableTypeName = '';
       switch (type) {
         case 'asosiy-zal': max = 35; label = 'Stol'; tableTypeName = 'Asosiy zal'; break;
@@ -906,119 +640,53 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'vip': max = 9; label = 'Kabina'; tableTypeName = 'VIP kabina'; break;
         case 'tashqi': max = 40; label = 'Joy'; tableTypeName = "Ko'cha / Tashqi ayvon"; break;
       }
-
       tableNumberSelect.innerHTML = '<option value="">Yuklanmoqda...</option>';
-
       try {
-        const response = await fetch(`${API_URL}/booked`);
-        const bookedTables = await response.json();
-
+        const response = await fetch(`${API_URL}/booked`); const bookedTables = await response.json();
         tableNumberSelect.innerHTML = '';
         for (let i = 1; i <= max; i++) {
-          const optionValue = `${label} #${i}`;
-          const opt = document.createElement('option');
-          opt.value = optionValue;
-          
+          const optionValue = `${label} #${i}`; const opt = document.createElement('option'); opt.value = optionValue;
           const bookingKey = `${date}_${time}_${tableTypeName}_${optionValue}`;
-
-          if (bookedTables[bookingKey]) {
-            opt.disabled = true;
-            opt.textContent = makeStrikethrough(optionValue) + " (BAND)";
-            opt.style.color = "red";
-            opt.style.backgroundColor = "#ffe6e6";
-          } else {
-            opt.textContent = optionValue;
-          }
+          if (bookedTables[bookingKey]) { opt.disabled = true; opt.textContent = makeStrikethrough(optionValue) + " (BAND)"; opt.style.color = "red"; opt.style.backgroundColor = "#ffe6e6"; } else { opt.textContent = optionValue; }
           tableNumberSelect.appendChild(opt);
         }
-
         if (tableNumberSelect.options.length > 0 && tableNumberSelect.options[tableNumberSelect.selectedIndex]?.disabled) {
           const firstAvailable = Array.from(tableNumberSelect.options).find(o => !o.disabled);
-          if (firstAvailable) { tableNumberSelect.value = firstAvailable.value; } 
-          else { tableNumberSelect.innerHTML = '<option value="" disabled selected>Hamma joy band</option>'; }
+          if (firstAvailable) { tableNumberSelect.value = firstAvailable.value; } else { tableNumberSelect.innerHTML = '<option value="" disabled selected>Hamma joy band</option>'; }
         }
       } catch (err) {
         tableNumberSelect.innerHTML = '';
-        for (let i = 1; i <= max; i++) {
-          const optionValue = `${label} #${i}`;
-          const opt = document.createElement('option');
-          opt.value = optionValue;
-          opt.textContent = optionValue;
-          tableNumberSelect.appendChild(opt);
-        }
+        for (let i = 1; i <= max; i++) { const optionValue = `${label} #${i}`; const opt = document.createElement('option'); opt.value = optionValue; opt.textContent = optionValue; tableNumberSelect.appendChild(opt); }
       }
     }
 
     tableTypeSelect.addEventListener('change', checkAndFilterBookedTables);
     resDateInput.addEventListener('change', checkAndFilterBookedTables);
     resTimeSelect.addEventListener('change', checkAndFilterBookedTables);
-    
     checkAndFilterBookedTables();
 
-    let isResSubmitting = false; // DOUBLE CLICK HIMOYASI
+    let isResSubmitting = false;
     reservationForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (isResSubmitting) return;
+      e.preventDefault(); if (isResSubmitting) return;
+      const name = document.getElementById('resName').value.trim(); const phone = document.getElementById('resPhone').value.trim();
+      const date = resDateInput.value; const time = resTimeSelect.value; const guests = document.getElementById('resGuests').value;
+      const tableType = tableTypeSelect.value; const tableNumber = tableNumberSelect.value; const notesEl = document.getElementById('resNotes'); const notes = notesEl ? notesEl.value.trim() : '';
 
-      const name = document.getElementById('resName').value.trim();
-      const phone = document.getElementById('resPhone').value.trim();
-      const date = resDateInput.value;
-      const time = resTimeSelect.value;
-      const guests = document.getElementById('resGuests').value;
-      const tableType = tableTypeSelect.value;
-      const tableNumber = tableNumberSelect.value;
-      const notesEl = document.getElementById('resNotes');
-      const notes = notesEl ? notesEl.value.trim() : '';
+      if (!name || !phone || !date || !time || !tableNumber) return showToast("Iltimos, barcha maydonlarni to'ldiring!", 'fa-exclamation-triangle');
 
-      if (!name || !phone || !date || !time || !tableNumber) {
-        showToast("Iltimos, barcha maydonlarni to'ldiring!", 'fa-exclamation-triangle');
-        return;
-      }
+      isResSubmitting = true; let tableTypeName = '';
+      if (tableType === 'asosiy-zal') tableTypeName = 'Asosiy zal'; else if (tableType === 'zal-2') tableTypeName = '2-zal'; else if (tableType === 'vip') tableTypeName = 'VIP kabina'; else if (tableType === 'tashqi') tableTypeName = "Ko'cha / Tashqi ayvon";
 
-      isResSubmitting = true;
-      let tableTypeName = '';
-      if (tableType === 'asosiy-zal') tableTypeName = 'Asosiy zal';
-      else if (tableType === 'zal-2') tableTypeName = '2-zal';
-      else if (tableType === 'vip') tableTypeName = 'VIP kabina';
-      else if (tableType === 'tashqi') tableTypeName = "Ko'cha / Tashqi ayvon";
-
-      showToast("Tizimga yuborilmoqda...", 'fa-spinner');
-      const submitBtn = reservationForm.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
+      showToast("Tizimga yuborilmoqda...", 'fa-spinner'); const submitBtn = reservationForm.querySelector('button[type="submit"]'); if (submitBtn) submitBtn.disabled = true;
 
       try {
-        const response = await fetch(`${API_URL}/book`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, date, time, tableType: tableTypeName, tableNumber, guests, notes })
-        });
-
+        const response = await fetch(`${API_URL}/book`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, date, time, tableType: tableTypeName, tableNumber, guests, notes }) });
         const result = await response.json();
-
-        if (!result.success) {
-          showToast(result.message, 'fa-exclamation-triangle');
-          checkAndFilterBookedTables(); 
-          isResSubmitting = false;
-          if (submitBtn) submitBtn.disabled = false;
-          return;
-        }
-
+        if (!result.success) { showToast(result.message, 'fa-exclamation-triangle'); checkAndFilterBookedTables(); isResSubmitting = false; if (submitBtn) submitBtn.disabled = false; return; }
         const bookingCode = 'STOL-' + Math.floor(1000 + Math.random() * 9000);
-        showSuccessModal({
-          title: 'Stol muvaffaqiyatli band qilindi!',
-          subtitle: `Kod: #${bookingCode}`,
-          message: `Hurmatli ${name}, joyingiz ro'yxatga olindi. Sizni kutamiz!`,
-          details: `Joy turi: ${tableTypeName}\nStol: ${tableNumber}\nTelefon: ${phone}`
-        });
-
-        reservationForm.reset();
-        checkAndFilterBookedTables(); 
-      } catch (err) {
-        showToast("Server bilan aloqa yo'q!", 'fa-wifi');
-      } finally {
-        isResSubmitting = false;
-        if (submitBtn) submitBtn.disabled = false;
-      }
+        showSuccessModal({ title: 'Stol muvaffaqiyatli band qilindi!', subtitle: `Kod: #${bookingCode}`, message: `Hurmatli ${name}, joyingiz ro'yxatga olindi. Sizni kutamiz!`, details: `Joy turi: ${tableTypeName}\nStol: ${tableNumber}\nTelefon: ${phone}` });
+        reservationForm.reset(); checkAndFilterBookedTables(); 
+      } catch (err) { showToast("Server bilan aloqa yo'q!", 'fa-wifi'); } finally { isResSubmitting = false; if (submitBtn) submitBtn.disabled = false; }
     });
   }
 
@@ -1028,26 +696,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
     if (!successModal) return;
-    const titleEl = document.getElementById('successTitle');
-    const subEl = document.getElementById('successSubtitle');
-    const msgEl = document.getElementById('successMessage');
-    const detEl = document.getElementById('successDetails');
-
-    if (titleEl) titleEl.textContent = data.title || '';
-    if (subEl) subEl.textContent = data.subtitle || '';
-    if (msgEl) msgEl.textContent = data.message || '';
-    if (detEl) detEl.textContent = data.details || '';
-
-    successModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    const titleEl = document.getElementById('successTitle'); const subEl = document.getElementById('successSubtitle'); const msgEl = document.getElementById('successMessage'); const detEl = document.getElementById('successDetails');
+    if (titleEl) titleEl.textContent = data.title || ''; if (subEl) subEl.textContent = data.subtitle || ''; if (msgEl) msgEl.textContent = data.message || ''; if (detEl) detEl.textContent = data.details || '';
+    successModal.classList.add('open'); document.body.style.overflow = 'hidden';
   }
-
-  window.closeSuccessModal = function() {
-    if (successModal) {
-      successModal.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  };
+  window.closeSuccessModal = function() { if (successModal) { successModal.classList.remove('open'); document.body.style.overflow = ''; } };
 
   const savedTheme = localStorage.getItem('iqbol_theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1055,21 +708,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('iqbol_theme', next);
-      updateThemeIcon(next);
+      const current = document.documentElement.getAttribute('data-theme'); const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next); localStorage.setItem('iqbol_theme', next); updateThemeIcon(next);
       showToast(next === 'dark' ? 'Tungi rejim yoqildi' : 'Kunduzgi rejim yoqildi', next === 'dark' ? 'fa-moon' : 'fa-sun');
     });
   }
-
-  function updateThemeIcon(theme) {
-    if (!themeToggleBtn) return;
-    themeToggleBtn.innerHTML = theme === 'dark'
-      ? '<i class="fas fa-sun" style="color: #f3d889;"></i>'
-      : '<i class="fas fa-moon"></i>';
-  }
+  function updateThemeIcon(theme) { if (!themeToggleBtn) return; themeToggleBtn.innerHTML = theme === 'dark' ? '<i class="fas fa-sun" style="color: #f3d889;"></i>' : '<i class="fas fa-moon"></i>'; }
 
   const header = document.getElementById('header');
   window.addEventListener('scroll', () => {
@@ -1077,26 +721,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (header) header.classList.toggle('scrolled', scrollY > 50);
     if (backToTopBtn) backToTopBtn.classList.toggle('visible', scrollY > 400);
   });
-  if (backToTopBtn) {
-    backToTopBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  }
+  if (backToTopBtn) backToTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
-  if (hamburgerBtn) {
-    hamburgerBtn.addEventListener('click', () => {
-      if (mobileNavDrawer) mobileNavDrawer.classList.add('open');
-      if (mobileNavOverlay) mobileNavOverlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    });
-  }
-  window.closeMobileNav = function() {
-    if (mobileNavDrawer) {
-      mobileNavDrawer.classList.remove('open');
-      mobileNavOverlay.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  };
+  if (hamburgerBtn) hamburgerBtn.addEventListener('click', () => { if (mobileNavDrawer) mobileNavDrawer.classList.add('open'); if (mobileNavOverlay) mobileNavOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; });
+  window.closeMobileNav = function() { if (mobileNavDrawer) { mobileNavDrawer.classList.remove('open'); mobileNavOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
      7. GALLERY
@@ -1113,72 +741,63 @@ document.addEventListener('DOMContentLoaded', () => {
     { url: 'gal9.jpg', caption: 'Maxsus steyk va ishtahaochar taomlarimiz', tag: 'Maxsus taomlar', featured: false }
   ];
 
-  const filterTabsContainer = document.querySelector('.gallery-filter-tabs');
-  if (filterTabsContainer) {
-    filterTabsContainer.style.display = 'none';
-  }
+  const filterTabsContainer = document.querySelector('.gallery-filter-tabs'); if (filterTabsContainer) filterTabsContainer.style.display = 'none';
 
   let activeLightboxIndex = 0;
-  const galleryGrid = document.getElementById('galleryGrid');
-  const lightboxModal = document.getElementById('lightboxModal');
-  const lightboxImg = document.getElementById('lightboxImg');
-  const lightboxCaption = document.getElementById('lightboxCaption');
+  const galleryGrid = document.getElementById('galleryGrid'); const lightboxModal = document.getElementById('lightboxModal'); const lightboxImg = document.getElementById('lightboxImg'); const lightboxCaption = document.getElementById('lightboxCaption');
 
   function renderGallery() {
     if (!galleryGrid) return;
     galleryGrid.innerHTML = GALLERY_IMAGES.map((item, index) => `
       <div class="gallery-item ${item.featured ? 'featured' : ''}" onclick="window.openLightbox(${index})">
         <img src="${item.url}" alt="${item.caption}" loading="lazy" />
-        <div class="gallery-overlay">
-          <span class="gallery-tag">${item.tag}</span>
-          <h4 class="gallery-caption">${item.caption}</h4>
-        </div>
+        <div class="gallery-overlay"><span class="gallery-tag">${item.tag}</span><h4 class="gallery-caption">${item.caption}</h4></div>
       </div>
     `).join('');
   }
 
-  window.openLightbox = function(index) {
-    activeLightboxIndex = index;
-    const item = GALLERY_IMAGES[activeLightboxIndex];
-    if (!item || !lightboxModal) return;
-    lightboxImg.src = item.url;
-    lightboxCaption.textContent = item.caption;
-    lightboxModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  };
-  window.closeLightbox = function() {
-    if (!lightboxModal) return;
-    lightboxModal.classList.remove('open');
-    document.body.style.overflow = '';
-  };
-  window.changeLightbox = function(step) {
-    activeLightboxIndex += step;
-    if (activeLightboxIndex < 0) activeLightboxIndex = GALLERY_IMAGES.length - 1;
-    if (activeLightboxIndex >= GALLERY_IMAGES.length) activeLightboxIndex = 0;
-    const item = GALLERY_IMAGES[activeLightboxIndex];
-    if (item) {
-      lightboxImg.src = item.url;
-      lightboxCaption.textContent = item.caption;
-    }
-  };
+  window.openLightbox = function(index) { activeLightboxIndex = index; const item = GALLERY_IMAGES[activeLightboxIndex]; if (!item || !lightboxModal) return; lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; lightboxModal.classList.add('open'); document.body.style.overflow = 'hidden'; };
+  window.closeLightbox = function() { if (!lightboxModal) return; lightboxModal.classList.remove('open'); document.body.style.overflow = ''; };
+  window.changeLightbox = function(step) { activeLightboxIndex += step; if (activeLightboxIndex < 0) activeLightboxIndex = GALLERY_IMAGES.length - 1; if (activeLightboxIndex >= GALLERY_IMAGES.length) activeLightboxIndex = 0; const item = GALLERY_IMAGES[activeLightboxIndex]; if (item) { lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; } };
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      window.closeDishModal();
-      window.closeCart();
-      window.closeCheckout();
-      window.closeSuccessModal();
-      window.closeMobileNav();
-      window.closeLightbox();
-    }
-  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox(); } });
 
-  const heroVideo = document.getElementById('heroVideo');
-  if (heroVideo) {
-    heroVideo.muted = true;
-    heroVideo.play().catch(err => console.log("Video avto-yonish xatosi:", err));
-  }
+  const heroVideo = document.getElementById('heroVideo'); if (heroVideo) { heroVideo.muted = true; heroVideo.play().catch(err => console.log("Video xatosi:", err)); }
+
+  // Boshlang'ich yuklash
+  window.changeLanguage(currentLang);
+    // ... (boshqa kodlar) ...
 
   // Boshlang'ich til va menyuni yuklash
   window.changeLanguage(currentLang);
-});
+
+  /* ==========================================================================
+     TELEFON RAQAM MASKASI (+998 XX XXX XX XX)
+     ========================================================================== */
+  function setupPhoneMask(inputElement) {
+    if (!inputElement) return;
+    if (inputElement.value === '') {
+      inputElement.value = '+998 ';
+    }
+    inputElement.addEventListener('input', function(e) {
+      let digits = this.value.replace(/\D/g, ''); 
+      if (digits.startsWith('998')) digits = digits.substring(3);
+      digits = digits.substring(0, 9);
+      let formatted = '+998 ';
+      if (digits.length > 0) formatted += digits.substring(0, 2);
+      if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
+      if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
+      if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
+      this.value = formatted;
+    });
+    inputElement.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' && this.value === '+998 ') {
+        e.preventDefault();
+      }
+    });
+  }
+
+  setupPhoneMask(document.getElementById('resPhone'));
+  setupPhoneMask(document.getElementById('checkoutPhone'));
+
+}); // <--- FAYLNING ENG OXIRGI YOPILISH QAVSI
