@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IQBOL OILAVIY RESTORAN — MAIN CSS
+   IQBOL OILAVIY RESTORAN — MAIN CSS (RESPONSIVE FIX INCLUDED)
    Location: Qarshi, Uzbekistan
    ========================================================================== */
 
@@ -2550,75 +2550,67 @@ h1, h2, h3, h4, .font-display {
 /* ==========================================================================
    18. SMART RESPONSIVE (EKRAN KICHRAYGANDA MOSLASHUVCHAN MENYU VA NAVIGATSIYA)
    ========================================================================== */
-
-/* 1. Tepadagi navigatsiya ekran kichrayganda darrov yo'qolmay, oldin siqiladi */
 @media (max-width: 1200px) and (min-width: 901px) {
-  .nav-menu {
-    gap: 1.1rem;
-  }
-  .nav-link {
-    font-size: 0.85rem;
-  }
-  .header-actions .btn-sm {
-    padding: 0.45rem 0.9rem;
-    font-size: 0.8rem;
-  }
-  .brand-logo .logo-title {
-    font-size: 1.45rem;
-  }
+  .nav-menu { gap: 1.1rem; }
+  .nav-link { font-size: 0.85rem; }
+  .header-actions .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.8rem; }
+  .brand-logo .logo-title { font-size: 1.45rem; }
 }
 
-/* Navigatsiya faqat 900px dan kichik ekranlarda (planshet/telefon) yashirinadi */
 @media (min-width: 901px) {
-  .nav-menu {
-    display: flex !important;
-  }
-  .hamburger-btn {
-    display: none !important;
-  }
+  .nav-menu { display: flex !important; }
+  .hamburger-btn { display: none !important; }
 }
 
 @media (max-width: 900px) {
-  .nav-menu, .d-none-mobile {
-    display: none !important;
+  .nav-menu, .d-none-mobile { display: none !important; }
+  .hamburger-btn { display: flex !important; }
+}
+
+@media (max-width: 992px) {
+  .dishes-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+  .dish-content { padding: 1rem; }
+  .dish-content .dish-title { font-size: 1.05rem; }
+  .dish-content .dish-desc { font-size: 0.8rem; margin-bottom: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .dish-content .dish-footer .dish-price-box .dish-price { font-size: 1.05rem; }
+  .dish-content .dish-footer .btn-add-cart { width: 34px; height: 34px; font-size: 0.95rem; }
+}
+
+/* Telefonda Header va Lang Switcher sig'ishini to'g'rilash */
+@media (max-width: 576px) {
+  .header-inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0;
+  }
+  .brand-logo {
+    margin-right: auto;
+  }
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .lang-switcher {
+    padding: 2px;
+  }
+  .lang-btn {
+    font-size: 0.65rem;
+    padding: 3px 6px;
+  }
+  .btn-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
   }
   .hamburger-btn {
-    display: flex !important;
+    width: 36px;
+    height: 36px;
+    padding: 7px;
   }
-}
-
-/* 2. Planshet va kichik noutbuk oynalari uchun (kartochkalar ixchamlashadi) */
-@media (max-width: 992px) {
-  .dishes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-  .dish-content {
-    padding: 1rem;
-  }
-  .dish-content .dish-title {
-    font-size: 1.05rem;
-  }
-  .dish-content .dish-desc {
-    font-size: 0.8rem;
-    margin-bottom: 0.85rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .dish-content .dish-footer .dish-price-box .dish-price {
-    font-size: 1.05rem;
-  }
-  .dish-content .dish-footer .btn-add-cart {
-    width: 34px;
-    height: 34px;
-    font-size: 0.95rem;
-  }
-}
-
-/* 3. Telefon ekranlari uchun: 1 ta katta karta emas, 2 ta ixcham karta yonma-yon turadi! */
-@media (max-width: 576px) {
   .dishes-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
@@ -2626,38 +2618,14 @@ h1, h2, h3, h4, .font-display {
   .dish-img-wrap {
     aspect-ratio: 4/3;
   }
-  .dish-img-wrap .dish-badges .badge {
-    padding: 0.2rem 0.5rem;
-    font-size: 0.65rem;
-  }
-  .dish-img-wrap .dish-fav-btn {
-    width: 30px;
-    height: 30px;
-    top: 8px;
-    right: 8px;
-    font-size: 0.8rem;
-  }
   .dish-content {
     padding: 0.75rem;
   }
-  .dish-content .dish-category {
-    font-size: 0.65rem;
-    margin-bottom: 0.2rem;
-  }
   .dish-content .dish-title {
     font-size: 0.9rem;
-    margin-bottom: 0.3rem;
   }
   .dish-content .dish-desc {
     font-size: 0.72rem;
-    margin-bottom: 0.6rem;
-    line-height: 1.35;
-  }
-  .dish-content .dish-footer {
-    padding-top: 0.6rem;
-  }
-  .dish-content .dish-footer .dish-price-box .price-label {
-    font-size: 0.6rem;
   }
   .dish-content .dish-footer .dish-price-box .dish-price {
     font-size: 0.9rem;
@@ -2667,19 +2635,8 @@ h1, h2, h3, h4, .font-display {
     height: 30px;
     font-size: 0.85rem;
   }
-  .cat-tab-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.8rem;
-  }
-  .menu-search-bar .search-input {
-    padding: 0.75rem 1rem 0.75rem 2.75rem;
-    font-size: 0.85rem;
-  }
 }
 
-/* Juda kichkina telefonlar uchun (masalan, iPhone SE) */
 @media (max-width: 360px) {
-  .dishes-grid {
-    grid-template-columns: 1fr;
-  }
+  .dishes-grid { grid-template-columns: 1fr; }
 }

@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (60 TA TAOM + 9 TA GALEREYA RASMI + UZ/RU/EN + CLICK / PAYME / PAYNET ILOVA VA SAYT BILAN)
+ * (60 TA TAOM + 9 TA GALEREYA RASMI + UZ/RU/EN + NAQD VA KARTA RAQAMI 9860 BILAN)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,36 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const RESTAURANT_CARD = '9860 1701 1569 3682';
   const RESTAURANT_CARD_RAW = '9860170115693682';
 
-  // TO'LOV ILOVALARI VA SAYTLARI KONFIGURATSIYASI
-  const PAYMENT_PROVIDERS = {
-    Click: {
-      name: 'CLICK',
-      color: '#0099ff',
-      textColor: '#ffffff',
-      webUrl: 'https://my.click.uz/',
-      appScheme: 'clickup://',
-      androidIntent: 'intent://#Intent;scheme=clickup;package=air.com.ssdsoftwaresolutions.clickuz;S.browser_fallback_url=https%3A%2F%2Fmy.click.uz%2F;end'
-    },
-    Payme: {
-      name: 'Payme',
-      color: '#00cccc',
-      textColor: '#112219',
-      webUrl: 'https://payme.uz/',
-      appScheme: 'payme://',
-      androidIntent: 'intent://#Intent;scheme=payme;package=uz.dida.payme;S.browser_fallback_url=https%3A%2F%2Fpayme.uz%2F;end'
-    },
-    Paynet: {
-      name: 'Paynet',
-      color: '#00a651',
-      textColor: '#ffffff',
-      webUrl: 'https://paynet.uz/',
-      appScheme: 'paynet://',
-      androidIntent: 'intent://#Intent;scheme=paynet;package=uz.paynet.app;S.browser_fallback_url=https%3A%2F%2Fpaynet.uz%2F;end'
-    }
-  };
-
   /* ==========================================================================
-     0. AVTOMATIK CSS VA HTML ELEMENTLARNI QO'SHISH (UZ/RU/EN + CLICK/PAYME/PAYNET)
+     0. AVTOMATIK CSS VA HTML ELEMENTLARNI QO'SHISH
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
@@ -101,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
       background: var(--bg-surface);
       color: var(--text-main);
       font-weight: 700;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -109,25 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
       cursor: pointer;
       transition: all 0.2s ease;
     }
-    .pay-option-btn.active[data-pay="Naqd"] {
+    .pay-option-btn.active {
       border-color: var(--accent-gold);
-      background: rgba(212, 175, 55, 0.15);
-      color: var(--accent-gold);
-    }
-    .pay-option-btn.active[data-pay="Click"] {
-      border-color: #0099ff;
-      background: #0099ff;
-      color: #ffffff;
-    }
-    .pay-option-btn.active[data-pay="Payme"] {
-      border-color: #00cccc;
-      background: #00cccc;
+      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
       color: #112219;
-    }
-    .pay-option-btn.active[data-pay="Paynet"] {
-      border-color: #00a651;
-      background: #00a651;
-      color: #ffffff;
     }
     .card-Display-box {
       margin-top: 0.85rem;
@@ -172,28 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
       align-items: center;
       gap: 0.3rem;
     }
-    .quick-pay-links {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
-    .quick-pay-btn {
-      padding: 0.55rem 0.5rem;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      transition: transform 0.15s ease;
-    }
-    .quick-pay-btn:hover {
-      transform: translateY(-1px);
-    }
     @media (max-width: 576px) {
       .lang-btn { padding: 4px 6px; font-size: 0.68rem; }
       .card-number-val { font-size: 0.92rem; }
@@ -214,65 +149,27 @@ document.addEventListener('DOMContentLoaded', () => {
     headerActions.insertBefore(langDiv, headerActions.firstChild);
   }
 
-  // Karta raqamini nusxalash funksiyasi
   window.copyRestaurantCard = function() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
     }
     const msg = currentLang === 'ru'
-      ? `Карта скопирована: ${RESTAURANT_CARD}`
+      ? `Номер карты скопирован: ${RESTAURANT_CARD}`
       : currentLang === 'en'
-      ? `Card copied: ${RESTAURANT_CARD}`
+      ? `Card number copied: ${RESTAURANT_CARD}`
       : `Karta raqami nusxalandi: ${RESTAURANT_CARD}`;
     showToast(msg, 'fa-copy');
   };
 
-  // Click, Payme yoki Paynet ilovasini (yoki saytini) ochish funksiyasi
-  window.openPaymentDestination = function(providerKey, mode = 'auto') {
-    const prov = PAYMENT_PROVIDERS[providerKey];
-    if (!prov) return;
-
-    // Avval karta raqamni avtomatik xotiraga nusxalaymiz
-    window.copyRestaurantCard();
-
-    if (mode === 'web') {
-      window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
-
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-
-    if (isAndroid) {
-      // Androidda ilovani ochadi, agar ilova yo'q bo'lsa avtomatik saytiga o'tadi
-      window.location.href = prov.androidIntent;
-    } else if (isIOS) {
-      // iPhone'da ilovani ochishga urinadi, 1.5 sekundda ochilmasa saytini ochadi
-      window.location.href = prov.appScheme;
-      setTimeout(() => {
-        if (!document.hidden) {
-          window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
-        }
-      }, 1500);
-    } else {
-      // Kompyuterda to'g'ridan-to'g'ri rasmiy saytini yangi oynada ochadi
-      window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   /* ==========================================================================
-     1. MENU DATABASE (BARCHA TAOMLAR VA TO'G'RILANGAN SALATLAR)
+     1. MENU DATABASE
      ========================================================================== */
   const MENU_DATA = [
-    // --- BIRINCHI TAOMLAR ---
     { id: 'bt-1', name: 'Тушёнка (хашлама)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 40000, portion: '1 porsiya', desc: 'Mazali va to\'yimli tushonka (xashlama) sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1566_JFVMaw1_OiyJoRv.jpg', tags: ['Issiq taom'], popular: true },
     { id: 'bt-2', name: 'Мастава', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 35000, portion: '1 porsiya', desc: 'An\'anaviy o\'zbekcha guruchli mastava sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1514_ZlX2FhI.jpg', tags: ['Milliy'], popular: true },
     { id: 'bt-3', name: 'Борщ', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 30000, portion: '1 porsiya', desc: 'Klassik qizil borsh sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1515_XhkBdxt_s4FDJwk.jpg', tags: ['Sho\'rva'], popular: false },
     { id: 'bt-4', name: 'Шўрва (мол гўшт)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 29000, portion: '1 porsiya', desc: 'Mol go\'shtidan tayyorlangan mazali sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1549_m8tgXEs.jpg', tags: ['Mol go\'shti'], popular: false },
     { id: 'bt-5', name: 'Тефтель шўрва', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 29000, portion: '1 porsiya', desc: 'Teftel solingan to\'yimli birinchi taom.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1550_zst6bIR_QraUR3a.jpg', tags: ['Teftel'], popular: false },
-
-    // --- IKKINCHI TAOMLAR ---
     { id: 'it-1', name: 'Мушак жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 210000, portion: '1 porsiya', desc: 'Maxsus usulda pishirilgan mushak jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1588_vqt1uS2.jpg', tags: ['Jiz'], popular: true },
     { id: 'it-2', name: 'Олот сомса', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 10000, portion: '1 dona', desc: 'Haqiqiy mazali Olot somsasi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1613.jpg', tags: ['Samsa'], popular: true },
     { id: 'it-3', name: 'Умакай жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 190000, portion: '1 porsiya', desc: 'Umakai jiz tansiq taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1611_IZss6f5.jpg', tags: ['Jiz'], popular: true },
@@ -285,8 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'it-10', name: 'Қозонча (Қизилча)', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 250000, portion: '1 kg', desc: 'Maxsus qizilcha go\'shtli taomi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1567_t8AkDY3_FRhAnBK.jpg', tags: ['1 kg'], popular: false },
     { id: 'it-11', name: 'Уйғурча жиз', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 240000, portion: '1 kg', desc: 'Uyg\'ur uslubidagi mazali jiz.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', tags: ['Uyg\'ur', '1 kg'], popular: true },
     { id: 'it-12', name: 'Манти', category: 'ikkinchi', categoryName: 'Ikkinchi taomlar', price: 7000, portion: '1 dona', desc: 'Bug\'da pishirilgan shirador manti.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1526.jpg', tags: ['Manti'], popular: true },
-
-    // --- SHASHLIK & ASSORTI ---
     { id: 'sh-1', name: 'Жигар шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Jigar va dumbadan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1631.jpg', tags: ['Jigar'], popular: true },
     { id: 'sh-2', name: 'Товуқ кавказ', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 28000, portion: '1 porsiya', desc: 'Tovuq go\'shtidan Kavkazcha shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1545_GKuqMgp.jpg', tags: ['Tovuq'], popular: false },
     { id: 'sh-3', name: 'Нон шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 5000, portion: '1 dona', desc: 'Ko\'mirda pishirilgan mazali non va dumba shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1542.jpg', tags: ['Non'], popular: false },
@@ -299,8 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sh-10', name: 'Наполеон', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 72000, portion: '1 porsiya', desc: 'Maxsus qatlamali Napoleon kabobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1626_RMYLZ0j_sCMPDEC.jpg', tags: ['Kabob'], popular: true },
     { id: 'sh-11', name: 'Помидор шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Ko\'mirda pishirilgan suvli pomidor shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', tags: ['Pomidor'], popular: false },
     { id: 'sh-12', name: 'Думба шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Saralangan dumba yog\'idan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Dumba'], popular: false },
-
-    // --- SALATLAR (RASMLAR VA NOMLAR 100% MOSLASHTIRILDI) ---
     { id: 'qt-1', name: 'Хрустящий баклажан', category: 'salatlar', categoryName: 'Salatlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon, pomidor va maxsus sous.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
     { id: 'sal-1', name: 'Свежий', category: 'salatlar', categoryName: 'Salatlar', price: 18000, portion: '1 porsiya', desc: 'Pomidor va bodringdan yig\'ilgan yangi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1529_Enmxvpq.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-2', name: 'Шакароб', category: 'salatlar', categoryName: 'Salatlar', price: 19000, portion: '1 porsiya', desc: 'An\'anaviy piyoz va pomidor shakarobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1530_bt4dHZM.jpg', tags: ['Milliy'], popular: true },
@@ -322,8 +215,6 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sal-18', name: 'Капризе', category: 'salatlar', categoryName: 'Salatlar', price: 68000, portion: '1 porsiya', desc: 'Pomidor, motsarella pishlog\'i, rukkola va pesto sousidan italyancha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1569.jpg', tags: ['Premium'], popular: true },
     { id: 'sal-19', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
     { id: 'sal-20', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
-
-    // --- ICHIMLIKLAR & MOXITO ---
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
     { id: 'ich-2', name: 'KARLOVY VARY', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 12000, portion: '1 litr', desc: 'Shifobaxsh mineral suv.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1587_j9z8Wv3_zGxwjgk.jpg', tags: ['Mineral suv'], popular: false },
     { id: 'ich-3', name: 'Черноголовка', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 14000, portion: '1 litr', desc: 'Mazali Tarxun / limonad.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1593_rJiNON9.jpg', tags: ['Limonad'], popular: false },
@@ -340,8 +231,6 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'ich-14', name: 'Тархун', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 60000, portion: '1 litr', desc: 'Xushbo\'y tarxun moxitosi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1534.jpg', tags: ['Moxito'], popular: false },
     { id: 'ich-15', name: 'Манго-Маракуя', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 65000, portion: '1 litr', desc: 'Egzotik mango-marakuya moxitosi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1533.jpg', tags: ['Moxito'], popular: true },
     { id: 'ich-16', name: 'Мохито клубничный', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 60000, portion: '1 litr', desc: 'Qulupnayli shirin moxito.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1535.jpg', tags: ['Moxito'], popular: false },
-
-    // --- DESERTLAR ---
     { id: 'des-1', name: 'San sebastian', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 dona', desc: 'Ispancha shokoladli/karamelli San-Sebastyan cheyzkeyki.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1608.jpg', tags: ['Desert'], popular: true },
     { id: 'des-2', name: 'Yagodniy opera', category: 'gazli', categoryName: 'Desertlar', price: 50000, portion: '1 dona', desc: 'Mevali nafis opera torti bo\'lagi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1609.jpg', tags: ['Desert'], popular: false },
     { id: 'des-3', name: 'Орешки safia', category: 'gazli', categoryName: 'Desertlar', price: 60000, portion: '1 quti', desc: 'Qaynatma shokoladli safia yong\'oqlari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1605.jpg', tags: ['Shirinlik'], popular: true },
@@ -355,30 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedPaymentMethod = 'Naqd';
 
   const CATEGORY_TRANSLATIONS = {
-    uz: {
-      'Birinchi taomlar': 'Birinchi taomlar',
-      'Ikkinchi taomlar': 'Ikkinchi taomlar',
-      'Shashlik va assorti': 'Shashlik va assorti',
-      'Salatlar': 'Salatlar',
-      'Ichimliklar & Non': 'Ichimliklar & Non',
-      'Desertlar': 'Desertlar'
-    },
-    ru: {
-      'Birinchi taomlar': 'Первые блюда',
-      'Ikkinchi taomlar': 'Вторые блюда',
-      'Shashlik va assorti': 'Шашлыки и ассорти',
-      'Salatlar': 'Салаты',
-      'Ichimliklar & Non': 'Напитки и Хлеб',
-      'Desertlar': 'Десерты'
-    },
-    en: {
-      'Birinchi taomlar': 'First Courses',
-      'Ikkinchi taomlar': 'Main Courses',
-      'Shashlik va assorti': 'Shashlik & Grill',
-      'Salatlar': 'Salads',
-      'Ichimliklar & Non': 'Drinks & Bread',
-      'Desertlar': 'Desserts'
-    }
+    uz: { 'Birinchi taomlar': 'Birinchi taomlar', 'Ikkinchi taomlar': 'Ikkinchi taomlar', 'Shashlik va assorti': 'Shashlik va assorti', 'Salatlar': 'Salatlar', 'Ichimliklar & Non': 'Ichimliklar & Non', 'Desertlar': 'Desertlar' },
+    ru: { 'Birinchi taomlar': 'Первые блюда', 'Ikkinchi taomlar': 'Вторые блюда', 'Shashlik va assorti': 'Шашлыки и ассорти', 'Salatlar': 'Салаты', 'Ichimliklar & Non': 'Напитки и Хлеб', 'Desertlar': 'Десерты' },
+    en: { 'Birinchi taomlar': 'First Courses', 'Ikkinchi taomlar': 'Main Courses', 'Shashlik va assorti': 'Shashlik & Grill', 'Salatlar': 'Salads', 'Ichimliklar & Non': 'Drinks & Bread', 'Desertlar': 'Desserts' }
   };
 
   const PORTION_TRANSLATIONS = {
@@ -390,74 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const DISH_TRANSLATIONS = {
     'bt-1': { ru: ['Тушёнка (хашлама)', 'Вкусный и сытный суп тушенка (хашлама).'], en: ['Tushonka (Khashlama)', 'Delicious and hearty beef stew soup.'] },
     'bt-2': { ru: ['Мастава', 'Традиционный узбекский рисовый суп мастава.'], en: ['Mastava', 'Traditional Uzbek rice soup with tender meat.'] },
-    'bt-3': { ru: ['Борщ', 'Классический красный борщ со свежей зеленью.'], en: ['Borscht', 'Classic red beetroot soup with beef.'] },
-    'bt-4': { ru: ['Шурпа (говядина)', 'Ароматный суп шурпа из свежей говядины.'], en: ['Beef Shurpa', 'Rich and flavorful beef broth soup with vegetables.'] },
-    'bt-5': { ru: ['Суп с тефтелями', 'Сытный суп с нежными мясными тефтелями.'], en: ['Meatball Soup', 'Hearty soup served with tender beef meatballs.'] },
-    'it-1': { ru: ['Мушак джиз', 'Приготовленный по особому рецепту мушак джиз.'], en: ['Mushak Jiz', 'Specially roasted tender beef shank meat.'] },
-    'it-2': { ru: ['Алатская самса', 'Настоящая сочная и хрустящая Алатская самса.'], en: ['Olot Samsa', 'Authentic crispy pastry stuffed with juicy meat and onions.'] },
-    'it-3': { ru: ['Умакай джиз', 'Изысканное мясное блюдо Умакай джиз.'], en: ['Umakai Jiz', 'Traditional pan-fried meat delicacy.'] },
-    'it-4': { ru: ['Тандыр гушт', 'Ароматное мясо, запеченное в настоящем тандыре.'], en: ['Tandoor Meat', 'Aromatic lamb slow-roasted in a traditional clay tandoor.'] },
-    'it-5': { ru: ['Жареные крылышки', 'Хрустящие жареные куриные крылышки.'], en: ['Fried Chicken Wings', 'Crispy golden fried chicken wings.'] },
-    'it-6': { ru: ['Картошка фри', 'Хрустящий золотистый картофель фри.'], en: ['French Fries', 'Crispy golden french fries.'] },
-    'it-7': { ru: ['Хасип из говядины', 'Национальное блюдо хасип из отборной говядины.'], en: ['Beef Khasip', 'Traditional Uzbek homemade beef and rice sausage.'] },
-    'it-8': { ru: ['Манчури', 'Мясное блюдо в стиле Манчури.'], en: ['Manchurian Meat', 'Savory meat prepared in special Manchurian style.'] },
-    'it-9': { ru: ['Буйрак джиз', 'Специальный джиз из свежих почек.'], en: ['Buyrak Jiz', 'Specialty pan-fried dish made with tender kidneys.'] },
-    'it-10': { ru: ['Казанча (Кизилча)', 'Фирменное мясное блюдо в казане.'], en: ['Qozoncha (Kizilcha)', 'Signature slow-cooked meat dish in a cast-iron kazan.'] },
-    'it-11': { ru: ['Уйгурский джиз', 'Аппетитный джиз по-уйгурски со специями.'], en: ['Uyghur Jiz', 'Flavorful stir-fried meat in traditional Uyghur style.'] },
-    'it-12': { ru: ['Манты', 'Сочные манты с рубленым мясом на пару.'], en: ['Manti', 'Steamed dumplings filled with juicy minced meat and onions.'] },
-    'sh-1': { ru: ['Шашлык из печени', 'Нежный шашлык из печени и курдюка.'], en: ['Liver Shashlik', 'Tender skewered beef liver with tail fat.'] },
-    'sh-2': { ru: ['Куриный кавказский', 'Кавказский шашлык из нежного куриного филе.'], en: ['Caucasian Chicken Shashlik', 'Marinated chicken skewers grilled over charcoal.'] },
-    'sh-3': { ru: ['Нон шашлык', 'Хрустящий шашлык из лепешки и курдючного жира.'], en: ['Bread Shashlik', 'Charcoal-grilled bread infused with savory lamb fat.'] },
-    'sh-4': { ru: ['Кавказский кусковой (баранина)', 'Сочный кусковой шашлык из баранины по-кавказски.'], en: ['Caucasian Lamb Shashlik', 'Juicy chunks of marinated lamb grilled on skewers.'] },
-    'sh-5': { ru: ['Кусковой (говядина)', 'Кусковой шашлык из отборной говядины с курдюком.'], en: ['Beef Shashlik', 'Tender beef fillet skewers grilled over glowing embers.'] },
-    'sh-6': { ru: ['Шашлык Гиждуван', 'Традиционный гиждуванский молотый шашлык (люля).'], en: ['Gijduvan Shashlik', 'Famous Gijduvan-style minced meat kebab.'] },
-    'sh-7': { ru: ['Рулет шашлык', 'Особый мясной рулет на углях.'], en: ['Roll Shashlik', 'Special rolled meat kebab grilled over charcoal.'] },
-    'sh-8': { ru: ['Сосиска сладкая', 'Аппетитный шашлык из нежных сосисок.'], en: ['Sweet Sausage Skewer', 'Charcoal-grilled mild sausage on a skewer.'] },
-    'sh-9': { ru: ['Сосиска острая', 'Пикантный шашлык из острых сосисок.'], en: ['Spicy Sausage Skewer', 'Charcoal-grilled spicy sausage on a skewer.'] },
-    'sh-10': { ru: ['Шашлык Наполеон', 'Фирменный слоеный шашлык Наполеон из мяса и курдюка.'], en: ['Napoleon Shashlik', 'Signature layered beef and lamb fat kebab.'] },
-    'sh-11': { ru: ['Шашлык из помидоров', 'Сочные помидоры, запеченные на углях.'], en: ['Tomato Shashlik', 'Juicy ripe tomatoes grilled over charcoal.'] },
-    'sh-12': { ru: ['Думба шашлык', 'Ароматный шашлык из отборного курдючного жира.'], en: ['Dumba (Tail Fat) Shashlik', 'Crispy and savory grilled lamb tail fat skewers.'] },
-    'qt-1': { ru: ['Хрустящий баклажан', 'Хрустящие жареные баклажаны со свежими томатами и соусом.'], en: ['Crispy Eggplant Salad', 'Crispy fried eggplant tossed with tomatoes and special sauce.'] },
-    'sal-1': { ru: ['Свежий салат', 'Легкий салат из свежих помидоров и огурцов.'], en: ['Fresh Salad', 'Light salad with fresh ripe tomatoes and cucumbers.'] },
-    'sal-2': { ru: ['Шакароб', 'Традиционный узбекский салат из тонко нарезанных томатов и лука.'], en: ['Shakarob', 'Traditional Uzbek sliced tomato and onion salad.'] },
-    'sal-3': { ru: ['Салат Икбол', 'Эксклюзивный фирменный салат от шеф-повара ресторана.'], en: ['Iqbol Signature Salad', 'Our restaurant’s special house salad.'] },
-    'sal-4': { ru: ['Цезарь', 'Классический салат Цезарь с креветками/курицей и пармезаном.'], en: ['Caesar Salad', 'Classic Caesar salad with shrimp/chicken and Parmesan cheese.'] },
-    'sal-5': { ru: ['Фруктовый салат', 'Витаминный сладкий салат из сезонных фруктов.'], en: ['Fruit Salad', 'Sweet vitamin-rich salad made from seasonal fresh fruits.'] },
-    'sal-6': { ru: ['Мужской каприз', 'Сытный мясной салат с сыром и майонезной заправкой.'], en: ['Men\'s Caprice Salad', 'Hearty meat and cheese salad with rich dressing.'] },
-    'sal-7': { ru: ['Греческий салат', 'Свежие овощи, маслины и нежный сыр Фета.'], en: ['Greek Salad', 'Fresh vegetables, olives, and authentic Feta cheese.'] },
-    'sal-8': { ru: ['Под водочку', 'Специальный аппетитный закусочный салат.'], en: ['Appetizer Salad', 'Savory starter salad with pickled and fresh ingredients.'] },
-    'sal-9': { ru: ['Японский салат', 'Пикантный салат в японском стиле с фирменным соусом.'], en: ['Japanese Style Salad', 'Savory salad dressed in a special Japanese soy-sesame sauce.'] },
-    'sal-10': { ru: ['Французский салат', 'Нежный салат с мясом, свежими овощами и хрустящим картофелем пай.'], en: ['French Salad', 'Delicate meat and vegetable salad topped with crispy shoestring potatoes.'] },
-    'sal-11': { ru: ['Салат Смак', 'Вкусный салат с томатами, сыром и хрустящими сухариками.'], en: ['Smak Salad', 'Tasty salad with tomatoes, cheese, and crunchy croutons.'] },
-    'sal-12': { ru: ['Свежий (с катыком)', 'Свежие помидоры и огурцы, заправленные домашним катыком и зеленью.'], en: ['Fresh Salad with Yogurt', 'Fresh tomatoes, cucumbers, and herbs dressed with traditional yogurt.'] },
-    'sal-13': { ru: ['Оливье', 'Традиционный и всеми любимый классический салат Оливье.'], en: ['Olivier Salad', 'Traditional classic Russian potato, meat, and pea salad.'] },
-    'sal-14': { ru: ['Свежее ассорти', 'Богатая нарезка из свежих овощей и ароматной зелени.'], en: ['Fresh Vegetable Platter', 'Assortment of fresh seasonal vegetables and greens.'] },
-    'sal-15': { ru: ['Лимон', 'Свеженарезанные ароматные дольки лимона.'], en: ['Fresh Lemon', 'Freshly sliced aromatic lemon wedges.'] },
-    'sal-16': { ru: ['Чакки (Сузьма)', 'Натуральная домашняя сузьма (чакки) со специями.'], en: ['Chakki (Strained Yogurt)', 'Natural and creamy traditional strained yogurt.'] },
-    'sal-17': { ru: ['Салат Чабан', 'Мелко нарезанные свежие овощи и зелень по-восточному.'], en: ['Chaban Salad', 'Finely diced fresh tomatoes, cucumbers, onions, and herbs.'] },
-    'sal-18': { ru: ['Капрезе', 'Итальянский салат со спелыми томатами, моцареллой, рукколой и песто.'], en: ['Caprese Salad', 'Italian salad with tomatoes, mozzarella, arugula, and pesto sauce.'] },
-    'sal-19': { ru: ['Салат Сате', 'Оригинальный салат в виде баклажанных рулетиков по особому рецепту.'], en: ['Sate Salad', 'Special eggplant rolls stuffed with savory filling.'] },
-    'sal-20': { ru: ['Салат Тулум', 'Изысканный салат с сыром Тулум, кукурузой, черри и свежей зеленью.'], en: ['Tulum Cheese Salad', 'Refined salad with Tulum cheese, sweet corn, cherry tomatoes, and greens.'] },
-    'ich-1': { ru: ['Сок DENA', 'Натуральный фруктовый сок DENA.'], en: ['DENA Juice', 'Natural fruit juice.'] },
-    'ich-2': { ru: ['KARLOVY VARY', 'Лечебная минеральная вода.'], en: ['KARLOVY VARY Water', 'Mineral water.'] },
-    'ich-3': { ru: ['Черноголовка', 'Освежающий лимонад Черноголовка.'], en: ['Chernogolovka Lemonade', 'Refreshing traditional lemonade.'] },
-    'ich-4': { ru: ['BLANC BLUE', 'Прохладительный напиток Blanc Blue.'], en: ['BLANC BLUE Drink', 'Refreshing sparkling drink.'] },
-    'ich-5': { ru: ['RED BULL', 'Энергетический напиток Red Bull.'], en: ['RED BULL Energy Drink', 'Classic energy drink.'] },
-    'ich-6': { ru: ['Sayhun', 'Чистая питьевая вода без газа.'], en: ['Sayhun Still Water', 'Pure drinking water.'] },
-    'ich-7': { ru: ['GORILLA', 'Энергетический напиток Gorilla.'], en: ['GORILLA Energy Drink', 'Energy drink.'] },
-    'ich-8': { ru: ['Аш-ТАУ', 'Природная минеральная вода Аш-Тау.'], en: ['Ash-TAU Mineral Water', 'Premium mineral water.'] },
-    'ich-9': { ru: ['Adrenaline Rush', 'Энергетический напиток Adrenaline Rush.'], en: ['Adrenaline Rush', 'Energy drink.'] },
-    'ich-10': { ru: ['Fanta', 'Освежающая апельсиновая Fanta.'], en: ['Fanta', 'Classic orange soda.'] },
-    'ich-11': { ru: ['Coca-Cola', 'Классическая прохладная Coca-Cola.'], en: ['Coca-Cola', 'Classic refreshing Coca-Cola.'] },
-    'ich-12': { ru: ['Мохито Киви', 'Ледяной освежающий мохито со вкусом киви.'], en: ['Kiwi Mojito', 'Ice-cold refreshing kiwi mojito pitcher.'] },
-    'ich-13': { ru: ['Мохито Классический', 'Классический мохито со свежей мятой и лаймом.'], en: ['Classic Mojito', 'Classic mojito pitcher with fresh mint and lime.'] },
-    'ich-14': { ru: ['Тархун Мохито', 'Ароматный освежающий лимонад Тархун.'], en: ['Tarragon Mojito', 'Refreshing tarragon lemonade pitcher.'] },
-    'ich-15': { ru: ['Манго-Маракуйя', 'Экзотический мохито со вкусом манго и маракуйи.'], en: ['Mango-Passionfruit Mojito', 'Exotic mango and passionfruit mojito pitcher.'] },
-    'ich-16': { ru: ['Мохито Клубничный', 'Сладкий освежающий клубничный мохито.'], en: ['Strawberry Mojito', 'Sweet and refreshing strawberry mojito pitcher.'] },
-    'des-1': { ru: ['Сан-Себастьян', 'Нежный испанский чизкейк Сан-Себастьян с шоколадом/карамелью.'], en: ['San Sebastian Cheesecake', 'Creamy Spanish burnt cheesecake with chocolate sauce.'] },
-    'des-2': { ru: ['Ягодная опера', 'Изысканное пирожное Опера с лесными ягодами.'], en: ['Berry Opera Cake', 'Delicate layered Opera cake with berry glaze.'] },
-    'des-3': { ru: ['Орешки Safia', 'Печенье орешки со вареной сгущенкой в коробке.'], en: ['Safia Sweet Walnuts', 'Pastry cookies filled with caramelized milk.'] },
-    'des-4': { ru: ['MILLENNIUM Air Bubble', 'Пористый молочный шоколад.'], en: ['MILLENNIUM Air Bubble', 'Aerated milk chocolate bar.'] }
+    'bt-3': { ru: ['Борщ', 'Классический красный борщ со свежей зеленью.'], en: ['Borscht', 'Classic red beetroot soup with beef.'] }
   };
 
   function getDishName(dish) {
@@ -499,23 +300,10 @@ document.addEventListener('DOMContentLoaded', () => {
     { sel: '#heroReservationBtn span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book a Table' },
     { sel: '#menu .section-tag', uz: 'Bizning taomnoma', ru: 'Наше меню', en: 'Our Menu' },
     { sel: '#menu .section-title', html: true, uz: 'IQBOL <span>Restoran Menyu</span>', ru: 'Меню <span>Ресторана IQBOL</span>', en: 'IQBOL <span>Restaurant Menu</span>' },
-    { sel: '#menu .section-subtitle', uz: "Haqiqiy chop etilgan menyu asosidagi asl taomlar va narxlar. O'zingiz yoqtirgan taomni qidiring yoki toifa bo'yicha tanlang.", ru: 'Оригинальные блюда и актуальные цены нашего ресторана. Найдите любимое блюдо через поиск или выберите категорию.', en: 'Authentic dishes and prices from our kitchen. Search for your favorite meal or filter by category.' },
-    { sel: '.cat-tab-btn[data-category="all"] span', uz: 'Barchasi', ru: 'Все', en: 'All' },
-    { sel: '.cat-tab-btn[data-category="birinchi"] span', uz: 'Birinchi taomlar', ru: 'Первые блюда', en: 'First Courses' },
-    { sel: '.cat-tab-btn[data-category="ikkinchi"] span', uz: 'Ikkinchi taomlar', ru: 'Вторые блюда', en: 'Main Courses' },
-    { sel: '.cat-tab-btn[data-category="shashlik"] span', uz: 'Shashliklar', ru: 'Шашлыки', en: 'Shashlik' },
-    { sel: '.cat-tab-btn[data-category="salatlar"] span', uz: 'Salatlar', ru: 'Салаты', en: 'Salads' },
-    { sel: '.cat-tab-btn[data-category="ichimliklar"] span', uz: 'Ichimliklar & Non', ru: 'Напитки и Хлеб', en: 'Drinks & Bread' },
-    { sel: '.cat-tab-btn[data-category="gazli"] span', uz: 'Desert', ru: 'Десерты', en: 'Desserts' },
     { sel: '#reservation .form-title', uz: 'Stol band qilish', ru: 'Бронирование стола', en: 'Table Reservation' },
-    { sel: '#reservation .form-desc', uz: "Qarshi shahrida oilaviy yoki do'stlar bilan unutilmas kecha o'tkazish uchun joyingizni oldindan bron qiling.", ru: 'Забронируйте столик заранее для незабываемого вечера в кругу семьи или друзей.', en: 'Reserve your table in advance for an unforgettable evening with family and friends.' },
     { sel: '#reservationForm button[type="submit"] span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book Table' },
     { sel: '#gallery .section-tag', uz: 'Foto lavhalar', ru: 'Фотогалерея', en: 'Photo Gallery' },
     { sel: '#gallery .section-title', html: true, uz: 'IQBOL <span>Galereyasi</span>', ru: 'Галерея <span>IQBOL</span>', en: 'IQBOL <span>Gallery</span>' },
-    { sel: '#testimonials .section-tag', uz: 'Mehmonlar fikri', ru: 'Отзывы гостей', en: 'Guest Reviews' },
-    { sel: '#testimonials .section-title', html: true, uz: 'Haqiqiy <span>Mijozlarimiz sharhlari</span>', ru: 'Отзывы <span>Наших гостей</span>', en: 'Real <span>Customer Reviews</span>' },
-    { sel: '#contact .section-tag', uz: 'Manzil & Aloqa', ru: 'Адрес и Контакты', en: 'Location & Contact' },
-    { sel: '#contact .section-title', html: true, uz: 'Bizni <span>Qarshida toping</span>', ru: 'Найдите нас <span>в Карши</span>', en: 'Find Us <span>in Karshi</span>' },
     { sel: '.cart-title span', uz: 'Sizning buyurtmangiz', ru: 'Ваш заказ', en: 'Your Order' },
     { sel: '.order-type-btn[data-type="dine_in"]', html: true, uz: '<i class="fas fa-utensils"></i> Restoranda', ru: '<i class="fas fa-utensils"></i> В ресторане', en: '<i class="fas fa-utensils"></i> Dine-in' },
     { sel: '.order-type-btn[data-type="delivery"]', html: true, uz: '<i class="fas fa-motorcycle"></i> Yetkazib berish', ru: '<i class="fas fa-motorcycle"></i> Доставка', en: '<i class="fas fa-motorcycle"></i> Delivery' },
@@ -543,20 +331,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const sInput = document.getElementById('searchInput');
     if (sInput) {
       sInput.placeholder = lang === 'ru'
-        ? 'Поиск блюда по названию (например: тандыр, шашлык, салат)...'
+        ? 'Поиск блюда по названию...'
         : lang === 'en'
-        ? 'Search dish by name (e.g. tandoor, shashlik, salad)...'
-        : "Taom nomi yoki tarkibini qidiring (masalan: tandir, shashlik, lag'mon)...";
+        ? 'Search dish by name...'
+        : "Taom nomi yoki tarkibini qidiring...";
     }
 
     const payTitleEl = document.getElementById('payMethodsTitleText');
     if (payTitleEl) {
-      payTitleEl.textContent = lang === 'ru' ? 'Способ оплаты (Click / Payme / Paynet / Наличные):' : lang === 'en' ? 'Payment Method (Click / Payme / Paynet / Cash):' : "To'lov usulini tanlang:";
+      payTitleEl.textContent = lang === 'ru' ? 'Способ оплаты (Наличные / КАРТА):' : lang === 'en' ? 'Payment Method (Cash / CARD):' : "To'lov usulini tanlang:";
     }
 
     const cashBtnEl = document.getElementById('payBtnCashText');
     if (cashBtnEl) {
       cashBtnEl.textContent = lang === 'ru' ? 'Наличные' : lang === 'en' ? 'Cash' : 'Naqd';
+    }
+
+    const cardBtnEl = document.getElementById('payBtnCardText');
+    if (cardBtnEl) {
+      cardBtnEl.textContent = lang === 'ru' ? 'На карту' : lang === 'en' ? 'To Card' : 'Karta orqali';
+    }
+
+    const cardHintEl = document.getElementById('cardTransferHint');
+    if (cardHintEl) {
+      cardHintEl.textContent = lang === 'ru'
+        ? `Номер карты для перевода (Click / Payme / Paynet):`
+        : lang === 'en'
+        ? `Card number for transfer (Click / Payme / Paynet):`
+        : `To'lov uchun karta raqami (Click / Payme / Paynet):`;
     }
 
     renderMenu();
@@ -604,8 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const toastContainer = document.getElementById('toastContainer');
   const backToTopBtn = document.getElementById('backToTop');
   const themeToggleBtn = document.getElementById('themeToggle');
-  const mobileNavDrawer = document.getElementById('mobileNavDrawer');
-  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const hamburgerBtn = document.getElementById('hamburgerBtn');
 
   function formatPrice(num) {
@@ -842,8 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (existing) existing.quantity += qty;
     else cart.push({ id: dishId, quantity: qty });
     saveCart();
-    const addedMsg = currentLang === 'ru' ? `"${getDishName(dish)}" добавлено в корзину!` : currentLang === 'en' ? `"${getDishName(dish)}" added to cart!` : `"${dish.name}" savatga qo'shildi!`;
-    showToast(addedMsg, 'fa-shopping-cart');
+    showToast(`"${getDishName(dish)}" savatga qo'shildi!`, 'fa-shopping-cart');
   };
   window.changeCartQty = function(dishId, delta) {
     const item = cart.find(i => i.id === dishId);
@@ -873,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     4. CHECKOUT & CLICK / PAYME / PAYNET (9860 1701 1569 3682)
+     4. CHECKOUT & TELEGRAM (NAQD VA KARTA 9860, CLICK/PAYME/PAYNET ESLATMASI BILAN)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -915,25 +714,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updateQuickPayButtonsUI() {
-    const actionsRow = document.getElementById('quickPayLinksRow');
-    if (!actionsRow) return;
-    const prov = PAYMENT_PROVIDERS[selectedPaymentMethod];
-    if (!prov) {
-      actionsRow.innerHTML = '';
-      return;
-    }
-    actionsRow.innerHTML = `
-      <button type="button" class="quick-pay-btn" style="background:${prov.color}; color:${prov.textColor};" onclick="window.openPaymentDestination('${selectedPaymentMethod}', 'auto')">
-        <i class="fas fa-mobile-screen-button"></i> ${prov.name} Ilovani ochish
-      </button>
-      <button type="button" class="quick-pay-btn" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-gold);" onclick="window.openPaymentDestination('${selectedPaymentMethod}', 'web')">
-        <i class="fas fa-globe"></i> ${prov.name} Saytiga kirish
-      </button>
-    `;
-  }
-
-  // Click / Payme / Paynet / Naqd va 9860 1701 1569 3682 karta raqamini ko'rsatuvchi blok
   function ensurePaymentSelectorUI() {
     const checkoutFormEl = document.getElementById('checkoutForm');
     if (!checkoutFormEl || document.getElementById('paymentMethodsBox')) return;
@@ -951,14 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <button type="button" class="pay-option-btn active" data-pay="Naqd">
           <i class="fas fa-money-bill-wave"></i> <span id="payBtnCashText">Naqd</span>
         </button>
-        <button type="button" class="pay-option-btn" data-pay="Click">
-          <i class="fas fa-credit-card"></i> <span>CLICK</span>
-        </button>
-        <button type="button" class="pay-option-btn" data-pay="Payme">
-          <i class="fas fa-mobile-screen-button"></i> <span>Payme</span>
-        </button>
-        <button type="button" class="pay-option-btn" data-pay="Paynet">
-          <i class="fas fa-bolt"></i> <span>Paynet</span>
+        <button type="button" class="pay-option-btn" data-pay="Karta">
+          <i class="fas fa-credit-card"></i> <span id="payBtnCardText">Karta orqali</span>
         </button>
       </div>
       <div id="cardDisplayBox" class="card-Display-box">
@@ -971,7 +745,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <i class="fas fa-copy"></i> Nusxalash
           </button>
         </div>
-        <div id="quickPayLinksRow" class="quick-pay-links"></div>
       </div>
     `;
     checkoutFormEl.insertBefore(payBox, submitBtn);
@@ -982,12 +755,12 @@ document.addEventListener('DOMContentLoaded', () => {
         payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         selectedPaymentMethod = btn.dataset.pay;
-        const isOnline = selectedPaymentMethod === 'Click' || selectedPaymentMethod === 'Payme' || selectedPaymentMethod === 'Paynet';
+        const isCard = selectedPaymentMethod === 'Karta';
         if (cardBox) {
-          cardBox.classList.toggle('visible', isOnline);
+          cardBox.classList.toggle('visible', isCard);
         }
-        if (isOnline) {
-          updateQuickPayButtonsUI();
+        if (isCard) {
+          window.copyRestaurantCard();
         }
       });
     });
@@ -1013,8 +786,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const checkoutForm = document.getElementById('checkoutForm');
   if (checkoutForm) {
+    let isSubmitting = false; // DOUBLE CLICK HIMOYASI
     checkoutForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (isSubmitting) return;
+
       const name = document.getElementById('checkoutName').value.trim(); 
       const phone = document.getElementById('checkoutPhone').value.trim(); 
       const address = document.getElementById('checkoutAddress').value.trim(); 
@@ -1031,12 +807,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
+      isSubmitting = true;
+      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
       let subtotal = 0; 
       let orderLinesText = cart.map(item => { 
         const dish = MENU_DATA.find(d => d.id === item.id); 
         const lineTotal = dish ? dish.price * item.quantity : 0; 
         subtotal += lineTotal; 
-        return `• ${dish ? dish.name : ''} x ${item.quantity} = ${formatPrice(lineTotal)}`; 
+        return `• ${getDishName(dish)} x ${item.quantity} = ${formatPrice(lineTotal)}`; 
       }).join('\n');
 
       let extraFee = 0;
@@ -1060,11 +840,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
-      const payInfoLine = selectedPaymentMethod === 'Naqd' ? 'Naqd' : `${selectedPaymentMethod} (Karta: ${RESTAURANT_CARD})`;
+      const payInfoLine = selectedPaymentMethod === 'Naqd' ? 'Naqd' : `Karta orqali (${RESTAURANT_CARD} - Click/Payme/Paynet)`;
       
       showToast("Yuborilmoqda...", 'fa-spinner');
-      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
-      if (submitBtn) submitBtn.disabled = true;
 
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
       const FOOD_CHAT_ID = '8072569639';
@@ -1083,18 +861,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.closeCheckout(); 
       showSuccessModal({ 
-        title: selectedPaymentMethod === 'Naqd' ? 'Buyurtmangiz qabul qilindi!' : `Buyurtma va ${selectedPaymentMethod} to'lov!`, 
+        title: selectedPaymentMethod === 'Naqd' ? 'Buyurtmangiz qabul qilindi!' : 'Buyurtma va Karta orqali to\'lov!', 
         subtitle: `Raqam: #${orderId} | To'lov: ${selectedPaymentMethod}`, 
         message: selectedPaymentMethod === 'Naqd'
           ? `Tez orada operator aloqaga chiqadi.`
-          : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Quyidagi tugma orqali ${selectedPaymentMethod} ilovasiga yoki saytiga kirib ${formatPrice(totalSum)} o'tkazing:`, 
-        details: `${deliveryText}\nTo'lov turi: ${payInfoLine}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`,
-        paymentProvider: selectedPaymentMethod,
-        paymentAmount: totalSum,
-        orderId: orderId
+          : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Iltimos, ${formatPrice(totalSum)} ni Click, Payme yoki Paynet orqali ushbu kartaga o'tkazing:`, 
+        details: `${deliveryText}\nTo'lov turi: ${payInfoLine}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`
       });
       cart = [];
       saveCart();
+      isSubmitting = false;
       if (submitBtn) submitBtn.disabled = false;
     });
   }
@@ -1179,8 +955,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     checkAndFilterBookedTables();
 
+    let isResSubmitting = false; // DOUBLE CLICK HIMOYASI
     reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (isResSubmitting) return;
+
       const name = document.getElementById('resName').value.trim();
       const phone = document.getElementById('resPhone').value.trim();
       const date = resDateInput.value;
@@ -1196,6 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      isResSubmitting = true;
       let tableTypeName = '';
       if (tableType === 'asosiy-zal') tableTypeName = 'Asosiy zal';
       else if (tableType === 'zal-2') tableTypeName = '2-zal';
@@ -1218,6 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!result.success) {
           showToast(result.message, 'fa-exclamation-triangle');
           checkAndFilterBookedTables(); 
+          isResSubmitting = false;
           if (submitBtn) submitBtn.disabled = false;
           return;
         }
@@ -1235,13 +1016,14 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         showToast("Server bilan aloqa yo'q!", 'fa-wifi');
       } finally {
+        isResSubmitting = false;
         if (submitBtn) submitBtn.disabled = false;
       }
     });
   }
 
   /* ==========================================================================
-     6. SUCCESS MODAL (CLICK / PAYME / PAYNET ILOVA VA SAYT TUGMALARI BILAN)
+     6. SUCCESS MODAL
      ========================================================================== */
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
@@ -1255,40 +1037,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (subEl) subEl.textContent = data.subtitle || '';
     if (msgEl) msgEl.textContent = data.message || '';
     if (detEl) detEl.textContent = data.details || '';
-
-    let oldPayWrap = document.getElementById('dynamicOnlinePayWrap');
-    if (oldPayWrap) oldPayWrap.remove();
-
-    const prov = data.paymentProvider ? PAYMENT_PROVIDERS[data.paymentProvider] : null;
-    if (prov) {
-      // Karta raqamini avtomatik nusxalab beramiz
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
-      }
-
-      const payWrap = document.createElement('div');
-      payWrap.id = 'dynamicOnlinePayWrap';
-      payWrap.style.cssText = 'margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem;';
-      payWrap.innerHTML = `
-        <div class="card-number-row" style="justify-content: space-between;">
-          <span class="card-number-val">${RESTAURANT_CARD}</span>
-          <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()">
-            <i class="fas fa-copy"></i> Nusxalash
-          </button>
-        </div>
-        <button type="button" onclick="window.openPaymentDestination('${data.paymentProvider}', 'auto')" class="btn" style="width:100%; color:${prov.textColor}; font-weight:700; background:${prov.color};">
-          <i class="fas fa-mobile-screen-button"></i>
-          <span>${prov.name} Ilovasini ochish (${formatPrice(data.paymentAmount)})</span>
-        </button>
-        <button type="button" onclick="window.openPaymentDestination('${data.paymentProvider}', 'web')" class="btn btn-outline-gold" style="width:100%; font-size:0.85rem; padding:0.6rem 1rem;">
-          <i class="fas fa-globe"></i>
-          <span>${prov.name} rasmiy saytiga kirish</span>
-        </button>
-      `;
-      if (detEl && detEl.parentNode) {
-        detEl.parentNode.insertBefore(payWrap, detEl.nextSibling);
-      }
-    }
 
     successModal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1343,13 +1091,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   window.closeMobileNav = function() {
-    if (mobileNavDrawer) mobileNavDrawer.classList.remove('open');
-    if (mobileNavOverlay) mobileNavOverlay.classList.remove('open');
-    document.body.style.overflow = '';
+    if (mobileNavDrawer) {
+      mobileNavDrawer.classList.remove('open');
+      mobileNavOverlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
   };
 
   /* ==========================================================================
-     7. GALLERY (NOMLARI TO'G'RILANDI VA ORTIQCHA TUGMALAR OLIB TASHLANDI)
+     7. GALLERY
      ========================================================================== */
   const GALLERY_IMAGES = [
     { url: 'gal1.jpg', caption: 'IQBOL Restorani — Mehmondo\'stlik maskani', tag: 'IQBOL Restoran', featured: true },
@@ -1423,7 +1173,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Orqa fondagi videoni majburan o'ynatish
   const heroVideo = document.getElementById('heroVideo');
   if (heroVideo) {
     heroVideo.muted = true;
