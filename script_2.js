@@ -1,5 +1,5 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (BARCHA SALAT RASMLARI 100% TO'G'RILANGAN VERSIYA)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (GALEREYA VA BARCHA RASMLAR 100% TO'G'RILANGAN FINAL VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sal-16', name: 'Чакки', category: 'salatlar', categoryName: 'Salatlar', price: 10000, portion: '1 porsiya', desc: 'Tabiiy va mazali suzma (chakki).', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1532.jpg', tags: ['Milliy'], popular: false },
     { id: 'sal-17', name: 'Чабан', category: 'salatlar', categoryName: 'Salatlar', price: 42000, portion: '1 porsiya', desc: 'Mayda to\'g\'ralgan sarxil sabzavotlar va ko\'katlardan tayyorlangan Chaban salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1517.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-18', name: 'Капризе', category: 'salatlar', categoryName: 'Salatlar', price: 68000, portion: '1 porsiya', desc: 'Pomidor, motsarella pishlog\'i, rukkola va pesto sousidan italyancha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1569.jpg', tags: ['Premium'], popular: true },
-    { id: 'sal-19', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
-    { id: 'sal-20', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
+    { id: 'sal-19', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
+    { id: 'sal-20', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
 
     // --- ICHIMLIKLAR & MOXITO ---
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
@@ -743,20 +743,27 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     7. GALLERY VA VIDEONI MAJBURIY YOQISH
+     7. GALLERY (NOMLARI TO'G'RILANDI VA ORTIQCHA TUGMALAR OLIB TASHLANDI)
      ========================================================================== */
   const GALLERY_IMAGES = [
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg', caption: 'Tandir go\'shti', category: 'taomlar', featured: true },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1546_pEeqfr3.jpg', caption: 'Kavkaz shashlik', category: 'shashlik', featured: false },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1570_M6SWgAY_nrvaBzI.jpg', caption: 'Uyg\'urcha jiz', category: 'taomlar', featured: false },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg', caption: 'Iqbol firma salati', category: 'salatlar', featured: false },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1544_9UVbHU1_x6uvel1_4Vitamw_Bg6I9sS.jpg', caption: 'G\'ijduvon kabob', category: 'shashlik', featured: false },
-    { url: 'https://admin.easymenu.uz/media/menu/items/IMG_1573.jpg', caption: 'Muzdek Moxito', category: 'ichimliklar', featured: false }
+    { url: 'gal1.jpg', caption: 'IQBOL Restorani — Mehmondo\'stlik maskani', tag: 'IQBOL Restoran', featured: true },
+    { url: 'gal2.jpg', caption: 'Yuqori darajadagi xizmat va shinam zal', tag: 'Restoran muhiti', featured: false },
+    { url: 'gal3.jpg', caption: 'Milliy qadriyatlar va an\'anaviy kolorit', tag: 'Sharqona bezak', featured: false },
+    { url: 'gal4.jpg', caption: 'Yashilliklar orasidagi qulay o\'rindiqlar', tag: 'Shinam muhit', featured: false },
+    { url: 'gal5.jpg', caption: 'Oilaviy va do\'stlar davrasi uchun keng zal', tag: 'Oilaviy zal', featured: false },
+    { url: 'gal6.jpg', caption: 'Alangada pishirilgan tansiq taomlar', tag: 'Oshxona sirlari', featured: false },
+    { url: 'gal7.jpg', caption: 'Nafis sharqona naqshlar uyg\'unligi', tag: 'Interyer', featured: false },
+    { url: 'gal8.jpg', caption: 'Milliy sopol laganlar va so\'zana', tag: 'Milliy ruh', featured: false },
+    { url: 'gal9.jpg', caption: 'Maxsus steyk va ishtahaochar taomlarimiz', tag: 'Maxsus taomlar', featured: false }
   ];
 
-  let currentGalleryCategory = 'all';
+  // Tepadagi qizil bilan chizilgan ortiqcha tugmalarni olib tashlaymiz
+  const filterTabsContainer = document.querySelector('.gallery-filter-tabs');
+  if (filterTabsContainer) {
+    filterTabsContainer.style.display = 'none';
+  }
+
   let activeLightboxIndex = 0;
-  let activeGalleryItems = [];
   const galleryGrid = document.getElementById('galleryGrid');
   const lightboxModal = document.getElementById('lightboxModal');
   const lightboxImg = document.getElementById('lightboxImg');
@@ -764,32 +771,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderGallery() {
     if (!galleryGrid) return;
-    activeGalleryItems = currentGalleryCategory === 'all'
-      ? GALLERY_IMAGES
-      : GALLERY_IMAGES.filter(img => img.category === currentGalleryCategory);
-    galleryGrid.innerHTML = activeGalleryItems.map((item, index) => `
+    galleryGrid.innerHTML = GALLERY_IMAGES.map((item, index) => `
       <div class="gallery-item ${item.featured ? 'featured' : ''}" onclick="window.openLightbox(${index})">
         <img src="${item.url}" alt="${item.caption}" loading="lazy" />
         <div class="gallery-overlay">
-          <span class="gallery-tag">${item.category}</span>
+          <span class="gallery-tag">${item.tag}</span>
           <h4 class="gallery-caption">${item.caption}</h4>
         </div>
       </div>
     `).join('');
   }
 
-  document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentGalleryCategory = btn.dataset.category;
-      renderGallery();
-    });
-  });
-
   window.openLightbox = function(index) {
     activeLightboxIndex = index;
-    const item = activeGalleryItems[activeLightboxIndex];
+    const item = GALLERY_IMAGES[activeLightboxIndex];
     if (!item || !lightboxModal) return;
     lightboxImg.src = item.url;
     lightboxCaption.textContent = item.caption;
@@ -803,9 +798,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   window.changeLightbox = function(step) {
     activeLightboxIndex += step;
-    if (activeLightboxIndex < 0) activeLightboxIndex = activeGalleryItems.length - 1;
-    if (activeLightboxIndex >= activeGalleryItems.length) activeLightboxIndex = 0;
-    const item = activeGalleryItems[activeLightboxIndex];
+    if (activeLightboxIndex < 0) activeLightboxIndex = GALLERY_IMAGES.length - 1;
+    if (activeLightboxIndex >= GALLERY_IMAGES.length) activeLightboxIndex = 0;
+    const item = GALLERY_IMAGES[activeLightboxIndex];
     if (item) {
       lightboxImg.src = item.url;
       lightboxCaption.textContent = item.caption;
