@@ -1,10 +1,10 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (XATOLARSIZ FINAL VERSIYA)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (BARCHA SALAT RASMLARI 100% TO'G'RILANGAN VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     1. MENU DATABASE (RASMLAR VA TAOMLAR 100% TO'G'RILANGAN)
+     1. MENU DATABASE (BARCHA TAOMLAR VA TO'G'RILANGAN SALATLAR)
      ========================================================================== */
   const MENU_DATA = [
     // --- BIRINCHI TAOMLAR ---
@@ -42,18 +42,28 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sh-11', name: 'Помидор шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 20000, portion: '1 porsiya', desc: 'Ko\'mirda pishirilgan suvli pomidor shashligi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1629.jpg', tags: ['Pomidor'], popular: false },
     { id: 'sh-12', name: 'Думба шашлик', category: 'shashlik', categoryName: 'Shashlik va assorti', price: 40000, portion: '1 porsiya', desc: 'Saralangan dumba yog\'idan tayyorlangan shashlik.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1633.jpg', tags: ['Dumba'], popular: false },
 
-    // --- SALATLAR ---
-    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'salatlar', categoryName: 'Salatlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
+    // --- SALATLAR (RASMLAR VA NOMLAR 100% MOSLASHTIRILDI) ---
+    { id: 'qt-1', name: 'Хрустящий баклажан', category: 'salatlar', categoryName: 'Salatlar', price: 62000, portion: '1 porsiya', desc: 'Qarsildoq qovurilgan baqlajon, pomidor va maxsus sous.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1555.jpg', tags: ['Hit', 'Baqlajon'], popular: true },
     { id: 'sal-1', name: 'Свежий', category: 'salatlar', categoryName: 'Salatlar', price: 18000, portion: '1 porsiya', desc: 'Pomidor va bodringdan yig\'ilgan yangi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1529_Enmxvpq.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-2', name: 'Шакароб', category: 'salatlar', categoryName: 'Salatlar', price: 19000, portion: '1 porsiya', desc: 'An\'anaviy piyoz va pomidor shakarobi.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1530_bt4dHZM.jpg', tags: ['Milliy'], popular: true },
     { id: 'sal-3', name: 'Иқбол', category: 'salatlar', categoryName: 'Salatlar', price: 53000, portion: '1 porsiya', desc: 'Restoranning maxsus firma salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg', tags: ['Firma'], popular: true },
-    { id: 'sal-4', name: 'Цезарь', category: 'salatlar', categoryName: 'Salatlar', price: 44000, portion: '1 porsiya', desc: 'Klassik sezar salati krevetka/tovuq bilan.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1520.jpg', tags: ['Sezar'], popular: true },
-    { id: 'sal-5', name: 'Фруктовый', category: 'salatlar', categoryName: 'Salatlar', price: 47000, portion: '1 porsiya', desc: 'Vitaminli mevali salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1523.jpg', tags: ['Mevali'], popular: false },
-    { id: 'sal-6', name: 'Мужской каприз', category: 'salatlar', categoryName: 'Salatlar', price: 49000, portion: '1 porsiya', desc: 'To\'yimli go\'shtli salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1524_uFqW9ec.jpg', tags: ['To\'yimli'], popular: true },
-    { id: 'sal-7', name: 'Греческий', category: 'salatlar', categoryName: 'Salatlar', price: 54000, portion: '1 porsiya', desc: 'Feta pishlog\'i qo\'shilgan yunoncha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1557.jpg', tags: ['Gretskiy'], popular: true },
-    { id: 'sal-8', name: 'Под водочку', category: 'salatlar', categoryName: 'Salatlar', price: 44000, portion: '1 porsiya', desc: 'Maxsus zakuska salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1522.jpg', tags: ['Zakuska'], popular: false },
-    { id: 'sal-9', name: 'Японский', category: 'salatlar', categoryName: 'Salatlar', price: 46000, portion: '1 porsiya', desc: 'Yaponcha uslubdagi salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1527.jpg', tags: ['Yapon'], popular: false },
-    { id: 'sal-10', name: 'Французский', category: 'salatlar', categoryName: 'Salatlar', price: 48000, portion: '1 porsiya', desc: 'Fransuzcha nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1548_W2vkC83.jpg', tags: ['Fransuz'], popular: false },
+    { id: 'sal-4', name: 'Цезарь', category: 'salatlar', categoryName: 'Salatlar', price: 44000, portion: '1 porsiya', desc: 'Klassik sezar salati krevetka/tovuq va parmezan pishlog\'i bilan.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1520.jpg', tags: ['Sezar'], popular: true },
+    { id: 'sal-5', name: 'Фруктовый', category: 'salatlar', categoryName: 'Salatlar', price: 47000, portion: '1 porsiya', desc: 'Mavsumiy mevalardan vitaminli shirin salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1523.jpg', tags: ['Mevali'], popular: false },
+    { id: 'sal-6', name: 'Мужской каприз', category: 'salatlar', categoryName: 'Salatlar', price: 49000, portion: '1 porsiya', desc: 'Go\'sht mahsulotlari va pishloqli to\'yimli salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1524_uFqW9ec.jpg', tags: ['To\'yimli'], popular: true },
+    { id: 'sal-7', name: 'Греческий', category: 'salatlar', categoryName: 'Salatlar', price: 54000, portion: '1 porsiya', desc: 'Feta pishlog\'i, zaytun va sarxil sabzavotlardan yunoncha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1557.jpg', tags: ['Gretskiy'], popular: true },
+    { id: 'sal-8', name: 'Под водочку', category: 'salatlar', categoryName: 'Salatlar', price: 44000, portion: '1 porsiya', desc: 'Maxsus ishtahaochar zakuska salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1522.jpg', tags: ['Zakuska'], popular: false },
+    { id: 'sal-9', name: 'Японский', category: 'salatlar', categoryName: 'Salatlar', price: 46000, portion: '1 porsiya', desc: 'Maxsus sousda tayyorlangan yaponcha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1527.jpg', tags: ['Yapon'], popular: false },
+    { id: 'sal-10', name: 'Французский', category: 'salatlar', categoryName: 'Salatlar', price: 48000, portion: '1 porsiya', desc: 'Qarsildoq kartoshka va go\'shtli fransuzcha nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1548_W2vkC83.jpg', tags: ['Fransuz'], popular: false },
+    { id: 'sal-11', name: 'Смак', category: 'salatlar', categoryName: 'Salatlar', price: 42000, portion: '1 porsiya', desc: 'Pomidor, pishloq va qarsildoq suxariklar qo\'shilgan mazali Smak salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1521.jpg', tags: ['Smak'], popular: true },
+    { id: 'sal-12', name: 'Свежий (қатиқли)', category: 'salatlar', categoryName: 'Salatlar', price: 19000, portion: '1 porsiya', desc: 'Qatiq va ko\'katlar qo\'shilgan sarxil pomidor-bodring salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1528_UMv33XI.jpg', tags: ['Qatiqli'], popular: false },
+    { id: 'sal-13', name: 'Оливье', category: 'salatlar', categoryName: 'Salatlar', price: 46000, portion: '1 porsiya', desc: 'An\'anaviy va sevimli klassik Olivye salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1561.jpg', tags: ['Klassik'], popular: true },
+    { id: 'sal-14', name: 'Свежий ассорти', category: 'salatlar', categoryName: 'Salatlar', price: 35000, portion: '1 porsiya', desc: 'Sarxil sabzavotlar va ko\'katlar to\'plami.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1552.jpg', tags: ['Assorti'], popular: false },
+    { id: 'sal-15', name: 'Лимон', category: 'salatlar', categoryName: 'Salatlar', price: 6000, portion: '1 porsiya', desc: 'Yangi kesilgan xushbo\'y limon bo\'laklari.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1531.jpg', tags: ['Limon'], popular: false },
+    { id: 'sal-16', name: 'Чакки', category: 'salatlar', categoryName: 'Salatlar', price: 10000, portion: '1 porsiya', desc: 'Tabiiy va mazali suzma (chakki).', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1532.jpg', tags: ['Milliy'], popular: false },
+    { id: 'sal-17', name: 'Чабан', category: 'salatlar', categoryName: 'Salatlar', price: 42000, portion: '1 porsiya', desc: 'Mayda to\'g\'ralgan sarxil sabzavotlar va ko\'katlardan tayyorlangan Chaban salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1517.jpg', tags: ['Yengil'], popular: false },
+    { id: 'sal-18', name: 'Капризе', category: 'salatlar', categoryName: 'Salatlar', price: 68000, portion: '1 porsiya', desc: 'Pomidor, motsarella pishlog\'i, rukkola va pesto sousidan italyancha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1569.jpg', tags: ['Premium'], popular: true },
+    { id: 'sal-19', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
+    { id: 'sal-20', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
 
     // --- ICHIMLIKLAR & MOXITO ---
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
