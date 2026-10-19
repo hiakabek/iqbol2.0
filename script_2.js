@@ -1,8 +1,266 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT (GALEREYA VA BARCHA RASMLAR 100% TO'G'RILANGAN FINAL VERSIYA)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT
+ * (60 TA TAOM + 9 TA GALEREYA RASMI + UZ/RU/EN + CLICK / PAYME / PAYNET ILOVA VA SAYT BILAN)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // RESTORAN KARTA RAQAMI
+  const RESTAURANT_CARD = '9860 1701 1569 3682';
+  const RESTAURANT_CARD_RAW = '9860170115693682';
+
+  // TO'LOV ILOVALARI VA SAYTLARI KONFIGURATSIYASI
+  const PAYMENT_PROVIDERS = {
+    Click: {
+      name: 'CLICK',
+      color: '#0099ff',
+      textColor: '#ffffff',
+      webUrl: 'https://my.click.uz/',
+      appScheme: 'clickup://',
+      androidIntent: 'intent://#Intent;scheme=clickup;package=air.com.ssdsoftwaresolutions.clickuz;S.browser_fallback_url=https%3A%2F%2Fmy.click.uz%2F;end'
+    },
+    Payme: {
+      name: 'Payme',
+      color: '#00cccc',
+      textColor: '#112219',
+      webUrl: 'https://payme.uz/',
+      appScheme: 'payme://',
+      androidIntent: 'intent://#Intent;scheme=payme;package=uz.dida.payme;S.browser_fallback_url=https%3A%2F%2Fpayme.uz%2F;end'
+    },
+    Paynet: {
+      name: 'Paynet',
+      color: '#00a651',
+      textColor: '#ffffff',
+      webUrl: 'https://paynet.uz/',
+      appScheme: 'paynet://',
+      androidIntent: 'intent://#Intent;scheme=paynet;package=uz.paynet.app;S.browser_fallback_url=https%3A%2F%2Fpaynet.uz%2F;end'
+    }
+  };
+
+  /* ==========================================================================
+     0. AVTOMATIK CSS VA HTML ELEMENTLARNI QO'SHISH (UZ/RU/EN + CLICK/PAYME/PAYNET)
+     ========================================================================== */
+  const customStyle = document.createElement('style');
+  customStyle.textContent = `
+    .lang-switcher {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .header.scrolled .lang-switcher {
+      background: var(--bg-card);
+      border-color: var(--border-color);
+    }
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .header.scrolled .lang-btn {
+      color: var(--text-main);
+    }
+    .lang-btn.active {
+      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
+      color: #112219 !important;
+      box-shadow: 0 2px 8px rgba(212, 175, 55, 0.35);
+    }
+    .payment-methods-box {
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+    }
+    .payment-methods-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .payment-methods-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+    .pay-option-btn {
+      padding: 0.65rem 0.5rem;
+      border-radius: 8px;
+      border: 1.5px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pay-option-btn.active[data-pay="Naqd"] {
+      border-color: var(--accent-gold);
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--accent-gold);
+    }
+    .pay-option-btn.active[data-pay="Click"] {
+      border-color: #0099ff;
+      background: #0099ff;
+      color: #ffffff;
+    }
+    .pay-option-btn.active[data-pay="Payme"] {
+      border-color: #00cccc;
+      background: #00cccc;
+      color: #112219;
+    }
+    .pay-option-btn.active[data-pay="Paynet"] {
+      border-color: #00a651;
+      background: #00a651;
+      color: #ffffff;
+    }
+    .card-Display-box {
+      margin-top: 0.85rem;
+      padding: 0.85rem;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1.5px dashed var(--accent-gold);
+      display: none;
+      flex-direction: column;
+      gap: 0.6rem;
+      text-align: center;
+    }
+    .card-Display-box.visible {
+      display: flex;
+    }
+    .card-number-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      padding: 0.55rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .card-number-val {
+      font-family: monospace;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--accent-gold);
+    }
+    .btn-copy-card {
+      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
+      color: #112219;
+      border: none;
+      border-radius: 6px;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .quick-pay-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+    .quick-pay-btn {
+      padding: 0.55rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: transform 0.15s ease;
+    }
+    .quick-pay-btn:hover {
+      transform: translateY(-1px);
+    }
+    @media (max-width: 576px) {
+      .lang-btn { padding: 4px 6px; font-size: 0.68rem; }
+      .card-number-val { font-size: 0.92rem; }
+    }
+  `;
+  document.head.appendChild(customStyle);
+
+  // Header ichiga UZ | RU | EN tugmalarini joylash
+  const headerActions = document.querySelector('.header-actions');
+  if (headerActions && !document.querySelector('.lang-switcher')) {
+    const langDiv = document.createElement('div');
+    langDiv.className = 'lang-switcher';
+    langDiv.innerHTML = `
+      <button type="button" class="lang-btn active" data-lang="uz">UZ</button>
+      <button type="button" class="lang-btn" data-lang="ru">RU</button>
+      <button type="button" class="lang-btn" data-lang="en">EN</button>
+    `;
+    headerActions.insertBefore(langDiv, headerActions.firstChild);
+  }
+
+  // Karta raqamini nusxalash funksiyasi
+  window.copyRestaurantCard = function() {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
+    }
+    const msg = currentLang === 'ru'
+      ? `Карта скопирована: ${RESTAURANT_CARD}`
+      : currentLang === 'en'
+      ? `Card copied: ${RESTAURANT_CARD}`
+      : `Karta raqami nusxalandi: ${RESTAURANT_CARD}`;
+    showToast(msg, 'fa-copy');
+  };
+
+  // Click, Payme yoki Paynet ilovasini (yoki saytini) ochish funksiyasi
+  window.openPaymentDestination = function(providerKey, mode = 'auto') {
+    const prov = PAYMENT_PROVIDERS[providerKey];
+    if (!prov) return;
+
+    // Avval karta raqamni avtomatik xotiraga nusxalaymiz
+    window.copyRestaurantCard();
+
+    if (mode === 'web') {
+      window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+    if (isAndroid) {
+      // Androidda ilovani ochadi, agar ilova yo'q bo'lsa avtomatik saytiga o'tadi
+      window.location.href = prov.androidIntent;
+    } else if (isIOS) {
+      // iPhone'da ilovani ochishga urinadi, 1.5 sekundda ochilmasa saytini ochadi
+      window.location.href = prov.appScheme;
+      setTimeout(() => {
+        if (!document.hidden) {
+          window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
+        }
+      }, 1500);
+    } else {
+      // Kompyuterda to'g'ridan-to'g'ri rasmiy saytini yangi oynada ochadi
+      window.open(prov.webUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   /* ==========================================================================
      1. MENU DATABASE (BARCHA TAOMLAR VA TO'G'RILANGAN SALATLAR)
      ========================================================================== */
@@ -91,6 +349,226 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   /* ==========================================================================
+     1.1 KO'P TILLILIK LUG'ATI (UZ, RU, EN)
+     ========================================================================== */
+  let currentLang = localStorage.getItem('iqbol_lang') || 'uz';
+  let selectedPaymentMethod = 'Naqd';
+
+  const CATEGORY_TRANSLATIONS = {
+    uz: {
+      'Birinchi taomlar': 'Birinchi taomlar',
+      'Ikkinchi taomlar': 'Ikkinchi taomlar',
+      'Shashlik va assorti': 'Shashlik va assorti',
+      'Salatlar': 'Salatlar',
+      'Ichimliklar & Non': 'Ichimliklar & Non',
+      'Desertlar': 'Desertlar'
+    },
+    ru: {
+      'Birinchi taomlar': 'Первые блюда',
+      'Ikkinchi taomlar': 'Вторые блюда',
+      'Shashlik va assorti': 'Шашлыки и ассорти',
+      'Salatlar': 'Салаты',
+      'Ichimliklar & Non': 'Напитки и Хлеб',
+      'Desertlar': 'Десерты'
+    },
+    en: {
+      'Birinchi taomlar': 'First Courses',
+      'Ikkinchi taomlar': 'Main Courses',
+      'Shashlik va assorti': 'Shashlik & Grill',
+      'Salatlar': 'Salads',
+      'Ichimliklar & Non': 'Drinks & Bread',
+      'Desertlar': 'Desserts'
+    }
+  };
+
+  const PORTION_TRANSLATIONS = {
+    uz: { '1 porsiya': '1 porsiya', '1 dona': '1 dona', '1 kg': '1 kg', '1 litr': '1 litr', '0.5 litr': '0.5 litr', '0.45 litr': '0.45 litr', '0.25 litr': '0.25 litr', '1 quti': '1 quti' },
+    ru: { '1 porsiya': '1 порция', '1 dona': '1 шт', '1 kg': '1 кг', '1 litr': '1 литр', '0.5 litr': '0.5 литра', '0.45 litr': '0.45 литра', '0.25 litr': '0.25 литра', '1 quti': '1 коробка' },
+    en: { '1 porsiya': '1 portion', '1 dona': '1 pc', '1 kg': '1 kg', '1 litr': '1 liter', '0.5 litr': '0.5 L', '0.45 litr': '0.45 L', '0.25 litr': '0.25 L', '1 quti': '1 box' }
+  };
+
+  const DISH_TRANSLATIONS = {
+    'bt-1': { ru: ['Тушёнка (хашлама)', 'Вкусный и сытный суп тушенка (хашлама).'], en: ['Tushonka (Khashlama)', 'Delicious and hearty beef stew soup.'] },
+    'bt-2': { ru: ['Мастава', 'Традиционный узбекский рисовый суп мастава.'], en: ['Mastava', 'Traditional Uzbek rice soup with tender meat.'] },
+    'bt-3': { ru: ['Борщ', 'Классический красный борщ со свежей зеленью.'], en: ['Borscht', 'Classic red beetroot soup with beef.'] },
+    'bt-4': { ru: ['Шурпа (говядина)', 'Ароматный суп шурпа из свежей говядины.'], en: ['Beef Shurpa', 'Rich and flavorful beef broth soup with vegetables.'] },
+    'bt-5': { ru: ['Суп с тефтелями', 'Сытный суп с нежными мясными тефтелями.'], en: ['Meatball Soup', 'Hearty soup served with tender beef meatballs.'] },
+    'it-1': { ru: ['Мушак джиз', 'Приготовленный по особому рецепту мушак джиз.'], en: ['Mushak Jiz', 'Specially roasted tender beef shank meat.'] },
+    'it-2': { ru: ['Алатская самса', 'Настоящая сочная и хрустящая Алатская самса.'], en: ['Olot Samsa', 'Authentic crispy pastry stuffed with juicy meat and onions.'] },
+    'it-3': { ru: ['Умакай джиз', 'Изысканное мясное блюдо Умакай джиз.'], en: ['Umakai Jiz', 'Traditional pan-fried meat delicacy.'] },
+    'it-4': { ru: ['Тандыр гушт', 'Ароматное мясо, запеченное в настоящем тандыре.'], en: ['Tandoor Meat', 'Aromatic lamb slow-roasted in a traditional clay tandoor.'] },
+    'it-5': { ru: ['Жареные крылышки', 'Хрустящие жареные куриные крылышки.'], en: ['Fried Chicken Wings', 'Crispy golden fried chicken wings.'] },
+    'it-6': { ru: ['Картошка фри', 'Хрустящий золотистый картофель фри.'], en: ['French Fries', 'Crispy golden french fries.'] },
+    'it-7': { ru: ['Хасип из говядины', 'Национальное блюдо хасип из отборной говядины.'], en: ['Beef Khasip', 'Traditional Uzbek homemade beef and rice sausage.'] },
+    'it-8': { ru: ['Манчури', 'Мясное блюдо в стиле Манчури.'], en: ['Manchurian Meat', 'Savory meat prepared in special Manchurian style.'] },
+    'it-9': { ru: ['Буйрак джиз', 'Специальный джиз из свежих почек.'], en: ['Buyrak Jiz', 'Specialty pan-fried dish made with tender kidneys.'] },
+    'it-10': { ru: ['Казанча (Кизилча)', 'Фирменное мясное блюдо в казане.'], en: ['Qozoncha (Kizilcha)', 'Signature slow-cooked meat dish in a cast-iron kazan.'] },
+    'it-11': { ru: ['Уйгурский джиз', 'Аппетитный джиз по-уйгурски со специями.'], en: ['Uyghur Jiz', 'Flavorful stir-fried meat in traditional Uyghur style.'] },
+    'it-12': { ru: ['Манты', 'Сочные манты с рубленым мясом на пару.'], en: ['Manti', 'Steamed dumplings filled with juicy minced meat and onions.'] },
+    'sh-1': { ru: ['Шашлык из печени', 'Нежный шашлык из печени и курдюка.'], en: ['Liver Shashlik', 'Tender skewered beef liver with tail fat.'] },
+    'sh-2': { ru: ['Куриный кавказский', 'Кавказский шашлык из нежного куриного филе.'], en: ['Caucasian Chicken Shashlik', 'Marinated chicken skewers grilled over charcoal.'] },
+    'sh-3': { ru: ['Нон шашлык', 'Хрустящий шашлык из лепешки и курдючного жира.'], en: ['Bread Shashlik', 'Charcoal-grilled bread infused with savory lamb fat.'] },
+    'sh-4': { ru: ['Кавказский кусковой (баранина)', 'Сочный кусковой шашлык из баранины по-кавказски.'], en: ['Caucasian Lamb Shashlik', 'Juicy chunks of marinated lamb grilled on skewers.'] },
+    'sh-5': { ru: ['Кусковой (говядина)', 'Кусковой шашлык из отборной говядины с курдюком.'], en: ['Beef Shashlik', 'Tender beef fillet skewers grilled over glowing embers.'] },
+    'sh-6': { ru: ['Шашлык Гиждуван', 'Традиционный гиждуванский молотый шашлык (люля).'], en: ['Gijduvan Shashlik', 'Famous Gijduvan-style minced meat kebab.'] },
+    'sh-7': { ru: ['Рулет шашлык', 'Особый мясной рулет на углях.'], en: ['Roll Shashlik', 'Special rolled meat kebab grilled over charcoal.'] },
+    'sh-8': { ru: ['Сосиска сладкая', 'Аппетитный шашлык из нежных сосисок.'], en: ['Sweet Sausage Skewer', 'Charcoal-grilled mild sausage on a skewer.'] },
+    'sh-9': { ru: ['Сосиска острая', 'Пикантный шашлык из острых сосисок.'], en: ['Spicy Sausage Skewer', 'Charcoal-grilled spicy sausage on a skewer.'] },
+    'sh-10': { ru: ['Шашлык Наполеон', 'Фирменный слоеный шашлык Наполеон из мяса и курдюка.'], en: ['Napoleon Shashlik', 'Signature layered beef and lamb fat kebab.'] },
+    'sh-11': { ru: ['Шашлык из помидоров', 'Сочные помидоры, запеченные на углях.'], en: ['Tomato Shashlik', 'Juicy ripe tomatoes grilled over charcoal.'] },
+    'sh-12': { ru: ['Думба шашлык', 'Ароматный шашлык из отборного курдючного жира.'], en: ['Dumba (Tail Fat) Shashlik', 'Crispy and savory grilled lamb tail fat skewers.'] },
+    'qt-1': { ru: ['Хрустящий баклажан', 'Хрустящие жареные баклажаны со свежими томатами и соусом.'], en: ['Crispy Eggplant Salad', 'Crispy fried eggplant tossed with tomatoes and special sauce.'] },
+    'sal-1': { ru: ['Свежий салат', 'Легкий салат из свежих помидоров и огурцов.'], en: ['Fresh Salad', 'Light salad with fresh ripe tomatoes and cucumbers.'] },
+    'sal-2': { ru: ['Шакароб', 'Традиционный узбекский салат из тонко нарезанных томатов и лука.'], en: ['Shakarob', 'Traditional Uzbek sliced tomato and onion salad.'] },
+    'sal-3': { ru: ['Салат Икбол', 'Эксклюзивный фирменный салат от шеф-повара ресторана.'], en: ['Iqbol Signature Salad', 'Our restaurant’s special house salad.'] },
+    'sal-4': { ru: ['Цезарь', 'Классический салат Цезарь с креветками/курицей и пармезаном.'], en: ['Caesar Salad', 'Classic Caesar salad with shrimp/chicken and Parmesan cheese.'] },
+    'sal-5': { ru: ['Фруктовый салат', 'Витаминный сладкий салат из сезонных фруктов.'], en: ['Fruit Salad', 'Sweet vitamin-rich salad made from seasonal fresh fruits.'] },
+    'sal-6': { ru: ['Мужской каприз', 'Сытный мясной салат с сыром и майонезной заправкой.'], en: ['Men\'s Caprice Salad', 'Hearty meat and cheese salad with rich dressing.'] },
+    'sal-7': { ru: ['Греческий салат', 'Свежие овощи, маслины и нежный сыр Фета.'], en: ['Greek Salad', 'Fresh vegetables, olives, and authentic Feta cheese.'] },
+    'sal-8': { ru: ['Под водочку', 'Специальный аппетитный закусочный салат.'], en: ['Appetizer Salad', 'Savory starter salad with pickled and fresh ingredients.'] },
+    'sal-9': { ru: ['Японский салат', 'Пикантный салат в японском стиле с фирменным соусом.'], en: ['Japanese Style Salad', 'Savory salad dressed in a special Japanese soy-sesame sauce.'] },
+    'sal-10': { ru: ['Французский салат', 'Нежный салат с мясом, свежими овощами и хрустящим картофелем пай.'], en: ['French Salad', 'Delicate meat and vegetable salad topped with crispy shoestring potatoes.'] },
+    'sal-11': { ru: ['Салат Смак', 'Вкусный салат с томатами, сыром и хрустящими сухариками.'], en: ['Smak Salad', 'Tasty salad with tomatoes, cheese, and crunchy croutons.'] },
+    'sal-12': { ru: ['Свежий (с катыком)', 'Свежие помидоры и огурцы, заправленные домашним катыком и зеленью.'], en: ['Fresh Salad with Yogurt', 'Fresh tomatoes, cucumbers, and herbs dressed with traditional yogurt.'] },
+    'sal-13': { ru: ['Оливье', 'Традиционный и всеми любимый классический салат Оливье.'], en: ['Olivier Salad', 'Traditional classic Russian potato, meat, and pea salad.'] },
+    'sal-14': { ru: ['Свежее ассорти', 'Богатая нарезка из свежих овощей и ароматной зелени.'], en: ['Fresh Vegetable Platter', 'Assortment of fresh seasonal vegetables and greens.'] },
+    'sal-15': { ru: ['Лимон', 'Свеженарезанные ароматные дольки лимона.'], en: ['Fresh Lemon', 'Freshly sliced aromatic lemon wedges.'] },
+    'sal-16': { ru: ['Чакки (Сузьма)', 'Натуральная домашняя сузьма (чакки) со специями.'], en: ['Chakki (Strained Yogurt)', 'Natural and creamy traditional strained yogurt.'] },
+    'sal-17': { ru: ['Салат Чабан', 'Мелко нарезанные свежие овощи и зелень по-восточному.'], en: ['Chaban Salad', 'Finely diced fresh tomatoes, cucumbers, onions, and herbs.'] },
+    'sal-18': { ru: ['Капрезе', 'Итальянский салат со спелыми томатами, моцареллой, рукколой и песто.'], en: ['Caprese Salad', 'Italian salad with tomatoes, mozzarella, arugula, and pesto sauce.'] },
+    'sal-19': { ru: ['Салат Сате', 'Оригинальный салат в виде баклажанных рулетиков по особому рецепту.'], en: ['Sate Salad', 'Special eggplant rolls stuffed with savory filling.'] },
+    'sal-20': { ru: ['Салат Тулум', 'Изысканный салат с сыром Тулум, кукурузой, черри и свежей зеленью.'], en: ['Tulum Cheese Salad', 'Refined salad with Tulum cheese, sweet corn, cherry tomatoes, and greens.'] },
+    'ich-1': { ru: ['Сок DENA', 'Натуральный фруктовый сок DENA.'], en: ['DENA Juice', 'Natural fruit juice.'] },
+    'ich-2': { ru: ['KARLOVY VARY', 'Лечебная минеральная вода.'], en: ['KARLOVY VARY Water', 'Mineral water.'] },
+    'ich-3': { ru: ['Черноголовка', 'Освежающий лимонад Черноголовка.'], en: ['Chernogolovka Lemonade', 'Refreshing traditional lemonade.'] },
+    'ich-4': { ru: ['BLANC BLUE', 'Прохладительный напиток Blanc Blue.'], en: ['BLANC BLUE Drink', 'Refreshing sparkling drink.'] },
+    'ich-5': { ru: ['RED BULL', 'Энергетический напиток Red Bull.'], en: ['RED BULL Energy Drink', 'Classic energy drink.'] },
+    'ich-6': { ru: ['Sayhun', 'Чистая питьевая вода без газа.'], en: ['Sayhun Still Water', 'Pure drinking water.'] },
+    'ich-7': { ru: ['GORILLA', 'Энергетический напиток Gorilla.'], en: ['GORILLA Energy Drink', 'Energy drink.'] },
+    'ich-8': { ru: ['Аш-ТАУ', 'Природная минеральная вода Аш-Тау.'], en: ['Ash-TAU Mineral Water', 'Premium mineral water.'] },
+    'ich-9': { ru: ['Adrenaline Rush', 'Энергетический напиток Adrenaline Rush.'], en: ['Adrenaline Rush', 'Energy drink.'] },
+    'ich-10': { ru: ['Fanta', 'Освежающая апельсиновая Fanta.'], en: ['Fanta', 'Classic orange soda.'] },
+    'ich-11': { ru: ['Coca-Cola', 'Классическая прохладная Coca-Cola.'], en: ['Coca-Cola', 'Classic refreshing Coca-Cola.'] },
+    'ich-12': { ru: ['Мохито Киви', 'Ледяной освежающий мохито со вкусом киви.'], en: ['Kiwi Mojito', 'Ice-cold refreshing kiwi mojito pitcher.'] },
+    'ich-13': { ru: ['Мохито Классический', 'Классический мохито со свежей мятой и лаймом.'], en: ['Classic Mojito', 'Classic mojito pitcher with fresh mint and lime.'] },
+    'ich-14': { ru: ['Тархун Мохито', 'Ароматный освежающий лимонад Тархун.'], en: ['Tarragon Mojito', 'Refreshing tarragon lemonade pitcher.'] },
+    'ich-15': { ru: ['Манго-Маракуйя', 'Экзотический мохито со вкусом манго и маракуйи.'], en: ['Mango-Passionfruit Mojito', 'Exotic mango and passionfruit mojito pitcher.'] },
+    'ich-16': { ru: ['Мохито Клубничный', 'Сладкий освежающий клубничный мохито.'], en: ['Strawberry Mojito', 'Sweet and refreshing strawberry mojito pitcher.'] },
+    'des-1': { ru: ['Сан-Себастьян', 'Нежный испанский чизкейк Сан-Себастьян с шоколадом/карамелью.'], en: ['San Sebastian Cheesecake', 'Creamy Spanish burnt cheesecake with chocolate sauce.'] },
+    'des-2': { ru: ['Ягодная опера', 'Изысканное пирожное Опера с лесными ягодами.'], en: ['Berry Opera Cake', 'Delicate layered Opera cake with berry glaze.'] },
+    'des-3': { ru: ['Орешки Safia', 'Печенье орешки со вареной сгущенкой в коробке.'], en: ['Safia Sweet Walnuts', 'Pastry cookies filled with caramelized milk.'] },
+    'des-4': { ru: ['MILLENNIUM Air Bubble', 'Пористый молочный шоколад.'], en: ['MILLENNIUM Air Bubble', 'Aerated milk chocolate bar.'] }
+  };
+
+  function getDishName(dish) {
+    if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) {
+      return DISH_TRANSLATIONS[dish.id][currentLang][0];
+    }
+    return dish.name;
+  }
+
+  function getDishDesc(dish) {
+    if (currentLang !== 'uz' && DISH_TRANSLATIONS[dish.id] && DISH_TRANSLATIONS[dish.id][currentLang]) {
+      return DISH_TRANSLATIONS[dish.id][currentLang][1];
+    }
+    return dish.desc;
+  }
+
+  function getCategoryName(catName) {
+    return (CATEGORY_TRANSLATIONS[currentLang] && CATEGORY_TRANSLATIONS[currentLang][catName]) || catName;
+  }
+
+  function getPortionName(portion) {
+    return (PORTION_TRANSLATIONS[currentLang] && PORTION_TRANSLATIONS[currentLang][portion]) || portion;
+  }
+
+  const PAGE_SELECTORS_I18N = [
+    { sel: '.logo-sub', uz: 'Oilaviy restoran', ru: 'Семейный ресторан', en: 'Family Restaurant' },
+    { sel: '#desktopNav a[href="#home"]', uz: 'Bosh sahifa', ru: 'Главная', en: 'Home' },
+    { sel: '#desktopNav a[href="#about"]', uz: 'Biz haqimizda', ru: 'О нас', en: 'About' },
+    { sel: '#desktopNav a[href="#why"]', uz: 'Afzalliklar', ru: 'Преимущества', en: 'Features' },
+    { sel: '#desktopNav a[href="#menu"]', uz: 'Menyu', ru: 'Меню', en: 'Menu' },
+    { sel: '#desktopNav a[href="#gallery"]', uz: 'Galereya', ru: 'Галерея', en: 'Gallery' },
+    { sel: '#desktopNav a[href="#testimonials"]', uz: 'Sharhlar', ru: 'Отзывы', en: 'Reviews' },
+    { sel: '#desktopNav a[href="#contact"]', uz: 'Aloqa', ru: 'Контакты', en: 'Contact' },
+    { sel: '#headerReservationBtn span', uz: 'Stol band qilish', ru: 'Бронь стола', en: 'Book a Table' },
+    { sel: '.hero-badge span', uz: "Qarshi shahrida mehmondo'stlik maskani", ru: 'Место гостеприимства в городе Карши', en: 'A hub of hospitality in Karshi' },
+    { sel: '.hero-title', html: true, uz: 'IQBOL — <span class="gold-gradient-text">Ta\'m va mehmondo\'stlik</span> uyg\'unligi', ru: 'IQBOL — Гармония <span class="gold-gradient-text">вкуса и гостеприимства</span>', en: 'IQBOL — Harmony of <span class="gold-gradient-text">Taste & Hospitality</span>' },
+    { sel: '.hero-subtitle', uz: "An'anaviy o'zbek va uyg'ur taomlari, iliq muhit va unutilmas ta'mlar. Saralangan go'sht, haqiqiy tandir va mehr bilan pishirilgan lazzatlar oilangizni kutmoqda.", ru: 'Традиционные узбекские и уйгурские блюда, теплая атмосфера и незабываемые вкусы. Отборное мясо, настоящий тандыр и приготовленные с любовью блюда ждут вашу семью.', en: 'Traditional Uzbek and Uyghur cuisine, warm atmosphere, and unforgettable flavors. Selected meat, authentic clay tandoor, and dishes cooked with love await your family.' },
+    { sel: '#heroMenuBtn span', uz: "Menuni ko'rish", ru: 'Смотреть меню', en: 'View Menu' },
+    { sel: '#heroReservationBtn span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book a Table' },
+    { sel: '#menu .section-tag', uz: 'Bizning taomnoma', ru: 'Наше меню', en: 'Our Menu' },
+    { sel: '#menu .section-title', html: true, uz: 'IQBOL <span>Restoran Menyu</span>', ru: 'Меню <span>Ресторана IQBOL</span>', en: 'IQBOL <span>Restaurant Menu</span>' },
+    { sel: '#menu .section-subtitle', uz: "Haqiqiy chop etilgan menyu asosidagi asl taomlar va narxlar. O'zingiz yoqtirgan taomni qidiring yoki toifa bo'yicha tanlang.", ru: 'Оригинальные блюда и актуальные цены нашего ресторана. Найдите любимое блюдо через поиск или выберите категорию.', en: 'Authentic dishes and prices from our kitchen. Search for your favorite meal or filter by category.' },
+    { sel: '.cat-tab-btn[data-category="all"] span', uz: 'Barchasi', ru: 'Все', en: 'All' },
+    { sel: '.cat-tab-btn[data-category="birinchi"] span', uz: 'Birinchi taomlar', ru: 'Первые блюда', en: 'First Courses' },
+    { sel: '.cat-tab-btn[data-category="ikkinchi"] span', uz: 'Ikkinchi taomlar', ru: 'Вторые блюда', en: 'Main Courses' },
+    { sel: '.cat-tab-btn[data-category="shashlik"] span', uz: 'Shashliklar', ru: 'Шашлыки', en: 'Shashlik' },
+    { sel: '.cat-tab-btn[data-category="salatlar"] span', uz: 'Salatlar', ru: 'Салаты', en: 'Salads' },
+    { sel: '.cat-tab-btn[data-category="ichimliklar"] span', uz: 'Ichimliklar & Non', ru: 'Напитки и Хлеб', en: 'Drinks & Bread' },
+    { sel: '.cat-tab-btn[data-category="gazli"] span', uz: 'Desert', ru: 'Десерты', en: 'Desserts' },
+    { sel: '#reservation .form-title', uz: 'Stol band qilish', ru: 'Бронирование стола', en: 'Table Reservation' },
+    { sel: '#reservation .form-desc', uz: "Qarshi shahrida oilaviy yoki do'stlar bilan unutilmas kecha o'tkazish uchun joyingizni oldindan bron qiling.", ru: 'Забронируйте столик заранее для незабываемого вечера в кругу семьи или друзей.', en: 'Reserve your table in advance for an unforgettable evening with family and friends.' },
+    { sel: '#reservationForm button[type="submit"] span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book Table' },
+    { sel: '#gallery .section-tag', uz: 'Foto lavhalar', ru: 'Фотогалерея', en: 'Photo Gallery' },
+    { sel: '#gallery .section-title', html: true, uz: 'IQBOL <span>Galereyasi</span>', ru: 'Галерея <span>IQBOL</span>', en: 'IQBOL <span>Gallery</span>' },
+    { sel: '#testimonials .section-tag', uz: 'Mehmonlar fikri', ru: 'Отзывы гостей', en: 'Guest Reviews' },
+    { sel: '#testimonials .section-title', html: true, uz: 'Haqiqiy <span>Mijozlarimiz sharhlari</span>', ru: 'Отзывы <span>Наших гостей</span>', en: 'Real <span>Customer Reviews</span>' },
+    { sel: '#contact .section-tag', uz: 'Manzil & Aloqa', ru: 'Адрес и Контакты', en: 'Location & Contact' },
+    { sel: '#contact .section-title', html: true, uz: 'Bizni <span>Qarshida toping</span>', ru: 'Найдите нас <span>в Карши</span>', en: 'Find Us <span>in Karshi</span>' },
+    { sel: '.cart-title span', uz: 'Sizning buyurtmangiz', ru: 'Ваш заказ', en: 'Your Order' },
+    { sel: '.order-type-btn[data-type="dine_in"]', html: true, uz: '<i class="fas fa-utensils"></i> Restoranda', ru: '<i class="fas fa-utensils"></i> В ресторане', en: '<i class="fas fa-utensils"></i> Dine-in' },
+    { sel: '.order-type-btn[data-type="delivery"]', html: true, uz: '<i class="fas fa-motorcycle"></i> Yetkazib berish', ru: '<i class="fas fa-motorcycle"></i> Доставка', en: '<i class="fas fa-motorcycle"></i> Delivery' },
+    { sel: '.cart-footer .btn-primary span', uz: 'Buyurtmani rasmiylashtirish', ru: 'Оформить заказ', en: 'Proceed to Checkout' },
+    { sel: '#dishModal .modal-actions .btn-primary span', uz: "Buyurtmaga qo'shish", ru: 'Добавить в корзину', en: 'Add to Order' },
+    { sel: '#checkoutModal h3.font-display', uz: 'Buyurtmani tasdiqlash', ru: 'Подтверждение заказа', en: 'Confirm Order' },
+    { sel: '#checkoutForm button[type="submit"] span', uz: 'Buyurtmani yuborish', ru: 'Отправить заказ', en: 'Submit Order' }
+  ];
+
+  window.changeLanguage = function(lang) {
+    currentLang = lang;
+    localStorage.setItem('iqbol_lang', lang);
+
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
+
+    PAGE_SELECTORS_I18N.forEach(item => {
+      document.querySelectorAll(item.sel).forEach(el => {
+        if (item.html) el.innerHTML = item[lang];
+        else el.textContent = item[lang];
+      });
+    });
+
+    const sInput = document.getElementById('searchInput');
+    if (sInput) {
+      sInput.placeholder = lang === 'ru'
+        ? 'Поиск блюда по названию (например: тандыр, шашлык, салат)...'
+        : lang === 'en'
+        ? 'Search dish by name (e.g. tandoor, shashlik, salad)...'
+        : "Taom nomi yoki tarkibini qidiring (masalan: tandir, shashlik, lag'mon)...";
+    }
+
+    const payTitleEl = document.getElementById('payMethodsTitleText');
+    if (payTitleEl) {
+      payTitleEl.textContent = lang === 'ru' ? 'Способ оплаты (Click / Payme / Paynet / Наличные):' : lang === 'en' ? 'Payment Method (Click / Payme / Paynet / Cash):' : "To'lov usulini tanlang:";
+    }
+
+    const cashBtnEl = document.getElementById('payBtnCashText');
+    if (cashBtnEl) {
+      cashBtnEl.textContent = lang === 'ru' ? 'Наличные' : lang === 'en' ? 'Cash' : 'Naqd';
+    }
+
+    renderMenu();
+    updateCartUI();
+    renderGallery();
+  };
+
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => window.changeLanguage(btn.dataset.lang));
+  });
+
+  /* ==========================================================================
      2. APP STATE & STORAGE
      ========================================================================== */
   let cart = [];
@@ -131,7 +609,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const hamburgerBtn = document.getElementById('hamburgerBtn');
 
   function formatPrice(num) {
-    return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " so'm";
+    const unit = currentLang === 'ru' ? ' сум' : currentLang === 'en' ? ' UZS' : " so'm";
+    return Number(num || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + unit;
   }
 
   function showToast(message, icon = 'fa-check-circle') {
@@ -164,34 +643,43 @@ document.addEventListener('DOMContentLoaded', () => {
       const q = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(q) ||
+        getDishName(item).toLowerCase().includes(q) ||
         item.desc.toLowerCase().includes(q) ||
+        getDishDesc(item).toLowerCase().includes(q) ||
         item.categoryName.toLowerCase().includes(q)
       );
     }
     if (filtered.length === 0) {
-      dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>Hech qanday taom topilmadi</h3></div>`;
+      const emptyTxt = currentLang === 'ru' ? 'Блюда не найдены' : currentLang === 'en' ? 'No dishes found' : 'Hech qanday taom topilmadi';
+      dishesGrid.innerHTML = `<div class="no-dishes-found"><i class="fas fa-utensils"></i><h3>${emptyTxt}</h3></div>`;
       return;
     }
 
+    const priceLbl = currentLang === 'ru' ? 'Цена:' : currentLang === 'en' ? 'Price:' : 'Narxi:';
     let htmlResult = '';
     filtered.forEach(dish => {
       const isFav = favorites.includes(dish.id);
+      const dName = getDishName(dish);
+      const dDesc = getDishDesc(dish);
+      const dCat = getCategoryName(dish.categoryName);
+      const dPortion = getPortionName(dish.portion);
+
       htmlResult += `
         <article class="dish-card" data-id="${dish.id}">
           <div class="dish-img-wrap" onclick="window.openDishModal('${dish.id}')">
-            <img src="${dish.image}" alt="${dish.name}" loading="lazy" />
+            <img src="${dish.image}" alt="${dName}" loading="lazy" />
             <div class="dish-badges">
               ${dish.popular ? '<span class="badge badge-gold"><i class="fas fa-star"></i> Hit</span>' : ''}
-              ${dish.portion ? `<span class="badge badge-portion">${dish.portion}</span>` : ''}
+              ${dish.portion ? `<span class="badge badge-portion">${dPortion}</span>` : ''}
             </div>
             <button class="dish-fav-btn ${isFav ? 'favorited' : ''}" onclick="event.stopPropagation(); window.toggleFavorite('${dish.id}')"><i class="${isFav ? 'fas' : 'far'} fa-heart"></i></button>
           </div>
           <div class="dish-content">
-            <div class="dish-category">${dish.categoryName}</div>
-            <h3 class="dish-title" onclick="window.openDishModal('${dish.id}')">${dish.name}</h3>
-            <p class="dish-desc">${dish.desc}</p>
+            <div class="dish-category">${dCat}</div>
+            <h3 class="dish-title" onclick="window.openDishModal('${dish.id}')">${dName}</h3>
+            <p class="dish-desc">${dDesc}</p>
             <div class="dish-footer">
-              <div class="dish-price-box"><span class="price-label">Narxi:</span><span class="dish-price">${formatPrice(dish.price)}</span></div>
+              <div class="dish-price-box"><span class="price-label">${priceLbl}</span><span class="dish-price">${formatPrice(dish.price)}</span></div>
               <button class="btn-add-cart" onclick="window.addToCart('${dish.id}')"><i class="fas fa-plus"></i></button>
             </div>
           </div>
@@ -231,10 +719,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const idx = favorites.indexOf(dishId);
     if (idx > -1) {
       favorites.splice(idx, 1);
-      showToast('Sevimlilardan olib tashlandi', 'fa-heart-broken');
+      showToast(currentLang === 'ru' ? 'Удалено из избранного' : currentLang === 'en' ? 'Removed from favorites' : 'Sevimlilardan olib tashlandi', 'fa-heart-broken');
     } else {
       favorites.push(dishId);
-      showToast('Sevimlilarga qo\'shildi!', 'fa-heart');
+      showToast(currentLang === 'ru' ? 'Добавлено в избранное!' : currentLang === 'en' ? 'Added to favorites!' : 'Sevimlilarga qo\'shildi!', 'fa-heart');
     }
     localStorage.setItem('iqbol_favorites', JSON.stringify(favorites));
     renderMenu();
@@ -248,10 +736,10 @@ document.addEventListener('DOMContentLoaded', () => {
     selectedModalDish = dish;
     modalQuantity = 1;
     document.getElementById('modalImg').src = dish.image;
-    document.getElementById('modalTitle').textContent = dish.name;
-    document.getElementById('modalPrice').textContent = formatPrice(dish.price) + (dish.portion ? ` (${dish.portion})` : '');
-    document.getElementById('modalDesc').textContent = dish.desc;
-    document.getElementById('modalCategoryBadge').textContent = dish.categoryName;
+    document.getElementById('modalTitle').textContent = getDishName(dish);
+    document.getElementById('modalPrice').textContent = formatPrice(dish.price) + (dish.portion ? ` (${getPortionName(dish.portion)})` : '');
+    document.getElementById('modalDesc').textContent = getDishDesc(dish);
+    document.getElementById('modalCategoryBadge').textContent = getCategoryName(dish.categoryName);
     document.getElementById('modalQtyVal').textContent = modalQuantity;
     dishModal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -287,9 +775,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!cartItemsList) return;
     
     if (cart.length === 0) {
-      cartItemsList.innerHTML = `<div class="empty-cart-view"><i class="fas fa-shopping-basket"></i><h4>Savat bo'sh</h4></div>`;
-      if (cartSubtotalEl) cartSubtotalEl.textContent = '0 so\'m'; 
-      if (cartTotalEl) cartTotalEl.textContent = '0 so\'m'; 
+      const emptyCartTxt = currentLang === 'ru' ? 'Корзина пуста' : currentLang === 'en' ? 'Cart is empty' : "Savat bo'sh";
+      cartItemsList.innerHTML = `<div class="empty-cart-view"><i class="fas fa-shopping-basket"></i><h4>${emptyCartTxt}</h4></div>`;
+      if (cartSubtotalEl) cartSubtotalEl.textContent = formatPrice(0); 
+      if (cartTotalEl) cartTotalEl.textContent = formatPrice(0); 
       return;
     }
     
@@ -304,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="cart-item">
           <img src="${dish.image}" class="cart-item-thumb" />
           <div class="cart-item-details">
-            <h5 class="cart-item-name">${dish.name}</h5>
+            <h5 class="cart-item-name">${getDishName(dish)}</h5>
             <div class="cart-item-price">${formatPrice(dish.price)} x ${item.quantity} = <strong>${formatPrice(itemTotal)}</strong></div>
           </div>
           <div class="cart-item-actions">
@@ -328,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const zoneSelect = document.getElementById('deliveryZone');
       const zoneVal = zoneSelect ? zoneSelect.value : 'ichki';
       extraFee = zoneVal === 'tashqi' ? 15000 : 10000;
-      feeDescription = zoneVal === 'tashqi' ? 'Yetkazish (Tashqari): 15 000 so\'m' : 'Yetkazish (Shahar ichi): 10 000 so\'m';
+      feeDescription = zoneVal === 'tashqi' ? 'Yetkazish (Tashqari): 15 000' : 'Yetkazish (Shahar ichi): 10 000';
     } else {
       let serviceFeePercent = 0.07;
       const tableInputVal = document.getElementById('checkoutTable') ? document.getElementById('checkoutTable').value.toLowerCase() : '';
@@ -353,7 +842,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (existing) existing.quantity += qty;
     else cart.push({ id: dishId, quantity: qty });
     saveCart();
-    showToast(`"${dish.name}" savatga qo'shildi!`, 'fa-shopping-cart');
+    const addedMsg = currentLang === 'ru' ? `"${getDishName(dish)}" добавлено в корзину!` : currentLang === 'en' ? `"${getDishName(dish)}" added to cart!` : `"${dish.name}" savatga qo'shildi!`;
+    showToast(addedMsg, 'fa-shopping-cart');
   };
   window.changeCartQty = function(dishId, delta) {
     const item = cart.find(i => i.id === dishId);
@@ -383,7 +873,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     4. CHECKOUT & TELEGRAM (OVQAT BUYURTMASI)
+     4. CHECKOUT & CLICK / PAYME / PAYNET (9860 1701 1569 3682)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -396,6 +886,7 @@ document.addEventListener('DOMContentLoaded', () => {
       checkoutModal.classList.add('open');
       document.body.style.overflow = 'hidden';
       ensureDeliveryZoneSelect();
+      ensurePaymentSelectorUI();
       updateCartUI();
     }
   };
@@ -422,6 +913,84 @@ document.addEventListener('DOMContentLoaded', () => {
       addressGroup.appendChild(zoneDiv);
       document.getElementById('deliveryZone').addEventListener('change', updateCartUI);
     }
+  }
+
+  function updateQuickPayButtonsUI() {
+    const actionsRow = document.getElementById('quickPayLinksRow');
+    if (!actionsRow) return;
+    const prov = PAYMENT_PROVIDERS[selectedPaymentMethod];
+    if (!prov) {
+      actionsRow.innerHTML = '';
+      return;
+    }
+    actionsRow.innerHTML = `
+      <button type="button" class="quick-pay-btn" style="background:${prov.color}; color:${prov.textColor};" onclick="window.openPaymentDestination('${selectedPaymentMethod}', 'auto')">
+        <i class="fas fa-mobile-screen-button"></i> ${prov.name} Ilovani ochish
+      </button>
+      <button type="button" class="quick-pay-btn" style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-gold);" onclick="window.openPaymentDestination('${selectedPaymentMethod}', 'web')">
+        <i class="fas fa-globe"></i> ${prov.name} Saytiga kirish
+      </button>
+    `;
+  }
+
+  // Click / Payme / Paynet / Naqd va 9860 1701 1569 3682 karta raqamini ko'rsatuvchi blok
+  function ensurePaymentSelectorUI() {
+    const checkoutFormEl = document.getElementById('checkoutForm');
+    if (!checkoutFormEl || document.getElementById('paymentMethodsBox')) return;
+
+    const submitBtn = checkoutFormEl.querySelector('button[type="submit"]');
+    const payBox = document.createElement('div');
+    payBox.id = 'paymentMethodsBox';
+    payBox.className = 'payment-methods-box';
+    payBox.innerHTML = `
+      <div class="payment-methods-title">
+        <i class="fas fa-wallet" style="color:var(--accent-gold);"></i>
+        <span id="payMethodsTitleText">To'lov usulini tanlang:</span>
+      </div>
+      <div class="payment-methods-grid">
+        <button type="button" class="pay-option-btn active" data-pay="Naqd">
+          <i class="fas fa-money-bill-wave"></i> <span id="payBtnCashText">Naqd</span>
+        </button>
+        <button type="button" class="pay-option-btn" data-pay="Click">
+          <i class="fas fa-credit-card"></i> <span>CLICK</span>
+        </button>
+        <button type="button" class="pay-option-btn" data-pay="Payme">
+          <i class="fas fa-mobile-screen-button"></i> <span>Payme</span>
+        </button>
+        <button type="button" class="pay-option-btn" data-pay="Paynet">
+          <i class="fas fa-bolt"></i> <span>Paynet</span>
+        </button>
+      </div>
+      <div id="cardDisplayBox" class="card-Display-box">
+        <span style="font-size:0.78rem; color:var(--text-muted);" id="cardTransferHint">
+          To'lov uchun karta raqami (Click / Payme / Paynet):
+        </span>
+        <div class="card-number-row">
+          <span class="card-number-val">${RESTAURANT_CARD}</span>
+          <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()">
+            <i class="fas fa-copy"></i> Nusxalash
+          </button>
+        </div>
+        <div id="quickPayLinksRow" class="quick-pay-links"></div>
+      </div>
+    `;
+    checkoutFormEl.insertBefore(payBox, submitBtn);
+
+    const cardBox = document.getElementById('cardDisplayBox');
+    payBox.querySelectorAll('.pay-option-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedPaymentMethod = btn.dataset.pay;
+        const isOnline = selectedPaymentMethod === 'Click' || selectedPaymentMethod === 'Payme' || selectedPaymentMethod === 'Paynet';
+        if (cardBox) {
+          cardBox.classList.toggle('visible', isOnline);
+        }
+        if (isOnline) {
+          updateQuickPayButtonsUI();
+        }
+      });
+    });
   }
 
   const orderTypeBtns = document.querySelectorAll('.order-type-btn');
@@ -491,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
+      const payInfoLine = selectedPaymentMethod === 'Naqd' ? 'Naqd' : `${selectedPaymentMethod} (Karta: ${RESTAURANT_CARD})`;
       
       showToast("Yuborilmoqda...", 'fa-spinner');
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
@@ -499,7 +1069,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
       const FOOD_CHAT_ID = '8072569639';
       
-      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
+      const tgText = `📦 *YANGI TAOM BUYURTMASI!* (#${orderId})\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone}\n📍 ${deliveryText}\n💳 To'lov usuli: *${payInfoLine}*\n\n🛒 *Buyurtmalar:*\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 *Jami to'lov: ${formatPrice(totalSum)}*\n📝 Izoh: ${note || "Yo'q"}`;
       
       try {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -513,10 +1083,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.closeCheckout(); 
       showSuccessModal({ 
-        title: 'Buyurtmangiz qabul qilindi!', 
-        subtitle: `Raqam: #${orderId}`, 
-        message: `Tez orada operator aloqaga chiqadi.`, 
-        details: `${deliveryText}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}` 
+        title: selectedPaymentMethod === 'Naqd' ? 'Buyurtmangiz qabul qilindi!' : `Buyurtma va ${selectedPaymentMethod} to'lov!`, 
+        subtitle: `Raqam: #${orderId} | To'lov: ${selectedPaymentMethod}`, 
+        message: selectedPaymentMethod === 'Naqd'
+          ? `Tez orada operator aloqaga chiqadi.`
+          : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Quyidagi tugma orqali ${selectedPaymentMethod} ilovasiga yoki saytiga kirib ${formatPrice(totalSum)} o'tkazing:`, 
+        details: `${deliveryText}\nTo'lov turi: ${payInfoLine}\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`,
+        paymentProvider: selectedPaymentMethod,
+        paymentAmount: totalSum,
+        orderId: orderId
       });
       cart = [];
       saveCart();
@@ -666,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     6. SUCCESS MODAL & THEME
+     6. SUCCESS MODAL (CLICK / PAYME / PAYNET ILOVA VA SAYT TUGMALARI BILAN)
      ========================================================================== */
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
@@ -681,8 +1256,39 @@ document.addEventListener('DOMContentLoaded', () => {
     if (msgEl) msgEl.textContent = data.message || '';
     if (detEl) detEl.textContent = data.details || '';
 
-    const tgBtn = document.getElementById('successTelegramBtn');
-    if (tgBtn) tgBtn.style.display = 'none';
+    let oldPayWrap = document.getElementById('dynamicOnlinePayWrap');
+    if (oldPayWrap) oldPayWrap.remove();
+
+    const prov = data.paymentProvider ? PAYMENT_PROVIDERS[data.paymentProvider] : null;
+    if (prov) {
+      // Karta raqamini avtomatik nusxalab beramiz
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(RESTAURANT_CARD_RAW).catch(() => {});
+      }
+
+      const payWrap = document.createElement('div');
+      payWrap.id = 'dynamicOnlinePayWrap';
+      payWrap.style.cssText = 'margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.65rem;';
+      payWrap.innerHTML = `
+        <div class="card-number-row" style="justify-content: space-between;">
+          <span class="card-number-val">${RESTAURANT_CARD}</span>
+          <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()">
+            <i class="fas fa-copy"></i> Nusxalash
+          </button>
+        </div>
+        <button type="button" onclick="window.openPaymentDestination('${data.paymentProvider}', 'auto')" class="btn" style="width:100%; color:${prov.textColor}; font-weight:700; background:${prov.color};">
+          <i class="fas fa-mobile-screen-button"></i>
+          <span>${prov.name} Ilovasini ochish (${formatPrice(data.paymentAmount)})</span>
+        </button>
+        <button type="button" onclick="window.openPaymentDestination('${data.paymentProvider}', 'web')" class="btn btn-outline-gold" style="width:100%; font-size:0.85rem; padding:0.6rem 1rem;">
+          <i class="fas fa-globe"></i>
+          <span>${prov.name} rasmiy saytiga kirish</span>
+        </button>
+      `;
+      if (detEl && detEl.parentNode) {
+        detEl.parentNode.insertBefore(payWrap, detEl.nextSibling);
+      }
+    }
 
     successModal.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -757,7 +1363,6 @@ document.addEventListener('DOMContentLoaded', () => {
     { url: 'gal9.jpg', caption: 'Maxsus steyk va ishtahaochar taomlarimiz', tag: 'Maxsus taomlar', featured: false }
   ];
 
-  // Tepadagi qizil bilan chizilgan ortiqcha tugmalarni olib tashlaymiz
   const filterTabsContainer = document.querySelector('.gallery-filter-tabs');
   if (filterTabsContainer) {
     filterTabsContainer.style.display = 'none';
@@ -825,7 +1430,6 @@ document.addEventListener('DOMContentLoaded', () => {
     heroVideo.play().catch(err => console.log("Video avto-yonish xatosi:", err));
   }
 
-  renderMenu();
-  updateCartUI();
-  renderGallery();
+  // Boshlang'ich til va menyuni yuklash
+  window.changeLanguage(currentLang);
 });
