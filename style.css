@@ -2754,3 +2754,18 @@ h1, h2, h3, h4, .font-display {
     display: flex !important;
   }
 }
+/* Footer'dagi maxfiylik siyosati uchun dizayn */
+.footer-privacy {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05); /* Juda nozik chiziq */
+}
+
+.footer-privacy p {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4); /* Oq rangning xira (shaffof) ko'rinishi */
+  line-height: 1.6;
+  max-width: 800px;
+  margin: 0 auto;
+}
