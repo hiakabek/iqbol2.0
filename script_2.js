@@ -106,11 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
     @media (max-width: 900px) { #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; } }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
 
-    /* GOOGLE TUGMASINI MAJBURAN YO'QOTISH (Tizimga kirilganda) */
+    /* GOOGLE TUGMASI VA ONE-TAP OYNASINI MAJBURAN YO'QOTISH */
     body.logged-in #googleSignInContainer,
     body.logged-in #mobileGoogleContainer,
     body.logged-in #checkoutGoogleContainer,
-    body.logged-in iframe[src*="accounts.google.com"] {
+    body.logged-in iframe[src*="accounts.google.com"],
+    body.logged-in #credential_picker_container,
+    body.logged-in .g_id_signin {
       display: none !important;
       visibility: hidden !important;
       width: 0 !important;
@@ -119,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pointer-events: none !important;
       position: absolute !important;
       left: -9999px !important;
+      z-index: -9999 !important;
     }
   `;
   document.head.appendChild(customStyle);
@@ -326,7 +329,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMobileScreen = window.innerWidth <= 900;
 
     if (currentUser) {
-      document.body.classList.add('logged-in'); // GOOGLE TUGMASINI CSS ORQALI O'CHIRISH UCHUN
+      document.body.classList.add('logged-in'); // CSS ORQALI HAMMASINI YO'QOTISH
+
+      // JS orqali ham Google tugmalarini va One Tap oynasini majburan o'chirish
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try { google.accounts.id.cancel(); } catch(e) {}
+      }
+      const picker = document.getElementById('credential_picker_container');
+      if (picker) picker.style.display = 'none';
 
       const firstName = (currentUser.name || currentUser.email || 'Mijoz').split(' ')[0];
       const phoneHtml = currentUser.phone
@@ -416,6 +426,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function initGoogleSignIn() {
+    // Agar foydalanuvchi allaqachon tizimga kirgan bo'lsa, Google skripti umuman ishlamasin!
+    if (currentUser) return;
+
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
       setTimeout(initGoogleSignIn, 400);
       return;
@@ -429,17 +442,14 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
 
-      // Google tugmasini faqat tizimga KIRMAGANDA chizish
-      if (!currentUser) {
-        const headerContainer = document.getElementById('googleSignInContainer');
-        if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
+      const headerContainer = document.getElementById('googleSignInContainer');
+      if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
 
-        const mobileContainer = document.getElementById('mobileGoogleContainer');
-        if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
+      const mobileContainer = document.getElementById('mobileGoogleContainer');
+      if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
 
-        const checkoutContainer = document.getElementById('checkoutGoogleContainer');
-        if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
-      }
+      const checkoutContainer = document.getElementById('checkoutGoogleContainer');
+      if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
       
       renderUserUI();
     } catch (err) {
@@ -501,8 +511,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sal-16', name: 'Чакки', category: 'salatlar', categoryName: 'Salatlar', price: 10000, portion: '1 porsiya', desc: 'Tabiiy va mazali suzma (chakki).', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1532.jpg', tags: ['Milliy'], popular: false },
     { id: 'sal-17', name: 'Чабан', category: 'salatlar', categoryName: 'Salatlar', price: 42000, portion: '1 porsiya', desc: 'Mayda to\'g\'ralgan sarxil sabzavotlar va ko\'katlardan tayyorlangan Chaban salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1517.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-18', name: 'Капризе', category: 'salatlar', categoryName: 'Salatlar', price: 68000, portion: '1 porsiya', desc: 'Pomidor, motsarella pishlog\'i, rukkola va pesto sousidan italyancha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1569.jpg', tags: ['Premium'], popular: true },
-    { id: 'sal-19', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
-    { id: 'sal-20', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
+    { id: 'sal-19', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Tulum pishlogi arashlagan', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
+    { id: 'sal-20', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati..', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
     { id: 'ich-2', name: 'KARLOVY VARY', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 12000, portion: '1 litr', desc: 'Shifobaxsh mineral suv.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1587_j9z8Wv3_zGxwjgk.jpg', tags: ['Mineral suv'], popular: false },
     { id: 'ich-3', name: 'Черноголовка', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 14000, portion: '1 litr', desc: 'Mazali Tarxun / limonad.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1593_rJiNON9.jpg', tags: ['Limonad'], popular: false },
