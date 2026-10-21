@@ -112,6 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
     body.logged-in #checkoutGoogleContainer,
     body.logged-in iframe[src*="accounts.google.com"],
     body.logged-in #credential_picker_container,
+    body.logged-in #checkoutLoginNotice,
+    body.logged-in .S9gUrf-YoZ4jf,
+    body.logged-in [id^="gsi_"],
     body.logged-in .g_id_signin {
       display: none !important;
       visibility: hidden !important;
@@ -313,6 +316,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  // Kirgan foydalanuvchida Google tugma / One-Tap / iframe larni DOM dan butunlay olib tashlash
+  function purgeGoogleUI() {
+    ['googleSignInContainer', 'mobileGoogleContainer', 'checkoutGoogleContainer'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { if (el.innerHTML) el.innerHTML = ''; el.style.display = 'none'; }
+    });
+    document.querySelectorAll('.g_id_signin, #credential_picker_container, iframe[src*="accounts.google.com"], .S9gUrf-YoZ4jf, [id^="gsi_"]').forEach(el => {
+      if (!el.closest('#otpAuthModal')) el.remove();
+    });
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      try { google.accounts.id.cancel(); } catch (e) {}
+    }
+  }
+
   function renderUserUI() {
     const chip = document.getElementById('userProfileChip');
     const mobileChip = document.getElementById('mobileUserChip');
@@ -383,6 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (mobileGoogle) { mobileGoogle.style.display = 'none'; mobileGoogle.innerHTML = ''; }
       if (checkoutGoogle) { checkoutGoogle.style.display = 'none'; checkoutGoogle.innerHTML = ''; }
       if (checkoutNotice) checkoutNotice.style.display = 'none';
+      purgeGoogleUI();
 
       if (cName && !cName.value) cName.value = currentUser.name || '';
       if (rName && !rName.value) rName.value = currentUser.name || '';
@@ -404,12 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (rPhone) rPhone.readOnly = false;
 
       // Tizimdan chiqqanda Google tugmasini qayta yuklash
-      if (typeof google !== 'undefined' && google.accounts) {
-        const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
-        if (googleWrap && googleWrap.innerHTML === '') google.accounts.id.renderButton(googleWrap, config);
-        if (mobileGoogle && mobileGoogle.innerHTML === '') google.accounts.id.renderButton(mobileGoogle, { ...config, size: 'large', width: 280 });
-        if (checkoutGoogle && checkoutGoogle.innerHTML === '') google.accounts.id.renderButton(checkoutGoogle, { ...config, size: 'large' });
-      }
+      initGoogleSignIn();
     }
   }
 
@@ -425,39 +438,60 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Hisobdan chiqdingiz', 'fa-sign-out-alt');
   };
 
+  let googleLibInitialized = false;
+  let googleRetryCount = 0;
+  let googleInitTimer = null;
+
+  function renderGoogleButtons() {
+    const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
+    const targets = [
+      ['googleSignInContainer', config],
+      ['mobileGoogleContainer', { ...config, size: 'large', width: 280 }],
+      ['checkoutGoogleContainer', { ...config, size: 'large' }]
+    ];
+    targets.forEach(([id, cfg]) => {
+      const el = document.getElementById(id);
+      if (el && el.innerHTML.trim() === '') google.accounts.id.renderButton(el, cfg);
+    });
+  }
+
   function initGoogleSignIn() {
-    // Agar foydalanuvchi allaqachon tizimga kirgan bo'lsa, Google skripti umuman ishlamasin!
-    if (currentUser) return;
+    if (googleInitTimer) { clearTimeout(googleInitTimer); googleInitTimer = null; }
 
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      setTimeout(initGoogleSignIn, 400);
+      if (googleRetryCount++ < 60) googleInitTimer = setTimeout(initGoogleSignIn, 400);
       return;
     }
     try {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
-      const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
-
-      const headerContainer = document.getElementById('googleSignInContainer');
-      if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
-
-      const mobileContainer = document.getElementById('mobileGoogleContainer');
-      if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
-
-      const checkoutContainer = document.getElementById('checkoutGoogleContainer');
-      if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
-      
-      renderUserUI();
+      // initialize faqat BIR MARTA chaqiriladi
+      if (!googleLibInitialized) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredential,
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        googleLibInitialized = true;
+      }
+      // Kirgan bo'lsa — tugma chizilmaydi, mavjudlari tozalanadi
+      if (currentUser) { purgeGoogleUI(); return; }
+      renderGoogleButtons();
     } catch (err) {
       console.error('[Google Auth] Init xatosi:', err);
     }
   }
-  setTimeout(initGoogleSignIn, 150);
+
+  // Google kutubxonasi keyinroq tugma qo'shib yuborsa ham, kirgan foydalanuvchida darrov o'chirib tashlaymiz
+  let purgeScheduled = false;
+  new MutationObserver(() => {
+    if (!currentUser || purgeScheduled) return;
+    purgeScheduled = true;
+    requestAnimationFrame(() => { purgeScheduled = false; if (currentUser) purgeGoogleUI(); });
+  }).observe(document.body, { childList: true, subtree: true });
+
+  googleInitTimer = setTimeout(initGoogleSignIn, 150);
   window.addEventListener('load', initGoogleSignIn);
+  renderUserUI(); // sahifa ochilganda saqlangan foydalanuvchi holatini darrov qo'llash
 
   /* ==========================================================================
      1. MENU DATABASE (Barcha 60 ta taom joyida)
