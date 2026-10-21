@@ -1,6 +1,5 @@
 /**
- * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE SIGN-IN + TELEGRAM RAQAM TASDIQLASH BILAN BIRGA — XATOLAR TUZATILGAN)
+ * IQBOL OILAVIY RESTORAN — JAVASCRIPT (GOOGLE SIGN-IN + TELEGRAM OTP)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => {});
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (GOOGLE + TELEFON RAQAM KAPSULASI)
+     0. CSS VA INTERFEYS DIZAYNI
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
@@ -57,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .card-number-val { font-family: monospace; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; color: var(--accent-gold); }
     .btn-copy-card { background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark)); color: #112219; border: none; border-radius: 6px; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
 
-    /* Google Sign-In & Ixcham User Profile Chip (Rasm + Ism + Raqam birga) */
+    /* Google Sign-In & Ixcham User Profile Chip */
     .google-signin-wrap { display: flex; align-items: center; justify-content: center; }
     #userProfileChip.user-profile-chip {
       display: none; align-items: center; flex-wrap: nowrap !important; gap: 7px !important;
@@ -89,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
-    /* Mobil menyu ichidagi Google profil bloki */
     #mobileUserChip.mobile-user-chip {
       display: none; align-items: center; gap: 10px !important; padding: 10px 12px !important;
       background: var(--bg-card) !important; border: 1px solid var(--border-gold) !important;
@@ -103,12 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
       padding: 4px 9px !important; border-radius: 6px !important; font-size: 0.72rem !important; font-weight: 700 !important;
       margin-top: 5px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; cursor: pointer !important;
     }
-    @media (max-width: 900px) { #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; } }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
   `;
   document.head.appendChild(customStyle);
 
-  // Headerga UZ | RU | EN tugmalarini qo'shish
   const headerActions = document.querySelector('.header-actions');
   if (headerActions && !document.querySelector('.lang-switcher')) {
     const langDiv = document.createElement('div');
@@ -123,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     0.1 TELEFON RAQAMNI GOOGLE HISOBGA BOG'LASH MODALI (TELEGRAM OTP)
+     0.1 TELEGRAM OTP MODAL
      ========================================================================== */
   const otpModal = document.createElement('div');
   otpModal.id = 'otpAuthModal';
@@ -169,9 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openOtpModal = function(callback) {
     pendingCallbackAfterAuth = callback || null;
     const greetEl = document.getElementById('otpModalUserGreeting');
-    if (greetEl) {
-      greetEl.textContent = currentUser ? `Google hisob: ${currentUser.email}` : '';
-    }
+    if (greetEl) greetEl.textContent = currentUser ? `Google hisob: ${currentUser.email}` : '';
     otpModal.classList.add('open');
     document.body.style.overflow = 'hidden';
   };
@@ -188,7 +182,6 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Avval to\'liq telefon raqamingizni kiriting! (+998 XX XXX XX XX)', 'fa-exclamation-triangle');
       return;
     }
-
     if (!tgBotUsername) {
       try {
         const r = await fetch(`${API_URL}/bot-info`);
@@ -196,12 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (d && d.username) tgBotUsername = d.username;
       } catch (e) {}
     }
-
-    if (!tgBotUsername) {
-      showToast('Server uyg\'onmoqda, 3 soniyadan so\'ng qayta bosing!', 'fa-spinner');
-      return;
-    }
-
     window.open(`https://t.me/${tgBotUsername}?start=login_${digits}`, '_blank', 'noopener,noreferrer');
     showToast('Telegram bot ochildi! Botdagi "Raqamni tasdiqlash" tugmasini bosing.', 'fa-paper-plane');
   });
@@ -222,8 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: digits,
-          code: code,
+          phone: digits, code: code,
           googleId: currentUser ? currentUser.googleId : null,
           email: currentUser ? currentUser.email : null
         })
@@ -260,14 +246,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI (RAQAM BILAN BIRGA KO'RSATISH)
+     0.2 GOOGLE SIGN-IN LOGIKASI
      ========================================================================== */
   const handleGoogleCredential = async (response) => {
     try {
       showToast('Google hisob tekshirilmoqda...', 'fa-spinner');
       const res = await fetch(GOOGLE_AUTH_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential })
       });
       const data = await res.json();
@@ -290,9 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         showToast('Kirish amalga oshmadi: ' + (data.message || 'Xatolik'), 'fa-exclamation-triangle');
       }
-    } catch (err) {
-      showToast("Server bilan aloqa yo'q", 'fa-wifi');
-    }
+    } catch (err) { showToast("Server bilan aloqa yo'q", 'fa-wifi'); }
   };
 
   function renderUserUI() {
@@ -307,8 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const rName = document.getElementById('resName');
     const rPhone = document.getElementById('resPhone');
 
-    const isMobileScreen = window.innerWidth <= 900;
-
     if (currentUser) {
       const firstName = (currentUser.name || currentUser.email || 'Mijoz').split(' ')[0];
       const phoneHtml = currentUser.phone
@@ -316,38 +297,21 @@ document.addEventListener('DOMContentLoaded', () => {
         : `<small onclick="window.openOtpModal()" style="color:#ffb142; text-decoration:underline;">+ Raqamni ulash</small>`;
 
       if (chip) {
-        chip.style.display = isMobileScreen ? 'none' : 'inline-flex';
+        chip.style.display = 'inline-flex';
         const avatarEl = document.getElementById('userAvatar');
-        if (avatarEl) {
-          if (currentUser.picture) {
-            avatarEl.src = currentUser.picture;
-            avatarEl.style.display = 'block';
-          } else {
-            avatarEl.style.display = 'none';
-          }
-        }
+        if (avatarEl && currentUser.picture) { avatarEl.src = currentUser.picture; avatarEl.style.display = 'block'; }
         const uNameEl = document.getElementById('userName');
         if (uNameEl) {
           uNameEl.innerHTML = `<span>${firstName}</span>${phoneHtml}`;
           uNameEl.title = `${currentUser.name} | ${currentUser.email} | ${currentUser.phone || 'Raqam ulanmagan'}`;
         }
       }
-
       if (mobileChip) {
         mobileChip.style.display = 'flex';
         const mAvatar = document.getElementById('mobileUserAvatar');
-        if (mAvatar) {
-          if (currentUser.picture) {
-            mAvatar.src = currentUser.picture;
-            mAvatar.style.display = 'block';
-          } else {
-            mAvatar.style.display = 'none';
-          }
-        }
+        if (mAvatar && currentUser.picture) { mAvatar.src = currentUser.picture; mAvatar.style.display = 'block'; }
         const mNameEl = document.getElementById('mobileUserName');
-        if (mNameEl) {
-          mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
-        }
+        if (mNameEl) mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
       }
 
       if (googleWrap) googleWrap.style.display = 'none';
@@ -356,7 +320,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (cName && !cName.value) cName.value = currentUser.name || '';
       if (rName && !rName.value) rName.value = currentUser.name || '';
-
       if (currentUser.phone) {
         if (cPhone) { cPhone.value = currentUser.phone; cPhone.readOnly = true; }
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
@@ -364,15 +327,13 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (chip) chip.style.display = 'none';
       if (mobileChip) mobileChip.style.display = 'none';
-      if (googleWrap) googleWrap.style.display = isMobileScreen ? 'none' : 'flex';
+      if (googleWrap) googleWrap.style.display = 'flex';
       if (mobileGoogle) mobileGoogle.style.display = 'flex';
       if (checkoutNotice) checkoutNotice.style.display = 'block';
       if (cPhone) cPhone.readOnly = false;
       if (rPhone) rPhone.readOnly = false;
     }
   }
-
-  window.addEventListener('resize', renderUserUI);
 
   window.logoutUser = function() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
@@ -386,16 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initGoogleSignIn() {
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      setTimeout(initGoogleSignIn, 400);
-      return;
+      setTimeout(initGoogleSignIn, 400); return;
     }
     try {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredential,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
       const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
 
       const headerContainer = document.getElementById('googleSignInContainer');
@@ -408,9 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
 
       renderUserUI();
-    } catch (err) {
-      console.error('[Google Auth] Init xatosi:', err);
-    }
+    } catch (err) { console.error('[Google Auth] Init xatosi:', err); }
   }
   setTimeout(initGoogleSignIn, 150);
   window.addEventListener('load', initGoogleSignIn);
@@ -526,7 +479,25 @@ document.addEventListener('DOMContentLoaded', () => {
     { sel: '#desktopNav a[href="#gallery"]', uz: 'Galereya', ru: 'Галерея', en: 'Gallery' },
     { sel: '#desktopNav a[href="#testimonials"]', uz: 'Sharhlar', ru: 'Отзывы', en: 'Reviews' },
     { sel: '#desktopNav a[href="#contact"]', uz: 'Aloqa', ru: 'Контакты', en: 'Contact' },
-    { sel: '#headerReservationBtn span', uz: 'Stol band qilish', ru: 'Бронь стола', en: 'Book a Table' }
+    { sel: '#headerReservationBtn span', uz: 'Stol band qilish', ru: 'Бронь стола', en: 'Book a Table' },
+    { sel: '.hero-badge span', uz: "Qarshi shahrida mehmondo'stlik maskani", ru: 'Место гостеприимства в городе Карши', en: 'A hub of hospitality in Karshi' },
+    { sel: '.hero-title', html: true, uz: 'IQBOL — <span class="gold-gradient-text">Ta\'m va mehmondo\'stlik</span> uyg\'unligi', ru: 'IQBOL — Гармония <span class="gold-gradient-text">вкуса и гостеприимства</span>', en: 'IQBOL — Harmony of <span class="gold-gradient-text">Taste & Hospitality</span>' },
+    { sel: '.hero-subtitle', uz: "An'anaviy o'zbek va uyg'ur taomlari, iliq muhit va unutilmas ta'mlar. Saralangan go'sht, haqiqiy tandir va mehr bilan pishirilgan lazzatlar oilangizni kutmoqda.", ru: 'Традиционные узбекские и уйгурские блюда, теплая атмосфера и незабываемые вкусы. Отборное мясо, настоящий тандыр и приготовленные с любовью блюда ждут вашу семью.', en: 'Traditional Uzbek and Uyghur cuisine, warm atmosphere, and unforgettable flavors. Selected meat, authentic clay tandoor, and dishes cooked with love await your family.' },
+    { sel: '#heroMenuBtn span', uz: "Menuni ko'rish", ru: 'Смотреть меню', en: 'View Menu' },
+    { sel: '#heroReservationBtn span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book a Table' },
+    { sel: '#menu .section-tag', uz: 'Bizning taomnoma', ru: 'Наше меню', en: 'Our Menu' },
+    { sel: '#menu .section-title', html: true, uz: 'IQBOL <span>Restoran Menyu</span>', ru: 'Меню <span>Ресторана IQBOL</span>', en: 'IQBOL <span>Restaurant Menu</span>' },
+    { sel: '#reservation .form-title', uz: 'Stol band qilish', ru: 'Бронирование стола', en: 'Table Reservation' },
+    { sel: '#reservationForm button[type="submit"] span', uz: 'Stol band qilish', ru: 'Забронировать стол', en: 'Book Table' },
+    { sel: '#gallery .section-tag', uz: 'Foto lavhalar', ru: 'Фотогалерея', en: 'Photo Gallery' },
+    { sel: '#gallery .section-title', html: true, uz: 'IQBOL <span>Galereyasi</span>', ru: 'Галерея <span>IQBOL</span>', en: 'IQBOL <span>Gallery</span>' },
+    { sel: '.cart-title span', uz: 'Sizning buyurtmangiz', ru: 'Ваш заказ', en: 'Your Order' },
+    { sel: '.order-type-btn[data-type="dine_in"]', html: true, uz: '<i class="fas fa-utensils"></i> Restoranda', ru: '<i class="fas fa-utensils"></i> В ресторане', en: '<i class="fas fa-utensils"></i> Dine-in' },
+    { sel: '.order-type-btn[data-type="delivery"]', html: true, uz: '<i class="fas fa-motorcycle"></i> Yetkazib berish', ru: '<i class="fas fa-motorcycle"></i> Доставка', en: '<i class="fas fa-motorcycle"></i> Delivery' },
+    { sel: '.cart-footer .btn-primary span', uz: 'Buyurtmani rasmiylashtirish', ru: 'Оформить заказ', en: 'Proceed to Checkout' },
+    { sel: '#dishModal .modal-actions .btn-primary span', uz: "Buyurtmaga qo'shish", ru: 'Добавить в корзину', en: 'Add to Order' },
+    { sel: '#checkoutModal h3.font-display', uz: 'Buyurtmani tasdiqlash', ru: 'Подтверждение заказа', en: 'Confirm Order' },
+    { sel: '#checkoutForm button[type="submit"] span', uz: 'Buyurtmani yuborish', ru: 'Отправить заказ', en: 'Submit Order' }
   ];
 
   window.changeLanguage = function(lang) {
@@ -539,6 +510,8 @@ document.addEventListener('DOMContentLoaded', () => {
         else el.textContent = item[lang];
       });
     });
+    const sInput = document.getElementById('searchInput');
+    if (sInput) sInput.placeholder = lang === 'ru' ? 'Поиск блюда по названию...' : lang === 'en' ? 'Search dish by name...' : "Taom nomi yoki tarkibini qidiring...";
     renderMenu(); updateCartUI(); renderGallery();
   };
 
@@ -711,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & TELEGRAM (Google + Tasdiqlangan Raqam bilan)
+     4. CHECKOUT & TELEGRAM
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -853,7 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     5. TABLE RESERVATION SYSTEM (API_URL qayta e'lon qilinishi olib tashlandi)
+     5. TABLE RESERVATION SYSTEM
      ========================================================================== */
   const reservationForm = document.getElementById('reservationForm');
 
@@ -898,8 +871,17 @@ document.addEventListener('DOMContentLoaded', () => {
     reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault(); if (isResSubmitting) return;
 
+      if (!currentUser) {
+        showToast("Stol band qilish uchun avval raqamingizni Telegram orqali tasdiqlang!", 'fa-shield-halved');
+        window.openOtpModal(() => {
+          renderUserUI();
+          reservationForm.requestSubmit();
+        });
+        return;
+      }
+
       const name = document.getElementById('resName').value.trim();
-      const phone = (currentUser && currentUser.phone) ? currentUser.phone : document.getElementById('resPhone').value.trim();
+      const phone = currentUser.phone;
       const date = resDateInput.value; const time = resTimeSelect.value; const guests = document.getElementById('resGuests').value;
       const tableType = tableTypeSelect.value; const tableNumber = tableNumberSelect.value; const notesEl = document.getElementById('resNotes'); const notes = notesEl ? notesEl.value.trim() : '';
 
@@ -911,11 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast("Tizimga yuborilmoqda...", 'fa-spinner'); const submitBtn = reservationForm.querySelector('button[type="submit"]'); if (submitBtn) submitBtn.disabled = true;
 
       try {
-        const response = await fetch(`${API_URL}/book`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, email: currentUser ? currentUser.email : '', date, time, tableType: tableTypeName, tableNumber, guests, notes })
-        });
+        const response = await fetch(`${API_URL}/book`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, email: currentUser ? currentUser.email : '', date, time, tableType: tableTypeName, tableNumber, guests, notes }) });
         const result = await response.json();
         if (!result.success) { showToast(result.message, 'fa-exclamation-triangle'); checkAndFilterBookedTables(); isResSubmitting = false; if (submitBtn) submitBtn.disabled = false; return; }
         const bookingCode = 'STOL-' + Math.floor(1000 + Math.random() * 9000);
