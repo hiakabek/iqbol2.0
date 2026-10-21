@@ -5,6 +5,7 @@ const https = require('https');
 const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
 const RESERVATION_CHAT_ID = '7225335915'; 
 const NEW_USER_CHAT_ID = '7225335915';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://iqbol.onrender.com';
 
 const PORT = process.env.PORT || 3000;
@@ -14,18 +15,20 @@ app.use(cors());
 app.use(express.json());
 
 let bookedTables = {}; 
-let pendingTgPhones = {}; // chatId -> saytda yozilgan raqam ("998901234567")
-let otpStore = {};        // "998901234567" -> { code: "4829", name: "Sardor", phone: "+998901234567", tgId: 123, expires: ... }
+let pendingTgPhones = {}; 
+let otpStore = {};        
+let googleUserPhones = {}; 
+const seenUsers = new Set();
 let botUsername = '';
 
-// Telefon raqamni faqat raqamlardan iborat 998XXXXXXXXX formatга keltirish
+// Telefon raqamni 998XXXXXXXXX formatga keltirish
 function normalizePhone(raw) {
     let digits = String(raw || '').replace(/\D/g, '');
     if (digits.length === 9) digits = '998' + digits;
     return digits;
 }
 
-// Telegram API ga so'rov yuborish funksiyasi
+// Telegram API ga xavfsiz so'rov yuborish funksiyasi
 function tgRequest(method, payload, callback) {
     const postData = JSON.stringify(payload);
     const options = {
@@ -41,36 +44,94 @@ function tgRequest(method, payload, callback) {
     const req = https.request(options, (res) => {
         let body = '';
         res.on('data', (chunk) => body += chunk);
-        res.on('end', () => { if (callback) callback(body); });
+        res.on('end', () => {
+            if (callback) callback(body);
+        });
     });
-    req.on('error', (err) => console.error("Telegram xatosi:", err));
+    req.on('error', (err) => console.error("Telegram xatosi:", err.message));
     req.write(postData);
     req.end();
 }
 
-// Bot username-ni avtomatik aniqlash
-https.get(`https://api.telegram.org/bot${TOKEN}/getMe`, (res) => {
-    let data = '';
-    res.on('data', c => data += c);
-    res.on('end', () => {
-        try {
-            const parsed = JSON.parse(data);
-            if (parsed.ok && parsed.result.username) {
-                botUsername = parsed.result.username;
-                console.log("🤖 Bot tayyor: @" + botUsername);
-            }
-        } catch (e) {}
+// HTTPS GET yordamchi funksiyasi (fetch o'rniga 100% barcha Node.js da ishlaydi)
+function httpsGetJson(url) {
+    return new Promise((resolve, reject) => {
+        https.get(url, (res) => {
+            let body = '';
+            res.on('data', (chunk) => body += chunk);
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(body));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }).on('error', reject);
     });
+}
+
+// Bot username-ni avtomatik aniqlash
+httpsGetJson(`https://api.telegram.org/bot${TOKEN}/getMe`)
+    .then((parsed) => {
+        if (parsed && parsed.ok && parsed.result && parsed.result.username) {
+            botUsername = parsed.result.username;
+            console.log("🤖 Bot tayyor: @" + botUsername);
+        }
+    })
+    .catch((err) => console.error("Bot info xatosi:", err.message));
+
+// Server ishlayotganini tekshirish uchun bosh sahifa
+app.get('/', (req, res) => {
+    res.send('✅ IQBOL Restorani serveri ishlamoqda!');
 });
 
-// 1. Saytga bot username-ni berish
 app.get('/api/bot-info', (req, res) => {
     res.json({ username: botUsername });
 });
 
-// 2. Mijoz saytda kiritgan 4 xonali kodni va raqamni tekshirish
+// 1. Google orqali kirish (fetch o'rniga httpsGetJson ishlatildi)
+app.post('/api/auth/google', async (req, res) => {
+    const { credential } = req.body;
+    if (!credential) {
+        return res.status(400).json({ success: false, message: 'Token kerak' });
+    }
+
+    try {
+        const data = await httpsGetJson(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`);
+
+        if (!data || data.error || data.error_description) {
+            return res.status(400).json({ success: false, message: 'Token yaroqsiz' });
+        }
+        if (GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith('YOUR_') && data.aud !== GOOGLE_CLIENT_ID) {
+            return res.status(400).json({ success: false, message: 'Client ID mos emas' });
+        }
+
+        const { email, name, picture, sub: googleId } = data;
+        const savedPhone = googleUserPhones[googleId] || null;
+        const isNewUser = !seenUsers.has(googleId);
+        seenUsers.add(googleId);
+
+        if (isNewUser) {
+            tgRequest('sendMessage', {
+                chat_id: NEW_USER_CHAT_ID,
+                text: `🔐 YANGI FOYDALANUVCHI (Google Login)\n\n👤 Ism: ${name || 'N/A'}\n📧 Email: ${email || 'N/A'}\n📞 Tel: ${savedPhone || 'Hali tasdiqlanmagan'}\n⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}`
+            });
+        }
+
+        res.json({
+            success: true,
+            isNewUser,
+            user: { email, name, picture, googleId, phone: savedPhone }
+        });
+    } catch (err) {
+        console.error("Google verify xatosi:", err.message);
+        res.status(500).json({ success: false, message: 'Server xatosi' });
+    }
+});
+
+// 2. Telegram 4 xonali OTP kodni tekshirish va Google hisobga bog'lash
 app.post('/api/auth/verify-otp', (req, res) => {
-    const { phone, code } = req.body;
+    const { phone, code, googleId, email } = req.body;
     const normPhone = normalizePhone(phone);
     const cleanCode = String(code || '').trim();
 
@@ -91,27 +152,27 @@ app.post('/api/auth/verify-otp', (req, res) => {
     }
 
     delete otpStore[normPhone];
+    const formattedPhone = '+' + normPhone;
 
-    // Admin chatiga yangi tasdiqlangan mijoz haqida xabar yuborish
+    if (googleId) {
+        googleUserPhones[googleId] = formattedPhone;
+    }
+
     tgRequest('sendMessage', {
         chat_id: NEW_USER_CHAT_ID,
-        text: `🔐 *YANGI TASDIQLANGAN MIJOZ (Telegram OTP)*\n\n👤 Ism: ${record.name}\n📞 Tel: \`+${normPhone}\`\n🆔 Telegram ID: \`${record.tgId}\`\n⏰ Vaqt: ${new Date().toLocaleString('uz-UZ')}`,
-        parse_mode: 'Markdown'
+        text: `✅ GOOGLE HISOB VA TELEFON BOG'LANDI\n\n👤 Ism: ${record.name}\n📧 Email: ${email || 'Kiritilmagan'}\n📞 Tel: ${formattedPhone}\n🆔 Telegram ID: ${record.tgId}`
     });
 
     res.json({
         success: true,
-        user: {
-            name: record.name,
-            phone: '+' + normPhone,
-            tgId: record.tgId
-        }
+        phone: formattedPhone,
+        tgName: record.name
     });
 });
 
 // 3. Stol band qilish
 app.post('/api/book', (req, res) => {
-    const { name, phone, date, time, tableType, tableNumber, notes } = req.body;
+    const { name, phone, email, date, time, tableType, tableNumber, notes } = req.body;
     const bookingKey = `${date}_${time}_${tableType}_${tableNumber}`;
 
     if (bookedTables[bookingKey]) {
@@ -119,12 +180,12 @@ app.post('/api/book', (req, res) => {
     }
 
     bookedTables[bookingKey] = true;
-    const messageText = `🛎 *YANGI BUYURTMA!*\n\n👤 Mijoz: ${name}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || 'Yo\'q'}`;
+    const emailLine = email ? `\n📧 Email: ${email}` : '';
+    const messageText = `🛎 YANGI STOL BUYURTMASI!\n\n👤 Mijoz: ${name}${emailLine}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📅 Sana: ${date}\n⏰ Vaqt: ${time}\n🛋 Zal: ${tableType}\n🔢 Stol: ${tableNumber}\n📝 Izoh: ${notes || "Yo'q"}`;
     
     tgRequest('sendMessage', {
         chat_id: RESERVATION_CHAT_ID,
         text: messageText,
-        parse_mode: 'Markdown',
         reply_markup: {
             inline_keyboard: [
                 [{ text: "✅ Stolni bo'shatish", callback_data: `free_${bookingKey}` }]
@@ -135,12 +196,11 @@ app.post('/api/book', (req, res) => {
     res.json({ success: true, message: 'Muvaffaqiyatli band qilindi!' });
 });
 
-// 4. Band stollarni saytga berish
 app.get('/api/booked', (req, res) => {
     res.json(bookedTables);
 });
 
-// 5. Telegram Webhook (OTP kod berish + Raqamni solishtirish + Stol bo'shatish)
+// 4. Telegram Webhook
 app.post('/api/telegram-webhook', (req, res) => {
     const update = req.body;
 
@@ -148,7 +208,6 @@ app.post('/api/telegram-webhook', (req, res) => {
         const msg = update.message;
         const chatId = msg.chat.id;
 
-        // A) Mijoz saytdan /start login_998901234567 bo'lib kelganda
         if (msg.text && msg.text.startsWith('/start')) {
             const parts = msg.text.split(' ');
             const payload = parts[1] || '';
@@ -159,8 +218,7 @@ app.post('/api/telegram-webhook', (req, res) => {
 
                 tgRequest('sendMessage', {
                     chat_id: chatId,
-                    text: `🔐 *IQBOL Restorani — Xavfsizlik tekshiruvi*\n\nSiz saytda *+${requestedPhone}* raqamini kiritdingiz.\n\nUshbu raqam haqiqatdan ham sizning Telegram profilingizga ulanganini tasdiqlash va *4 xonali kod* olish uchun pastdagi tugmani bosing 👇`,
-                    parse_mode: 'Markdown',
+                    text: `🔐 IQBOL Restorani — Raqamni tasdiqlash\n\nSiz saytda +${requestedPhone} raqamini kiritdingiz.\n\nGoogle hisobingizga ushbu raqamni ulash va 4 xonali kod olish uchun pastdagi tugmani bosing 👇`,
                     reply_markup: {
                         keyboard: [
                             [{ text: "📱 Raqamni tasdiqlash va kod olish", request_contact: true }]
@@ -172,8 +230,7 @@ app.post('/api/telegram-webhook', (req, res) => {
             } else {
                 tgRequest('sendMessage', {
                     chat_id: chatId,
-                    text: "👋 *IQBOL Restorani* rasmiy botiga xush kelibsiz!\n\nTasdiqlash kodini olish uchun quyidagi *«📱 Raqamni tasdiqlash va kod olish»* tugmasini bosing:",
-                    parse_mode: 'Markdown',
+                    text: "👋 IQBOL Restorani rasmiy botiga xush kelibsiz!\n\nTasdiqlash kodini olish uchun quyidagi tugmani bosing:",
                     reply_markup: {
                         keyboard: [
                             [{ text: "📱 Raqamni tasdiqlash va kod olish", request_contact: true }]
@@ -185,14 +242,11 @@ app.post('/api/telegram-webhook', (req, res) => {
             }
         }
 
-        // B) Mijoz "Raqamni tasdiqlash" tugmasini bosib kontaktini yuborganda
         if (msg.contact) {
-            // Faqat o'zining shaxsiy kontaktini yuborganini tekshiramiz (boshqa odamning kontaktini forward qilsa o'tmaydi!)
             if (msg.contact.user_id && msg.from && msg.contact.user_id !== msg.from.id) {
                 tgRequest('sendMessage', {
                     chat_id: chatId,
-                    text: "❌ *XATOLIK!* Siz boshqa odamning kontaktini yubordingiz. Faqat pastdagi tugmani bosib o'z raqamingizni yuboring!",
-                    parse_mode: 'Markdown'
+                    text: "❌ XATOLIK! Faqat pastdagi tugmani bosib o'z raqamingizni yuboring!"
                 });
                 return res.sendStatus(200);
             }
@@ -200,41 +254,36 @@ app.post('/api/telegram-webhook', (req, res) => {
             const actualPhone = normalizePhone(msg.contact.phone_number);
             const expectedPhone = pendingTgPhones[chatId];
 
-            // Agar saytda yozilgan raqam bilan Telegramga ulangan raqam bir xil bo'lmasa — RAD ETAMIZ!
             if (expectedPhone && expectedPhone !== actualPhone) {
                 tgRequest('sendMessage', {
                     chat_id: chatId,
-                    text: `❌ *FIRIBGARLIK HIMOYASI: Raqamlar mos kelmadi!*\n\nSiz saytda: *+${expectedPhone}* raqamini yozdingiz,\nlekin Telegramingiz: *+${actualPhone}* raqamiga ulangan!\n\n👉 Iltimos, saytga qaytib aynan *+${actualPhone}* raqamini yozing va qaytadan urinib ko'ring.`,
-                    parse_mode: 'Markdown',
+                    text: `❌ Raqamlar mos kelmadi!\n\nSiz saytda: +${expectedPhone} yozdingiz,\nlekin Telegramingiz: +${actualPhone} raqamiga ulangan!\n\n👉 Saytga qaytib aynan +${actualPhone} raqamini kiriting.`,
                     reply_markup: { remove_keyboard: true }
                 });
                 return res.sendStatus(200);
             }
 
-            // Hammasi 100% to'g'ri — 4 xonali kod beramiz
             const otpCode = String(Math.floor(1000 + Math.random() * 9000));
-            const firstName = msg.contact.first_name || msg.from.first_name || 'Mijoz';
+            const firstName = msg.contact.first_name || (msg.from && msg.from.first_name) || 'Mijoz';
 
             otpStore[actualPhone] = {
                 code: otpCode,
                 name: firstName,
                 phone: '+' + actualPhone,
-                tgId: msg.from.id,
-                expires: Date.now() + 10 * 60 * 1000 // 10 daqiqa
+                tgId: msg.from ? msg.from.id : chatId,
+                expires: Date.now() + 10 * 60 * 1000
             };
 
             delete pendingTgPhones[chatId];
 
             tgRequest('sendMessage', {
                 chat_id: chatId,
-                text: `✅ *Raqamingiz tasdiqlandi:* +${actualPhone}\n\n🔐 Saytga kiritish uchun 4 xonali maxfiy kodingiz:\n\n👉 *${otpCode}*\n\n_(Saytga qaytib ushbu 4 xonali kodni kiriting)_`,
-                parse_mode: 'Markdown',
+                text: `✅ Raqamingiz tasdiqlandi: +${actualPhone}\n\n🔐 Saytga kiritish uchun 4 xonali kodingiz:\n\n👉 ${otpCode}`,
                 reply_markup: { remove_keyboard: true }
             });
         }
     }
 
-    // C) Stolni bo'shatish tugmasi bosilganda
     if (update && update.callback_query) {
         const callbackData = update.callback_query.data;
         const chatId = update.callback_query.message.chat.id;
@@ -254,8 +303,7 @@ app.post('/api/telegram-webhook', (req, res) => {
             tgRequest('editMessageText', {
                 chat_id: chatId,
                 message_id: messageId,
-                text: originalText + `\n\n🟢 *HOLAT:* Yopilgan (Stol bo'shatildi)`,
-                parse_mode: 'Markdown'
+                text: originalText + `\n\n🟢 HOLAT: Yopilgan (Stol bo'shatildi)`
             });
         }
     }
@@ -265,9 +313,9 @@ app.post('/api/telegram-webhook', (req, res) => {
 app.listen(PORT, () => {
     console.log(`✅ Server port ${PORT} da ishlamoqda...`);
     const webhookUrl = `${RENDER_URL}/api/telegram-webhook`;
-    const setWebhookUrl = `https://api.telegram.org/bot${TOKEN}/setWebhook?url=${webhookUrl}`;
-    https.get(setWebhookUrl, (res) => {
-        let data = ''; res.on('data', chunk => data += chunk);
+    https.get(`https://api.telegram.org/bot${TOKEN}/setWebhook?url=${webhookUrl}`, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
         res.on('end', () => console.log("Webhook natijasi:", data));
-    }).on('error', err => console.error("Webhook xato:", err));
+    }).on('error', err => console.error("Webhook xatosi:", err.message));
 });
