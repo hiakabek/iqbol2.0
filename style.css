@@ -2769,3 +2769,16 @@ h1, h2, h3, h4, .font-display {
   max-width: 800px;
   margin: 0 auto;
 }
+    /* TIZIMGA KIRGANDA GOOGLE TUGMASINI MAJBURAN YO'QOTISH */
+    body.logged-in #googleSignInContainer,
+    body.logged-in #mobileGoogleContainer,
+    body.logged-in #checkoutGoogleContainer {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }

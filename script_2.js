@@ -105,6 +105,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     @media (max-width: 900px) { #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; } }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
+
+    /* GOOGLE TUGMASINI MAJBURAN YO'QOTISH (Tizimga kirilganda) */
+    body.logged-in #googleSignInContainer,
+    body.logged-in #mobileGoogleContainer,
+    body.logged-in #checkoutGoogleContainer,
+    body.logged-in iframe[src*="accounts.google.com"] {
+      display: none !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
   `;
   document.head.appendChild(customStyle);
 
@@ -311,6 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const isMobileScreen = window.innerWidth <= 900;
 
     if (currentUser) {
+      document.body.classList.add('logged-in'); // GOOGLE TUGMASINI CSS ORQALI O'CHIRISH UCHUN
+
       const firstName = (currentUser.name || currentUser.email || 'Mijoz').split(' ')[0];
       const phoneHtml = currentUser.phone
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
@@ -365,6 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
       }
     } else {
+      document.body.classList.remove('logged-in'); // GOOGLE TUGMASINI QAYTA KO'RSATISH UCHUN
+
       if (chip) chip.style.display = 'none';
       if (mobileChip) mobileChip.style.display = 'none';
       if (googleWrap) googleWrap.style.display = isMobileScreen ? 'none' : 'flex';
