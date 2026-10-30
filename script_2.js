@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE SIGN-IN + TELEGRAM OTP + CLICK/PAYME/PAYNET ILOVA OCHISH + REAL-VAQTDA TO'LOV TASDIQLASH)
+ * (GOOGLE SIGN-IN TUGMASI KIRGANDAN KEYIN 100% YO'QOLADIGAN TO'LIQ VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,10 +53,28 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => {});
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI
+     0. CSS VA INTERFEYS DIZAYNI (GOOGLE TUGMASINI MAJBURIY YASHIRISH BILAN)
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
+    /* Majburiy yashirish klassi (style.css dagi !important ni yengib o'tadi) */
+    .force-hide-auth {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    #googleSignInContainer:not(.force-hide-auth) {
+      width: auto !important;
+      max-width: 210px !important;
+      overflow: visible !important;
+    }
+
     .lang-switcher {
       display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.12);
       border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; padding: 3px; gap: 2px;
@@ -84,15 +102,14 @@ document.addEventListener('DOMContentLoaded', () => {
     .open-app-btn { width: 100%; padding: 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: opacity 0.2s; }
     .open-app-btn:hover { opacity: 0.92; }
 
-    /* Google Sign-In & Ixcham User Profile Chip */
-    .google-signin-wrap { display: flex; align-items: center; justify-content: center; }
-    #userProfileChip.user-profile-chip {
-      display: none; align-items: center; flex-wrap: nowrap !important; gap: 7px !important;
+    /* Ixcham User Profile Chip */
+    #userProfileChip.user-profile-chip:not(.force-hide-auth) {
+      display: inline-flex !important; align-items: center !important; flex-wrap: nowrap !important; gap: 7px !important;
       padding: 3px 6px 3px 4px !important; height: 38px !important; border-radius: 999px !important;
       background: rgba(15, 44, 34, 0.88) !important; border: 1px solid rgba(212, 175, 55, 0.5) !important;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important; max-width: 245px !important;
     }
-    .header.scrolled #userProfileChip.user-profile-chip { background: var(--bg-card) !important; border-color: var(--border-gold) !important; }
+    .header.scrolled #userProfileChip.user-profile-chip:not(.force-hide-auth) { background: var(--bg-card) !important; border-color: var(--border-gold) !important; }
     #userProfileChip .user-avatar {
       width: 28px !important; height: 28px !important; min-width: 28px !important;
       border-radius: 50% !important; object-fit: cover !important; border: 1.5px solid var(--accent-gold) !important;
@@ -116,8 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
-    #mobileUserChip.mobile-user-chip {
-      display: none; align-items: center; gap: 10px !important; padding: 10px 12px !important;
+    #mobileUserChip.mobile-user-chip:not(.force-hide-auth) {
+      display: flex !important; align-items: center !important; gap: 10px !important; padding: 10px 12px !important;
       background: var(--bg-card) !important; border: 1px solid var(--border-gold) !important;
       border-radius: 12px !important; margin-bottom: 12px !important;
     }
@@ -136,6 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
       border-top-color: var(--accent-gold); border-radius: 50%;
       animation: spinLoader 1s linear infinite; margin: 0 auto 1.2rem auto;
     }
+    @media (max-width: 900px) {
+      #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; }
+    }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
   `;
   document.head.appendChild(customStyle);
@@ -153,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Karta raqami nusxalandi: ${RESTAURANT_CARD}`, 'fa-copy');
   };
 
-  // CLICK, PAYME YOKI PAYNET ILOVASINI (YOKI SAYTINI) OCHISH FUNKSIYASI
   window.openPaymentApp = function(appKey) {
     const appInfo = PAYMENT_APPS[appKey];
     if (!appInfo) return;
@@ -176,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   /* ==========================================================================
-     0.05 TO'LOVNI JONLI KUTISH VA TASDIQLASH OYNASI (PAYMENT VERIFICATION MODAL)
+     0.05 TO'LOVNI JONLI KUTISH VA TASDIQLASH OYNASI
      ========================================================================== */
   const payCheckModal = document.createElement('div');
   payCheckModal.id = 'paymentVerifyModal';
@@ -328,8 +347,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI
+     0.2 GOOGLE SIGN-IN LOGIKASI (KIRGANDAN SO'NG OQ TUGMANI BUTUNLAY O'CHIRISH)
      ========================================================================== */
+  function drawGoogleButtons() {
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+    const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
+
+    const headerContainer = document.getElementById('googleSignInContainer');
+    if (headerContainer) {
+      headerContainer.innerHTML = '';
+      google.accounts.id.renderButton(headerContainer, config);
+    }
+
+    const mobileContainer = document.getElementById('mobileGoogleContainer');
+    if (mobileContainer) {
+      mobileContainer.innerHTML = '';
+      google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
+    }
+
+    const checkoutContainer = document.getElementById('checkoutGoogleContainer');
+    if (checkoutContainer) {
+      checkoutContainer.innerHTML = '';
+      google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
+    }
+  }
+
   const handleGoogleCredential = async (response) => {
     try {
       showToast('Google hisob tekshirilmoqda...', 'fa-spinner');
@@ -378,8 +420,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
         : `<small onclick="window.openOtpModal()" style="color:#ffb142; text-decoration:underline;">+ Raqamni ulash</small>`;
 
+      // 1. Profil kapsulasini ko'rsatish
       if (chip) {
-        chip.style.display = 'inline-flex';
+        chip.classList.remove('force-hide-auth');
+        chip.style.setProperty('display', 'inline-flex', 'important');
         const avatarEl = document.getElementById('userAvatar');
         if (avatarEl && currentUser.picture) { avatarEl.src = currentUser.picture; avatarEl.style.display = 'block'; }
         const uNameEl = document.getElementById('userName');
@@ -389,16 +433,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (mobileChip) {
-        mobileChip.style.display = 'flex';
+        mobileChip.classList.remove('force-hide-auth');
+        mobileChip.style.setProperty('display', 'flex', 'important');
         const mAvatar = document.getElementById('mobileUserAvatar');
         if (mAvatar && currentUser.picture) { mAvatar.src = currentUser.picture; mAvatar.style.display = 'block'; }
         const mNameEl = document.getElementById('mobileUserName');
         if (mNameEl) mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
       }
 
-      if (googleWrap) googleWrap.style.display = 'none';
-      if (mobileGoogle) mobileGoogle.style.display = 'none';
-      if (checkoutNotice) checkoutNotice.style.display = 'none';
+      // 2. Google "Hisobingiz bilan kiring" tugmasini BUTUNLAY YO'QOTISH (!important bilan)
+      if (googleWrap) {
+        googleWrap.innerHTML = '';
+        googleWrap.classList.add('force-hide-auth');
+        googleWrap.style.setProperty('display', 'none', 'important');
+      }
+      if (mobileGoogle) {
+        mobileGoogle.innerHTML = '';
+        mobileGoogle.classList.add('force-hide-auth');
+        mobileGoogle.style.setProperty('display', 'none', 'important');
+      }
+      if (checkoutNotice) {
+        checkoutNotice.classList.add('force-hide-auth');
+        checkoutNotice.style.setProperty('display', 'none', 'important');
+      }
 
       if (cName && !cName.value) cName.value = currentUser.name || '';
       if (rName && !rName.value) rName.value = currentUser.name || '';
@@ -407,13 +464,33 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
       }
     } else {
-      if (chip) chip.style.display = 'none';
-      if (mobileChip) mobileChip.style.display = 'none';
-      if (googleWrap) googleWrap.style.display = 'flex';
-      if (mobileGoogle) mobileGoogle.style.display = 'flex';
-      if (checkoutNotice) checkoutNotice.style.display = 'block';
+      // Kirmagan holatda: Profil kapsulasini yashirib, Google tugmasini ko'rsatamiz
+      if (chip) {
+        chip.classList.add('force-hide-auth');
+        chip.style.setProperty('display', 'none', 'important');
+      }
+      if (mobileChip) {
+        mobileChip.classList.add('force-hide-auth');
+        mobileChip.style.setProperty('display', 'none', 'important');
+      }
+      if (googleWrap) {
+        googleWrap.classList.remove('force-hide-auth');
+        googleWrap.style.setProperty('display', 'flex', 'important');
+      }
+      if (mobileGoogle) {
+        mobileGoogle.classList.remove('force-hide-auth');
+        mobileGoogle.style.setProperty('display', 'flex', 'important');
+      }
+      if (checkoutNotice) {
+        checkoutNotice.classList.remove('force-hide-auth');
+        checkoutNotice.style.setProperty('display', 'block', 'important');
+      }
       if (cPhone) cPhone.readOnly = false;
       if (rPhone) rPhone.readOnly = false;
+
+      if (googleWrap && googleWrap.children.length === 0) {
+        drawGoogleButtons();
+      }
     }
   }
 
@@ -427,28 +504,31 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Hisobdan chiqdingiz', 'fa-sign-out-alt');
   };
 
+  let googleInitialized = false;
   function initGoogleSignIn() {
+    if (googleInitialized) return;
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      setTimeout(initGoogleSignIn, 400); return;
+      setTimeout(initGoogleSignIn, 350);
+      return;
     }
     try {
-      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
-      const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
-
-      const headerContainer = document.getElementById('googleSignInContainer');
-      if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
-
-      const mobileContainer = document.getElementById('mobileGoogleContainer');
-      if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
-
-      const checkoutContainer = document.getElementById('checkoutGoogleContainer');
-      if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
-
+      googleInitialized = true;
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+      if (!currentUser) {
+        drawGoogleButtons();
+      }
       renderUserUI();
-    } catch (err) { console.error('[Google Auth] Init xatosi:', err); }
+    } catch (err) {
+      console.error('[Google Auth] Init xatosi:', err);
+    }
   }
+  renderUserUI();
   setTimeout(initGoogleSignIn, 150);
-  window.addEventListener('load', initGoogleSignIn);
 
   /* ==========================================================================
      1. MENU DATABASE (Barcha 60 ta taom)
@@ -746,7 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI (CLICK / PAYME / PAYNET)
+     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -808,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()"><i class="fas fa-copy"></i> Nusxalash</button>
         </div>
         <div id="selectedAppActionWrap"></div>
-        <small style="color:var(--accent-gold); font-size:0.75rem;">2. To'lov qilgach, pastdagi "To'lovni tekshirish" tugmasini bosing 👇</small>
+        <small style="color:var(--accent-gold); font-size:0.75rem;">2. To'lov qilgach, pastdagi "Buyurtmani yuborish" tugmasini bosing 👇</small>
       </div>
     `;
     checkoutFormEl.insertBefore(payBox, submitBtn);
@@ -889,7 +969,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
 
-      // A) AGAR "NAQD" TANLANGAN BO'LSA — ODDIY YUBORISH
       if (selectedPaymentMethod === 'Naqd') {
         isSubmitting = true;
         const submitBtn = checkoutForm.querySelector('button[type="submit"]');
@@ -916,7 +995,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // B) AGAR CLICK, PAYME YOKI PAYNET TANLANGAN BO'LSA — REAL-TIME KARTA TEKSHIRUVI!
       isSubmitting = true;
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
@@ -936,7 +1014,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.closeCheckout();
 
-        // Jonli tekshirish oynasini ochamiz
         const spinnerEl = document.getElementById('payVerifySpinner');
         const iconEl = document.getElementById('payVerifyIcon');
         const titleEl = document.getElementById('payVerifyTitle');
@@ -959,7 +1036,6 @@ document.addEventListener('DOMContentLoaded', () => {
         payCheckModal.classList.add('open');
         document.body.style.overflow = 'hidden';
 
-        // Har 2 soniyada serverdan to'lov tushgan-tushmaganini so'rab turamiz
         if (payPollInterval) clearInterval(payPollInterval);
         payPollInterval = setInterval(async () => {
           try {
