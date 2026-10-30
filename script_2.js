@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE SIGN-IN TUGMASI KIRGANDAN KEYIN 100% YO'QOLADIGAN TO'LIQ VERSIYA)
+ * (GOOGLE TUGMASI KIRGANDAN KEYIN DOM'DAN 100% O'CHIRILADIGAN TO'LIQ VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -53,26 +53,38 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => {});
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (GOOGLE TUGMASINI MAJBURIY YASHIRISH BILAN)
+     0. CSS VA INTERFEYS DIZAYNI (STYLE.CSS NI 100% YENGADIGAN QOIDALAR)
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
-    /* Majburiy yashirish klassi (style.css dagi !important ni yengib o'tadi) */
-    .force-hide-auth {
+    html body #header #googleSignInContainer.force-hide-auth,
+    html body #mobileGoogleContainer.force-hide-auth,
+    html body #checkoutLoginNotice.force-hide-auth {
       display: none !important;
-      width: 0 !important;
-      height: 0 !important;
+      width: 0px !important;
+      min-width: 0px !important;
+      max-width: 0px !important;
+      height: 0px !important;
       margin: 0 !important;
       padding: 0 !important;
       overflow: hidden !important;
       visibility: hidden !important;
+      opacity: 0 !important;
       pointer-events: none !important;
+      position: absolute !important;
+      left: -9999px !important;
     }
 
-    #googleSignInContainer:not(.force-hide-auth) {
+    html body #header #googleSignInContainer:not(.force-hide-auth) {
       width: auto !important;
-      max-width: 210px !important;
+      max-width: none !important;
       overflow: visible !important;
+      display: inline-flex !important;
+    }
+
+    html body #header #googleSignInContainer iframe {
+      transform: scale(0.92) !important;
+      transform-origin: center center !important;
     }
 
     .lang-switcher {
@@ -103,7 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .open-app-btn:hover { opacity: 0.92; }
 
     /* Ixcham User Profile Chip */
-    #userProfileChip.user-profile-chip:not(.force-hide-auth) {
+    html body #header #userProfileChip.user-profile-chip.force-hide-auth {
+      display: none !important;
+    }
+    html body #header #userProfileChip.user-profile-chip:not(.force-hide-auth) {
       display: inline-flex !important; align-items: center !important; flex-wrap: nowrap !important; gap: 7px !important;
       padding: 3px 6px 3px 4px !important; height: 38px !important; border-radius: 999px !important;
       background: rgba(15, 44, 34, 0.88) !important; border: 1px solid rgba(212, 175, 55, 0.5) !important;
@@ -133,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
+    #mobileUserChip.mobile-user-chip.force-hide-auth { display: none !important; }
     #mobileUserChip.mobile-user-chip:not(.force-hide-auth) {
       display: flex !important; align-items: center !important; gap: 10px !important; padding: 10px 12px !important;
       background: var(--bg-card) !important; border: 1px solid var(--border-gold) !important;
@@ -154,7 +170,8 @@ document.addEventListener('DOMContentLoaded', () => {
       animation: spinLoader 1s linear infinite; margin: 0 auto 1.2rem auto;
     }
     @media (max-width: 900px) {
-      #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; }
+      html body #header #googleSignInContainer,
+      html body #header #userProfileChip.user-profile-chip { display: none !important; }
     }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
   `;
@@ -347,28 +364,47 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI (KIRGANDAN SO'NG OQ TUGMANI BUTUNLAY O'CHIRISH)
+     0.2 GOOGLE SIGN-IN LOGIKASI (KIRGANDAN SO'NG ELEMENTNI DOM'DAN O'CHIRISH)
      ========================================================================== */
-  function drawGoogleButtons() {
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
-    const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
+  function ensureHeaderGoogleContainerExists() {
+    let headerContainer = document.getElementById('googleSignInContainer');
+    if (!headerContainer && headerActions) {
+      headerContainer = document.createElement('div');
+      headerContainer.id = 'googleSignInContainer';
+      headerContainer.className = 'google-signin-wrap';
+      const chipEl = document.getElementById('userProfileChip');
+      if (chipEl && chipEl.parentNode === headerActions) {
+        headerActions.insertBefore(headerContainer, chipEl);
+      } else {
+        headerActions.appendChild(headerContainer);
+      }
+    }
+    return headerContainer;
+  }
 
-    const headerContainer = document.getElementById('googleSignInContainer');
+  function drawGoogleButtons() {
+    if (currentUser) return; // Agar hisobga kirgan bo'lsa, UMUMAN chizmaymiz!
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+
+    const compactConfig = { theme: 'outline', size: 'medium', text: 'signin', shape: 'pill', locale: 'uz' };
+    const largeConfig = { theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill', locale: 'uz' };
+
+    const headerContainer = ensureHeaderGoogleContainerExists();
     if (headerContainer) {
       headerContainer.innerHTML = '';
-      google.accounts.id.renderButton(headerContainer, config);
+      google.accounts.id.renderButton(headerContainer, compactConfig);
     }
 
     const mobileContainer = document.getElementById('mobileGoogleContainer');
     if (mobileContainer) {
       mobileContainer.innerHTML = '';
-      google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
+      google.accounts.id.renderButton(mobileContainer, { ...largeConfig, width: 280 });
     }
 
     const checkoutContainer = document.getElementById('checkoutGoogleContainer');
     if (checkoutContainer) {
       checkoutContainer.innerHTML = '';
-      google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
+      google.accounts.id.renderButton(checkoutContainer, largeConfig);
     }
   }
 
@@ -420,7 +456,19 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
         : `<small onclick="window.openOtpModal()" style="color:#ffb142; text-decoration:underline;">+ Raqamni ulash</small>`;
 
-      // 1. Profil kapsulasini ko'rsatish
+      // 1. Google "Hisobingiz bilan kiring" blokini DOM'dan BUTUNLAY OLIB TASHLAYMIZ!
+      if (googleWrap) {
+        googleWrap.remove();
+      }
+      if (mobileGoogle) {
+        mobileGoogle.innerHTML = '';
+        mobileGoogle.classList.add('force-hide-auth');
+      }
+      if (checkoutNotice) {
+        checkoutNotice.classList.add('force-hide-auth');
+      }
+
+      // 2. Profil kapsulasini ko'rsatamiz
       if (chip) {
         chip.classList.remove('force-hide-auth');
         chip.style.setProperty('display', 'inline-flex', 'important');
@@ -441,22 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (mNameEl) mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
       }
 
-      // 2. Google "Hisobingiz bilan kiring" tugmasini BUTUNLAY YO'QOTISH (!important bilan)
-      if (googleWrap) {
-        googleWrap.innerHTML = '';
-        googleWrap.classList.add('force-hide-auth');
-        googleWrap.style.setProperty('display', 'none', 'important');
-      }
-      if (mobileGoogle) {
-        mobileGoogle.innerHTML = '';
-        mobileGoogle.classList.add('force-hide-auth');
-        mobileGoogle.style.setProperty('display', 'none', 'important');
-      }
-      if (checkoutNotice) {
-        checkoutNotice.classList.add('force-hide-auth');
-        checkoutNotice.style.setProperty('display', 'none', 'important');
-      }
-
       if (cName && !cName.value) cName.value = currentUser.name || '';
       if (rName && !rName.value) rName.value = currentUser.name || '';
       if (currentUser.phone) {
@@ -464,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
       }
     } else {
-      // Kirmagan holatda: Profil kapsulasini yashirib, Google tugmasini ko'rsatamiz
+      // Kirmagan holatda: Profil kapsulasini yashirib, Google tugmasini qayta yaratamiz
       if (chip) {
         chip.classList.add('force-hide-auth');
         chip.style.setProperty('display', 'none', 'important');
@@ -473,22 +505,17 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileChip.classList.add('force-hide-auth');
         mobileChip.style.setProperty('display', 'none', 'important');
       }
-      if (googleWrap) {
-        googleWrap.classList.remove('force-hide-auth');
-        googleWrap.style.setProperty('display', 'flex', 'important');
-      }
       if (mobileGoogle) {
         mobileGoogle.classList.remove('force-hide-auth');
-        mobileGoogle.style.setProperty('display', 'flex', 'important');
       }
       if (checkoutNotice) {
         checkoutNotice.classList.remove('force-hide-auth');
-        checkoutNotice.style.setProperty('display', 'block', 'important');
       }
       if (cPhone) cPhone.readOnly = false;
       if (rPhone) rPhone.readOnly = false;
 
-      if (googleWrap && googleWrap.children.length === 0) {
+      const restoredWrap = ensureHeaderGoogleContainerExists();
+      if (restoredWrap && restoredWrap.children.length === 0) {
         drawGoogleButtons();
       }
     }
@@ -519,9 +546,6 @@ document.addEventListener('DOMContentLoaded', () => {
         auto_select: false,
         cancel_on_tap_outside: true
       });
-      if (!currentUser) {
-        drawGoogleButtons();
-      }
       renderUserUI();
     } catch (err) {
       console.error('[Google Auth] Init xatosi:', err);

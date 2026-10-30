@@ -2782,3 +2782,8 @@ h1, h2, h3, h4, .font-display {
       position: absolute !important;
       left: -9999px !important;
     }
+    #googleSignInContainer {
+  display: flex !important;
+  width: 145px !important;
+  overflow: hidden !important;
+}
