@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE TUGMASI KIRGANDAN KEYIN DOM'DAN 100% O'CHIRILADIGAN TO'LIQ VERSIYA)
+ * (GOOGLE HISOB KICHIK EKRANDA HAMBURGER MENYU ICHIGA KIRADIGAN TO'LIQ VERSIYA)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -52,13 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(d => { if (d && d.username) tgBotUsername = d.username; })
     .catch(() => {});
 
+  // Hamburger menyu ochilganda Google hisob darhol tepada ko'rinishi uchun uni drawer-links tepasiga ko'chiramiz
+  const drawerEl = document.getElementById('mobileNavDrawer');
+  const drawerLinksEl = drawerEl ? drawerEl.querySelector('.drawer-links') : null;
+  const mobileGoogleEl = document.getElementById('mobileGoogleContainer');
+  const mobileChipEl = document.getElementById('mobileUserChip');
+  if (drawerEl && drawerLinksEl) {
+    if (mobileGoogleEl) drawerEl.insertBefore(mobileGoogleEl, drawerLinksEl);
+    if (mobileChipEl) drawerEl.insertBefore(mobileChipEl, drawerLinksEl);
+  }
+
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (STYLE.CSS NI 100% YENGADIGAN QOIDALAR)
+     0. CSS VA INTERFEYS DIZAYNI (RESPONSIVE HAMBURGER INTEGRATSIYASI BILAN)
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
     html body #header #googleSignInContainer.force-hide-auth,
+    html body #header #userProfileChip.force-hide-auth,
     html body #mobileGoogleContainer.force-hide-auth,
+    html body #mobileUserChip.force-hide-auth,
     html body #checkoutLoginNotice.force-hide-auth {
       display: none !important;
       width: 0px !important;
@@ -75,11 +87,31 @@ document.addEventListener('DOMContentLoaded', () => {
       left: -9999px !important;
     }
 
-    html body #header #googleSignInContainer:not(.force-hide-auth) {
-      width: auto !important;
-      max-width: none !important;
-      overflow: visible !important;
-      display: inline-flex !important;
+    @media (min-width: 901px) {
+      html body #header #googleSignInContainer:not(.force-hide-auth) {
+        width: auto !important;
+        max-width: none !important;
+        overflow: visible !important;
+        display: inline-flex !important;
+      }
+      html body #header #userProfileChip.user-profile-chip:not(.force-hide-auth) {
+        display: inline-flex !important; align-items: center !important; flex-wrap: nowrap !important; gap: 7px !important;
+        padding: 3px 6px 3px 4px !important; height: 38px !important; border-radius: 999px !important;
+        background: rgba(15, 44, 34, 0.88) !important; border: 1px solid rgba(212, 175, 55, 0.5) !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important; max-width: 245px !important;
+      }
+      .header.scrolled #userProfileChip.user-profile-chip:not(.force-hide-auth) {
+        background: var(--bg-card) !important; border-color: var(--border-gold) !important;
+      }
+    }
+
+    /* Ekran kichrayganda (<= 900px) Google tugmasi va Profil kapsulasi Header'dan 100% yashirinib, Hamburger ichida chiqadi */
+    @media (max-width: 900px) {
+      html body #header #googleSignInContainer,
+      html body #header #userProfileChip,
+      html body #header #userProfileChip.user-profile-chip {
+        display: none !important;
+      }
     }
 
     html body #header #googleSignInContainer iframe {
@@ -114,17 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .open-app-btn { width: 100%; padding: 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: opacity 0.2s; }
     .open-app-btn:hover { opacity: 0.92; }
 
-    /* Ixcham User Profile Chip */
-    html body #header #userProfileChip.user-profile-chip.force-hide-auth {
-      display: none !important;
-    }
-    html body #header #userProfileChip.user-profile-chip:not(.force-hide-auth) {
-      display: inline-flex !important; align-items: center !important; flex-wrap: nowrap !important; gap: 7px !important;
-      padding: 3px 6px 3px 4px !important; height: 38px !important; border-radius: 999px !important;
-      background: rgba(15, 44, 34, 0.88) !important; border: 1px solid rgba(212, 175, 55, 0.5) !important;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18) !important; max-width: 245px !important;
-    }
-    .header.scrolled #userProfileChip.user-profile-chip:not(.force-hide-auth) { background: var(--bg-card) !important; border-color: var(--border-gold) !important; }
     #userProfileChip .user-avatar {
       width: 28px !important; height: 28px !important; min-width: 28px !important;
       border-radius: 50% !important; object-fit: cover !important; border: 1.5px solid var(--accent-gold) !important;
@@ -148,19 +169,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
-    #mobileUserChip.mobile-user-chip.force-hide-auth { display: none !important; }
-    #mobileUserChip.mobile-user-chip:not(.force-hide-auth) {
-      display: flex !important; align-items: center !important; gap: 10px !important; padding: 10px 12px !important;
-      background: var(--bg-card) !important; border: 1px solid var(--border-gold) !important;
-      border-radius: 12px !important; margin-bottom: 12px !important;
+    /* Hamburger menyu ichidagi Google profil bloki dizayni */
+    #mobileGoogleContainer:not(.force-hide-auth) {
+      display: flex !important;
+      justify-content: center !important;
+      margin-bottom: 1.25rem !important;
+      padding-bottom: 1rem !important;
+      border-bottom: 1px solid var(--border-color) !important;
     }
-    #mobileUserChip .user-avatar { width: 38px !important; height: 38px !important; border-radius: 50% !important; border: 2px solid var(--accent-gold) !important; }
-    #mobileUserChip .user-name-mobile { font-size: 0.85rem !important; font-weight: 700 !important; color: var(--text-main) !important; line-height: 1.25 !important; }
-    #mobileUserChip .user-name-mobile small { display: block !important; font-size: 0.74rem !important; color: var(--accent-gold) !important; margin-top: 2px !important; }
+    #mobileUserChip.mobile-user-chip:not(.force-hide-auth) {
+      display: flex !important; align-items: center !important; gap: 12px !important; padding: 12px 14px !important;
+      background: var(--bg-card) !important; border: 1.5px solid var(--border-gold) !important;
+      border-radius: 14px !important; margin-bottom: 1.5rem !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12) !important;
+    }
+    #mobileUserChip .user-avatar { width: 42px !important; height: 42px !important; min-width: 42px !important; border-radius: 50% !important; border: 2px solid var(--accent-gold) !important; object-fit: cover !important; }
+    #mobileUserChip .user-name-mobile { font-size: 0.9rem !important; font-weight: 700 !important; color: var(--text-main) !important; line-height: 1.3 !important; }
+    #mobileUserChip .user-name-mobile small { display: block !important; font-size: 0.75rem !important; color: var(--accent-gold) !important; margin-top: 2px !important; }
     #mobileUserChip .btn-logout-mobile {
-      background: rgba(201, 64, 91, 0.12) !important; color: #ff6b6b !important; border: 1px solid rgba(201, 64, 91, 0.35) !important;
-      padding: 4px 9px !important; border-radius: 6px !important; font-size: 0.72rem !important; font-weight: 700 !important;
-      margin-top: 5px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; cursor: pointer !important;
+      background: rgba(201, 64, 91, 0.14) !important; color: #ff6b6b !important; border: 1px solid rgba(201, 64, 91, 0.35) !important;
+      padding: 5px 10px !important; border-radius: 8px !important; font-size: 0.75rem !important; font-weight: 700 !important;
+      margin-top: 6px !important; display: inline-flex !important; align-items: center !important; gap: 5px !important; cursor: pointer !important;
     }
 
     @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -168,10 +197,6 @@ document.addEventListener('DOMContentLoaded', () => {
       width: 56px; height: 56px; border: 4px solid rgba(212, 175, 55, 0.2);
       border-top-color: var(--accent-gold); border-radius: 50%;
       animation: spinLoader 1s linear infinite; margin: 0 auto 1.2rem auto;
-    }
-    @media (max-width: 900px) {
-      html body #header #googleSignInContainer,
-      html body #header #userProfileChip.user-profile-chip { display: none !important; }
     }
     @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
   `;
@@ -364,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI (KIRGANDAN SO'NG ELEMENTNI DOM'DAN O'CHIRISH)
+     0.2 GOOGLE SIGN-IN LOGIKASI (MOBILDA HAMBURGER ICHIGA JOYLASH)
      ========================================================================== */
   function ensureHeaderGoogleContainerExists() {
     let headerContainer = document.getElementById('googleSignInContainer');
@@ -383,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function drawGoogleButtons() {
-    if (currentUser) return; // Agar hisobga kirgan bo'lsa, UMUMAN chizmaymiz!
+    if (currentUser) return;
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
 
     const compactConfig = { theme: 'outline', size: 'medium', text: 'signin', shape: 'pill', locale: 'uz' };
@@ -398,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileContainer = document.getElementById('mobileGoogleContainer');
     if (mobileContainer) {
       mobileContainer.innerHTML = '';
-      google.accounts.id.renderButton(mobileContainer, { ...largeConfig, width: 280 });
+      google.accounts.id.renderButton(mobileContainer, { ...largeConfig, width: 260 });
     }
 
     const checkoutContainer = document.getElementById('checkoutGoogleContainer');
@@ -454,9 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const firstName = (currentUser.name || currentUser.email || 'Mijoz').split(' ')[0];
       const phoneHtml = currentUser.phone
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
-        : `<small onclick="window.openOtpModal()" style="color:#ffb142; text-decoration:underline;">+ Raqamni ulash</small>`;
+        : `<small onclick="window.closeMobileNav(); window.openOtpModal()" style="color:#ffb142; text-decoration:underline; cursor:pointer;">+ Raqamni ulash</small>`;
 
-      // 1. Google "Hisobingiz bilan kiring" blokini DOM'dan BUTUNLAY OLIB TASHLAYMIZ!
       if (googleWrap) {
         googleWrap.remove();
       }
@@ -468,10 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
         checkoutNotice.classList.add('force-hide-auth');
       }
 
-      // 2. Profil kapsulasini ko'rsatamiz
+      // Inline display:inline-flex !important BERILMAYDI, shunda @media (max-width: 900px) uni tepadan yashirib, faqat hamburger ichida ko'rsatadi
       if (chip) {
+        chip.removeAttribute('style');
         chip.classList.remove('force-hide-auth');
-        chip.style.setProperty('display', 'inline-flex', 'important');
         const avatarEl = document.getElementById('userAvatar');
         if (avatarEl && currentUser.picture) { avatarEl.src = currentUser.picture; avatarEl.style.display = 'block'; }
         const uNameEl = document.getElementById('userName');
@@ -481,8 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (mobileChip) {
+        mobileChip.removeAttribute('style');
         mobileChip.classList.remove('force-hide-auth');
-        mobileChip.style.setProperty('display', 'flex', 'important');
         const mAvatar = document.getElementById('mobileUserAvatar');
         if (mAvatar && currentUser.picture) { mAvatar.src = currentUser.picture; mAvatar.style.display = 'block'; }
         const mNameEl = document.getElementById('mobileUserName');
@@ -496,14 +520,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
       }
     } else {
-      // Kirmagan holatda: Profil kapsulasini yashirib, Google tugmasini qayta yaratamiz
       if (chip) {
+        chip.removeAttribute('style');
         chip.classList.add('force-hide-auth');
-        chip.style.setProperty('display', 'none', 'important');
       }
       if (mobileChip) {
+        mobileChip.removeAttribute('style');
         mobileChip.classList.add('force-hide-auth');
-        mobileChip.style.setProperty('display', 'none', 'important');
       }
       if (mobileGoogle) {
         mobileGoogle.classList.remove('force-hide-auth');
@@ -520,6 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
+
+  window.addEventListener('resize', renderUserUI);
 
   window.logoutUser = function() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
