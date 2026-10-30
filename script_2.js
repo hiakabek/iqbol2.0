@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE SIGN-IN + TELEGRAM RAQAM TASDIQLASH BILAN BIRGA — XATOLAR TUZATILGAN)
+ * (GOOGLE SIGN-IN + TELEGRAM OTP + CLICK/PAYME/PAYNET ILOVA OCHISH + REAL-VAQTDA TO'LOV TASDIQLASH)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,6 +9,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_URL = 'https://iqbol.onrender.com/api';
   const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
   const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
+
+  // CLICK, PAYME, PAYNET ILOVALARI VA SAYTLARI
+  const PAYMENT_APPS = {
+    Click: {
+      name: 'Click',
+      color: '#0099ff',
+      webUrl: 'https://my.click.uz/',
+      appScheme: 'clickup://',
+      androidIntent: 'intent://#Intent;scheme=clickup;package=air.com.ssdsoftwaresolutions.clickuz;S.browser_fallback_url=https%3A%2F%2Fmy.click.uz%2F;end'
+    },
+    Payme: {
+      name: 'Payme',
+      color: '#00cccc',
+      webUrl: 'https://payme.uz/',
+      appScheme: 'payme://',
+      androidIntent: 'intent://#Intent;scheme=payme;package=uz.dida.payme;S.browser_fallback_url=https%3A%2F%2Fpayme.uz%2F;end'
+    },
+    Paynet: {
+      name: 'Paynet',
+      color: '#00a651',
+      webUrl: 'https://paynet.uz/',
+      appScheme: 'paynet://',
+      androidIntent: 'intent://#Intent;scheme=paynet;package=uz.paynet.app;S.browser_fallback_url=https%3A%2F%2Fpaynet.uz%2F;end'
+    }
+  };
 
   let currentUser = null;
   try {
@@ -28,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(() => {});
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (GOOGLE + TELEFON RAQAM KAPSULASI)
+     0. CSS VA INTERFEYS DIZAYNI
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
@@ -56,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
     .card-number-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); padding: 0.55rem 0.85rem; border-radius: 8px; border: 1px solid var(--border-color); }
     .card-number-val { font-family: monospace; font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; color: var(--accent-gold); }
     .btn-copy-card { background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark)); color: #112219; border: none; border-radius: 6px; padding: 0.35rem 0.65rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; }
+    .open-app-btn { width: 100%; padding: 0.7rem; border-radius: 8px; font-weight: 700; font-size: 0.88rem; color: #fff; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: opacity 0.2s; }
+    .open-app-btn:hover { opacity: 0.92; }
 
     /* Google Sign-In & Ixcham User Profile Chip */
     .google-signin-wrap { display: flex; align-items: center; justify-content: center; }
@@ -89,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
-    /* Mobil menyu ichidagi Google profil bloki */
     #mobileUserChip.mobile-user-chip {
       display: none; align-items: center; gap: 10px !important; padding: 10px 12px !important;
       background: var(--bg-card) !important; border: 1px solid var(--border-gold) !important;
@@ -103,33 +129,17 @@ document.addEventListener('DOMContentLoaded', () => {
       padding: 4px 9px !important; border-radius: 6px !important; font-size: 0.72rem !important; font-weight: 700 !important;
       margin-top: 5px !important; display: inline-flex !important; align-items: center !important; gap: 4px !important; cursor: pointer !important;
     }
-    @media (max-width: 900px) { #googleSignInContainer:not(.mobile-google), #userProfileChip.user-profile-chip { display: none !important; } }
-    @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
 
-    /* GOOGLE TUGMASI VA ONE-TAP OYNASINI MAJBURAN YO'QOTISH */
-    body.logged-in #googleSignInContainer,
-    body.logged-in #mobileGoogleContainer,
-    body.logged-in #checkoutGoogleContainer,
-    body.logged-in iframe[src*="accounts.google.com"],
-    body.logged-in #credential_picker_container,
-    body.logged-in #checkoutLoginNotice,
-    body.logged-in .S9gUrf-YoZ4jf,
-    body.logged-in [id^="gsi_"],
-    body.logged-in .g_id_signin {
-      display: none !important;
-      visibility: hidden !important;
-      width: 0 !important;
-      height: 0 !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      position: absolute !important;
-      left: -9999px !important;
-      z-index: -9999 !important;
+    @keyframes spinLoader { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .pay-spinner {
+      width: 56px; height: 56px; border: 4px solid rgba(212, 175, 55, 0.2);
+      border-top-color: var(--accent-gold); border-radius: 50%;
+      animation: spinLoader 1s linear infinite; margin: 0 auto 1.2rem auto;
     }
+    @media (max-width: 576px) { .lang-btn { padding: 4px 6px; font-size: 0.68rem; } .card-number-val { font-size: 0.92rem; } }
   `;
   document.head.appendChild(customStyle);
 
-  // Headerga UZ | RU | EN tugmalarini qo'shish
   const headerActions = document.querySelector('.header-actions');
   if (headerActions && !document.querySelector('.lang-switcher')) {
     const langDiv = document.createElement('div');
@@ -143,8 +153,55 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Karta raqami nusxalandi: ${RESTAURANT_CARD}`, 'fa-copy');
   };
 
+  // CLICK, PAYME YOKI PAYNET ILOVASINI (YOKI SAYTINI) OCHISH FUNKSIYASI
+  window.openPaymentApp = function(appKey) {
+    const appInfo = PAYMENT_APPS[appKey];
+    if (!appInfo) return;
+    window.copyRestaurantCard();
+
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+    if (isAndroid) {
+      window.location.href = appInfo.androidIntent;
+    } else if (isIOS) {
+      window.location.href = appInfo.appScheme;
+      setTimeout(() => {
+        if (!document.hidden) window.open(appInfo.webUrl, '_blank', 'noopener,noreferrer');
+      }, 1400);
+    } else {
+      window.open(appInfo.webUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   /* ==========================================================================
-     0.1 TELEFON RAQAMNI GOOGLE HISOBGA BOG'LASH MODALI (TELEGRAM OTP)
+     0.05 TO'LOVNI JONLI KUTISH VA TASDIQLASH OYNASI (PAYMENT VERIFICATION MODAL)
+     ========================================================================== */
+  const payCheckModal = document.createElement('div');
+  payCheckModal.id = 'paymentVerifyModal';
+  payCheckModal.className = 'modal-wrapper';
+  payCheckModal.innerHTML = `
+    <div class="modal-overlay"></div>
+    <div class="modal-card" style="max-width: 440px; padding: 2.2rem 1.8rem; text-align: center;">
+      <div id="payVerifySpinner" class="pay-spinner"></div>
+      <div id="payVerifyIcon" style="display:none; width:64px; height:64px; border-radius:50%; margin:0 auto 1rem auto; align-items:center; justify-content:center; font-size:2rem;"></div>
+      <h3 id="payVerifyTitle" class="font-display" style="font-size: 1.65rem; color: var(--text-main); margin-bottom: 0.5rem;">To'lov tekshirilmoqda...</h3>
+      <p id="payVerifyDesc" style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem;"></p>
+      <div id="payVerifyActions" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+    </div>
+  `;
+  document.body.appendChild(payCheckModal);
+
+  let payPollInterval = null;
+  window.closePayVerifyModal = function() {
+    if (payPollInterval) clearInterval(payPollInterval);
+    payCheckModal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  /* ==========================================================================
+     0.1 TELEGRAM OTP MODAL
      ========================================================================== */
   const otpModal = document.createElement('div');
   otpModal.id = 'otpAuthModal';
@@ -190,9 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openOtpModal = function(callback) {
     pendingCallbackAfterAuth = callback || null;
     const greetEl = document.getElementById('otpModalUserGreeting');
-    if (greetEl) {
-      greetEl.textContent = currentUser ? `Google hisob: ${currentUser.email}` : '';
-    }
+    if (greetEl) greetEl.textContent = currentUser ? `Google hisob: ${currentUser.email}` : '';
     otpModal.classList.add('open');
     document.body.style.overflow = 'hidden';
   };
@@ -209,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Avval to\'liq telefon raqamingizni kiriting! (+998 XX XXX XX XX)', 'fa-exclamation-triangle');
       return;
     }
-
     if (!tgBotUsername) {
       try {
         const r = await fetch(`${API_URL}/bot-info`);
@@ -217,12 +271,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (d && d.username) tgBotUsername = d.username;
       } catch (e) {}
     }
-
-    if (!tgBotUsername) {
-      showToast('Server uyg\'onmoqda, 3 soniyadan so\'ng qayta bosing!', 'fa-spinner');
-      return;
-    }
-
     window.open(`https://t.me/${tgBotUsername}?start=login_${digits}`, '_blank', 'noopener,noreferrer');
     showToast('Telegram bot ochildi! Botdagi "Raqamni tasdiqlash" tugmasini bosing.', 'fa-paper-plane');
   });
@@ -243,8 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: digits,
-          code: code,
+          phone: digits, code: code,
           googleId: currentUser ? currentUser.googleId : null,
           email: currentUser ? currentUser.email : null
         })
@@ -281,14 +328,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI (RAQAM BILAN BIRGA KO'RSATISH)
+     0.2 GOOGLE SIGN-IN LOGIKASI
      ========================================================================== */
   const handleGoogleCredential = async (response) => {
     try {
       showToast('Google hisob tekshirilmoqda...', 'fa-spinner');
       const res = await fetch(GOOGLE_AUTH_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential })
       });
       const data = await res.json();
@@ -311,24 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         showToast('Kirish amalga oshmadi: ' + (data.message || 'Xatolik'), 'fa-exclamation-triangle');
       }
-    } catch (err) {
-      showToast("Server bilan aloqa yo'q", 'fa-wifi');
-    }
+    } catch (err) { showToast("Server bilan aloqa yo'q", 'fa-wifi'); }
   };
-
-  // Kirgan foydalanuvchida Google tugma / One-Tap / iframe larni DOM dan butunlay olib tashlash
-  function purgeGoogleUI() {
-    ['googleSignInContainer', 'mobileGoogleContainer', 'checkoutGoogleContainer'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) { if (el.innerHTML) el.innerHTML = ''; el.style.display = 'none'; }
-    });
-    document.querySelectorAll('.g_id_signin, #credential_picker_container, iframe[src*="accounts.google.com"], .S9gUrf-YoZ4jf, [id^="gsi_"]').forEach(el => {
-      if (!el.closest('#otpAuthModal')) el.remove();
-    });
-    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-      try { google.accounts.id.cancel(); } catch (e) {}
-    }
-  }
 
   function renderUserUI() {
     const chip = document.getElementById('userProfileChip');
@@ -336,97 +366,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const googleWrap = document.getElementById('googleSignInContainer');
     const mobileGoogle = document.getElementById('mobileGoogleContainer');
     const checkoutNotice = document.getElementById('checkoutLoginNotice');
-    const checkoutGoogle = document.getElementById('checkoutGoogleContainer');
 
     const cName = document.getElementById('checkoutName');
     const cPhone = document.getElementById('checkoutPhone');
     const rName = document.getElementById('resName');
     const rPhone = document.getElementById('resPhone');
 
-    const isMobileScreen = window.innerWidth <= 900;
-
     if (currentUser) {
-      document.body.classList.add('logged-in'); // CSS ORQALI HAMMASINI YO'QOTISH
-
-      // JS orqali ham Google tugmalarini va One Tap oynasini majburan o'chirish
-      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-        try { google.accounts.id.cancel(); } catch(e) {}
-      }
-      const picker = document.getElementById('credential_picker_container');
-      if (picker) picker.style.display = 'none';
-
       const firstName = (currentUser.name || currentUser.email || 'Mijoz').split(' ')[0];
       const phoneHtml = currentUser.phone
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
         : `<small onclick="window.openOtpModal()" style="color:#ffb142; text-decoration:underline;">+ Raqamni ulash</small>`;
 
       if (chip) {
-        chip.style.display = isMobileScreen ? 'none' : 'inline-flex';
+        chip.style.display = 'inline-flex';
         const avatarEl = document.getElementById('userAvatar');
-        if (avatarEl) {
-          if (currentUser.picture) {
-            avatarEl.src = currentUser.picture;
-            avatarEl.style.display = 'block';
-          } else {
-            avatarEl.style.display = 'none';
-          }
-        }
+        if (avatarEl && currentUser.picture) { avatarEl.src = currentUser.picture; avatarEl.style.display = 'block'; }
         const uNameEl = document.getElementById('userName');
         if (uNameEl) {
           uNameEl.innerHTML = `<span>${firstName}</span>${phoneHtml}`;
           uNameEl.title = `${currentUser.name} | ${currentUser.email} | ${currentUser.phone || 'Raqam ulanmagan'}`;
         }
       }
-
       if (mobileChip) {
         mobileChip.style.display = 'flex';
         const mAvatar = document.getElementById('mobileUserAvatar');
-        if (mAvatar) {
-          if (currentUser.picture) {
-            mAvatar.src = currentUser.picture;
-            mAvatar.style.display = 'block';
-          } else {
-            mAvatar.style.display = 'none';
-          }
-        }
+        if (mAvatar && currentUser.picture) { mAvatar.src = currentUser.picture; mAvatar.style.display = 'block'; }
         const mNameEl = document.getElementById('mobileUserName');
-        if (mNameEl) {
-          mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
-        }
+        if (mNameEl) mNameEl.innerHTML = `${currentUser.name}<small>${currentUser.email}</small>${phoneHtml}`;
       }
 
-      // GOOGLE TUGMALARINI BUTUNLAY YO'QOTISH (Agar tizimga kirgan bo'lsa)
-      if (googleWrap) { googleWrap.style.display = 'none'; googleWrap.innerHTML = ''; }
-      if (mobileGoogle) { mobileGoogle.style.display = 'none'; mobileGoogle.innerHTML = ''; }
-      if (checkoutGoogle) { checkoutGoogle.style.display = 'none'; checkoutGoogle.innerHTML = ''; }
+      if (googleWrap) googleWrap.style.display = 'none';
+      if (mobileGoogle) mobileGoogle.style.display = 'none';
       if (checkoutNotice) checkoutNotice.style.display = 'none';
-      purgeGoogleUI();
 
       if (cName && !cName.value) cName.value = currentUser.name || '';
       if (rName && !rName.value) rName.value = currentUser.name || '';
-
       if (currentUser.phone) {
         if (cPhone) { cPhone.value = currentUser.phone; cPhone.readOnly = true; }
         if (rPhone) { rPhone.value = currentUser.phone; rPhone.readOnly = true; }
       }
     } else {
-      document.body.classList.remove('logged-in'); // GOOGLE TUGMASINI QAYTA KO'RSATISH UCHUN
-
       if (chip) chip.style.display = 'none';
       if (mobileChip) mobileChip.style.display = 'none';
-      if (googleWrap) googleWrap.style.display = isMobileScreen ? 'none' : 'flex';
+      if (googleWrap) googleWrap.style.display = 'flex';
       if (mobileGoogle) mobileGoogle.style.display = 'flex';
       if (checkoutNotice) checkoutNotice.style.display = 'block';
-      if (checkoutGoogle) checkoutGoogle.style.display = 'flex';
       if (cPhone) cPhone.readOnly = false;
       if (rPhone) rPhone.readOnly = false;
-
-      // Tizimdan chiqqanda Google tugmasini qayta yuklash
-      initGoogleSignIn();
     }
   }
-
-  window.addEventListener('resize', renderUserUI);
 
   window.logoutUser = function() {
     if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
@@ -438,63 +427,31 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Hisobdan chiqdingiz', 'fa-sign-out-alt');
   };
 
-  let googleLibInitialized = false;
-  let googleRetryCount = 0;
-  let googleInitTimer = null;
-
-  function renderGoogleButtons() {
-    const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
-    const targets = [
-      ['googleSignInContainer', config],
-      ['mobileGoogleContainer', { ...config, size: 'large', width: 280 }],
-      ['checkoutGoogleContainer', { ...config, size: 'large' }]
-    ];
-    targets.forEach(([id, cfg]) => {
-      const el = document.getElementById(id);
-      if (el && el.innerHTML.trim() === '') google.accounts.id.renderButton(el, cfg);
-    });
-  }
-
   function initGoogleSignIn() {
-    if (googleInitTimer) { clearTimeout(googleInitTimer); googleInitTimer = null; }
-
     if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      if (googleRetryCount++ < 60) googleInitTimer = setTimeout(initGoogleSignIn, 400);
-      return;
+      setTimeout(initGoogleSignIn, 400); return;
     }
     try {
-      // initialize faqat BIR MARTA chaqiriladi
-      if (!googleLibInitialized) {
-        google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCredential,
-          auto_select: false,
-          cancel_on_tap_outside: true
-        });
-        googleLibInitialized = true;
-      }
-      // Kirgan bo'lsa — tugma chizilmaydi, mavjudlari tozalanadi
-      if (currentUser) { purgeGoogleUI(); return; }
-      renderGoogleButtons();
-    } catch (err) {
-      console.error('[Google Auth] Init xatosi:', err);
-    }
+      google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential, auto_select: false, cancel_on_tap_outside: true });
+      const config = { theme: 'outline', size: 'medium', text: 'signin_with', shape: 'pill', locale: 'uz' };
+
+      const headerContainer = document.getElementById('googleSignInContainer');
+      if (headerContainer) google.accounts.id.renderButton(headerContainer, config);
+
+      const mobileContainer = document.getElementById('mobileGoogleContainer');
+      if (mobileContainer) google.accounts.id.renderButton(mobileContainer, { ...config, size: 'large', width: 280 });
+
+      const checkoutContainer = document.getElementById('checkoutGoogleContainer');
+      if (checkoutContainer) google.accounts.id.renderButton(checkoutContainer, { ...config, size: 'large' });
+
+      renderUserUI();
+    } catch (err) { console.error('[Google Auth] Init xatosi:', err); }
   }
-
-  // Google kutubxonasi keyinroq tugma qo'shib yuborsa ham, kirgan foydalanuvchida darrov o'chirib tashlaymiz
-  let purgeScheduled = false;
-  new MutationObserver(() => {
-    if (!currentUser || purgeScheduled) return;
-    purgeScheduled = true;
-    requestAnimationFrame(() => { purgeScheduled = false; if (currentUser) purgeGoogleUI(); });
-  }).observe(document.body, { childList: true, subtree: true });
-
-  googleInitTimer = setTimeout(initGoogleSignIn, 150);
+  setTimeout(initGoogleSignIn, 150);
   window.addEventListener('load', initGoogleSignIn);
-  renderUserUI(); // sahifa ochilganda saqlangan foydalanuvchi holatini darrov qo'llash
 
   /* ==========================================================================
-     1. MENU DATABASE (Barcha 60 ta taom joyida)
+     1. MENU DATABASE (Barcha 60 ta taom)
      ========================================================================== */
   const MENU_DATA = [
     { id: 'bt-1', name: 'Тушёнка (хашлама)', category: 'birinchi', categoryName: 'Birinchi taomlar', price: 40000, portion: '1 porsiya', desc: 'Mazali va to\'yimli tushonka (xashlama) sho\'rva.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1566_JFVMaw1_OiyJoRv.jpg', tags: ['Issiq taom'], popular: true },
@@ -545,8 +502,8 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'sal-16', name: 'Чакки', category: 'salatlar', categoryName: 'Salatlar', price: 10000, portion: '1 porsiya', desc: 'Tabiiy va mazali suzma (chakki).', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1532.jpg', tags: ['Milliy'], popular: false },
     { id: 'sal-17', name: 'Чабан', category: 'salatlar', categoryName: 'Salatlar', price: 42000, portion: '1 porsiya', desc: 'Mayda to\'g\'ralgan sarxil sabzavotlar va ko\'katlardan tayyorlangan Chaban salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1517.jpg', tags: ['Yengil'], popular: false },
     { id: 'sal-18', name: 'Капризе', category: 'salatlar', categoryName: 'Salatlar', price: 68000, portion: '1 porsiya', desc: 'Pomidor, motsarella pishlog\'i, rukkola va pesto sousidan italyancha salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1569.jpg', tags: ['Premium'], popular: true },
-    { id: 'sal-19', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Tulum pishlogi arashlagan', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
-    { id: 'sal-20', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati..', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
+    { id: 'sal-19', name: 'Сате', category: 'salatlar', categoryName: 'Salatlar', price: 45000, portion: '1 porsiya', desc: 'Maxsus retsept asosida rulet shaklida tayyorlangan Sate salati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1578.jpg', tags: ['Maxsus'], popular: false },
+    { id: 'sal-20', name: 'Тулум', category: 'salatlar', categoryName: 'Salatlar', price: 60000, portion: '1 porsiya', desc: 'Tulum pishlog\'i, makkajo\'xori, cherri pomidori va ko\'katlardan nafis salat.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1577.jpg', tags: ['Tulum'], popular: true },
     { id: 'ich-1', name: 'Сок DENA', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 18000, portion: '1 litr', desc: 'Tabiiy DENA meva sharbati.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1590.jpg', tags: ['Sharbat'], popular: false },
     { id: 'ich-2', name: 'KARLOVY VARY', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 12000, portion: '1 litr', desc: 'Shifobaxsh mineral suv.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1587_j9z8Wv3_zGxwjgk.jpg', tags: ['Mineral suv'], popular: false },
     { id: 'ich-3', name: 'Черноголовка', category: 'ichimliklar', categoryName: 'Ichimliklar & Non', price: 14000, portion: '1 litr', desc: 'Mazali Tarxun / limonad.', image: 'https://admin.easymenu.uz/media/menu/items/IMG_1593_rJiNON9.jpg', tags: ['Limonad'], popular: false },
@@ -789,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & TELEGRAM (Google + Tasdiqlangan Raqam bilan)
+     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI (CLICK / PAYME / PAYNET)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -816,6 +773,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function renderSelectedAppButton() {
+    const btnWrap = document.getElementById('selectedAppActionWrap');
+    if (!btnWrap) return;
+    const appInfo = PAYMENT_APPS[selectedPaymentMethod];
+    if (!appInfo) {
+      btnWrap.innerHTML = '';
+      return;
+    }
+    btnWrap.innerHTML = `
+      <button type="button" class="open-app-btn" style="background:${appInfo.color};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
+        <i class="fas fa-external-link-alt"></i>
+        <span>1. ${appInfo.name} ilovasini ochish va To'lash</span>
+      </button>
+    `;
+  }
+
   function ensurePaymentSelectorUI() {
     const checkoutFormEl = document.getElementById('checkoutForm'); if (!checkoutFormEl || document.getElementById('paymentMethodsBox')) return;
     const submitBtn = checkoutFormEl.querySelector('button[type="submit"]');
@@ -823,12 +796,19 @@ document.addEventListener('DOMContentLoaded', () => {
     payBox.innerHTML = `
       <div class="payment-methods-title"><i class="fas fa-wallet" style="color:var(--accent-gold);"></i><span id="payMethodsTitleText">To'lov usulini tanlang:</span></div>
       <div class="payment-methods-grid">
-        <button type="button" class="pay-option-btn active" data-pay="Naqd"><i class="fas fa-money-bill-wave"></i> <span id="payBtnCashText">Naqd</span></button>
-        <button type="button" class="pay-option-btn" data-pay="Karta"><i class="fas fa-credit-card"></i> <span id="payBtnCardText">Karta orqali</span></button>
+        <button type="button" class="pay-option-btn active" data-pay="Naqd"><i class="fas fa-money-bill-wave"></i> <span>Naqd</span></button>
+        <button type="button" class="pay-option-btn" data-pay="Click"><i class="fas fa-credit-card"></i> <span>Click</span></button>
+        <button type="button" class="pay-option-btn" data-pay="Payme"><i class="fas fa-mobile-alt"></i> <span>Payme</span></button>
+        <button type="button" class="pay-option-btn" data-pay="Paynet"><i class="fas fa-bolt"></i> <span>Paynet</span></button>
       </div>
       <div id="cardDisplayBox" class="card-Display-box">
-        <span style="font-size:0.78rem; color:var(--text-muted);" id="cardTransferHint">To'lov uchun karta raqami (Click / Payme / Paynet):</span>
-        <div class="card-number-row"><span class="card-number-val">${RESTAURANT_CARD}</span><button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()"><i class="fas fa-copy"></i> Nusxalash</button></div>
+        <span style="font-size:0.78rem; color:var(--text-muted);" id="cardTransferHint">Karta raqamini nusxalab, ilova orqali to'lov qiling:</span>
+        <div class="card-number-row">
+          <span class="card-number-val">${RESTAURANT_CARD}</span>
+          <button type="button" class="btn-copy-card" onclick="window.copyRestaurantCard()"><i class="fas fa-copy"></i> Nusxalash</button>
+        </div>
+        <div id="selectedAppActionWrap"></div>
+        <small style="color:var(--accent-gold); font-size:0.75rem;">2. To'lov qilgach, pastdagi "To'lovni tekshirish" tugmasini bosing 👇</small>
       </div>
     `;
     checkoutFormEl.insertBefore(payBox, submitBtn);
@@ -836,9 +816,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardBox = document.getElementById('cardDisplayBox');
     payBox.querySelectorAll('.pay-option-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active');
+        payBox.querySelectorAll('.pay-option-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         selectedPaymentMethod = btn.dataset.pay;
-        const isCard = selectedPaymentMethod === 'Karta'; if (cardBox) cardBox.classList.toggle('visible', isCard); if (isCard) window.copyRestaurantCard();
+        const isOnline = selectedPaymentMethod !== 'Naqd';
+        if (cardBox) cardBox.classList.toggle('visible', isOnline);
+        if (isOnline) {
+          window.copyRestaurantCard();
+          renderSelectedAppButton();
+        }
       });
     });
   }
@@ -887,8 +873,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!name || !phone) return showToast('Ism va telefonni kiriting!', 'fa-exclamation-triangle');
       if (orderType === 'delivery' && !address) return showToast('Yetkazish manzilini kiriting!', 'fa-exclamation-triangle');
       
-      isSubmitting = true; const submitBtn = checkoutForm.querySelector('button[type="submit"]'); if (submitBtn) submitBtn.disabled = true;
-
       let subtotal = 0; 
       let orderLinesText = cart.map(item => { const dish = MENU_DATA.find(d => d.id === item.id); const lineTotal = dish ? dish.price * item.quantity : 0; subtotal += lineTotal; return `• ${getDishName(dish)} x ${item.quantity} = ${formatPrice(lineTotal)}`; }).join('\n');
 
@@ -904,29 +888,119 @@ document.addEventListener('DOMContentLoaded', () => {
       let totalSum = subtotal + extraFee;
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
-      const payInfoLine = selectedPaymentMethod === 'Naqd' ? 'Naqd' : `Karta orqali (${RESTAURANT_CARD} - Click/Payme/Paynet)`;
-      
-      showToast("Yuborilmoqda...", 'fa-spinner');
 
-      const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-      const FOOD_CHAT_ID = '8072569639';
-      
-      const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: ${payInfoLine}\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}`;
-      
-      try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText })
+      // A) AGAR "NAQD" TANLANGAN BO'LSA — ODDIY YUBORISH
+      if (selectedPaymentMethod === 'Naqd') {
+        isSubmitting = true;
+        const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.disabled = true;
+
+        const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
+        const FOOD_CHAT_ID = '8072569639';
+        const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}`;
+        
+        try {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText })
+          });
+        } catch (err) {}
+
+        window.closeCheckout();
+        showSuccessModal({
+          title: 'Buyurtmangiz qabul qilindi!',
+          subtitle: `Raqam: #${orderId} | To'lov: Naqd`,
+          message: `Tez orada operator aloqaga chiqadi.`,
+          details: `${deliveryText}\nGoogle: ${currentUser.email}\nTel: ${phone}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`
         });
-      } catch (err) { console.log("Telegram xatolik:", err); }
+        cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
+        return;
+      }
 
-      window.closeCheckout(); 
-      showSuccessModal({ 
-        title: selectedPaymentMethod === 'Naqd' ? 'Buyurtmangiz qabul qilindi!' : 'Buyurtma va Karta orqali to\'lov!', 
-        subtitle: `Raqam: #${orderId} | To'lov: ${selectedPaymentMethod}`, 
-        message: selectedPaymentMethod === 'Naqd' ? `Tez orada operator aloqaga chiqadi.` : `Karta raqami (${RESTAURANT_CARD}) nusxalandi! Iltimos, ${formatPrice(totalSum)} ni ushbu kartaga o'tkazing:`, 
-        details: `${deliveryText}\nGoogle: ${currentUser.email}\nTel: ${phone}\nTo'lov turi: ${payInfoLine}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`
-      });
-      cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
+      // B) AGAR CLICK, PAYME YOKI PAYNET TANLANGAN BO'LSA — REAL-TIME KARTA TEKSHIRUVI!
+      isSubmitting = true;
+      const submitBtn = checkoutForm.querySelector('button[type="submit"]');
+      if (submitBtn) submitBtn.disabled = true;
+
+      try {
+        await fetch(`${API_URL}/payment/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId, name, phone, email: currentUser.email,
+            deliveryText, payMethod: `${selectedPaymentMethod} (${RESTAURANT_CARD})`,
+            orderLinesText, subtotalText: formatPrice(subtotal),
+            feeTitle, extraFeeText: formatPrice(extraFee),
+            totalText: formatPrice(totalSum), note
+          })
+        });
+
+        window.closeCheckout();
+
+        // Jonli tekshirish oynasini ochamiz
+        const spinnerEl = document.getElementById('payVerifySpinner');
+        const iconEl = document.getElementById('payVerifyIcon');
+        const titleEl = document.getElementById('payVerifyTitle');
+        const descEl = document.getElementById('payVerifyDesc');
+        const actEl = document.getElementById('payVerifyActions');
+
+        spinnerEl.style.display = 'block';
+        iconEl.style.display = 'none';
+        titleEl.textContent = "To'lov tekshirilmoqda...";
+        descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${selectedPaymentMethod}</b> orqali <b>${formatPrice(totalSum)}</b> tushishi kutilmoqda.<br><br><small>Agar hali to'lov qilmagan bo'lsangiz, pastdagi tugma orqali ${selectedPaymentMethod} ilovasida to'lovni amalga oshiring:</small>`;
+        
+        const appInfo = PAYMENT_APPS[selectedPaymentMethod];
+        actEl.innerHTML = `
+          <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
+            <i class="fas fa-external-link-alt"></i> ${selectedPaymentMethod} ilovasini ochish (${formatPrice(totalSum)})
+          </button>
+          <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Bekor qilish</button>
+        `;
+
+        payCheckModal.classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        // Har 2 soniyada serverdan to'lov tushgan-tushmaganini so'rab turamiz
+        if (payPollInterval) clearInterval(payPollInterval);
+        payPollInterval = setInterval(async () => {
+          try {
+            const stRes = await fetch(`${API_URL}/payment/status/${orderId}`);
+            const stData = await stRes.json();
+
+            if (stData.status === 'approved') {
+              clearInterval(payPollInterval);
+              spinnerEl.style.display = 'none';
+              iconEl.style.display = 'flex';
+              iconEl.style.background = 'rgba(46, 204, 113, 0.18)';
+              iconEl.style.color = '#2ecc71';
+              iconEl.innerHTML = '<i class="fas fa-check"></i>';
+              titleEl.textContent = "✅ To'lov tasdiqlandi!";
+              descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi va buyurtmangiz (#${orderId}) oshxonaga yuborildi!`;
+              actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal()">Yopish</button>`;
+              cart = []; saveCart();
+            } else if (stData.status === 'rejected') {
+              clearInterval(payPollInterval);
+              spinnerEl.style.display = 'none';
+              iconEl.style.display = 'flex';
+              iconEl.style.background = 'rgba(255, 107, 107, 0.18)';
+              iconEl.style.color = '#ff6b6b';
+              iconEl.innerHTML = '<i class="fas fa-times"></i>';
+              titleEl.textContent = "❌ To'lov tasdiqlanmadi!";
+              descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${formatPrice(totalSum)}</b> tushmadi!<br>Iltimos, to'lovni amalga oshirib qaytadan urinib ko'ring.`;
+              actEl.innerHTML = `
+                <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
+                  <i class="fas fa-redo"></i> ${selectedPaymentMethod} orqali qayta to'lash
+                </button>
+                <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Yopish</button>
+              `;
+            }
+          } catch (e) {}
+        }, 2000);
+      } catch (err) {
+        showToast("Server bilan aloqa yo'q!", 'fa-wifi');
+      } finally {
+        isSubmitting = false;
+        if (submitBtn) submitBtn.disabled = false;
+      }
     });
   }
 
@@ -976,8 +1050,17 @@ document.addEventListener('DOMContentLoaded', () => {
     reservationForm.addEventListener('submit', async (e) => {
       e.preventDefault(); if (isResSubmitting) return;
 
+      if (!currentUser) {
+        showToast("Stol band qilish uchun avval Google va Telegram orqali kiring!", 'fa-shield-halved');
+        window.openOtpModal(() => {
+          renderUserUI();
+          reservationForm.requestSubmit();
+        });
+        return;
+      }
+
       const name = document.getElementById('resName').value.trim();
-      const phone = (currentUser && currentUser.phone) ? currentUser.phone : document.getElementById('resPhone').value.trim();
+      const phone = currentUser.phone || document.getElementById('resPhone').value.trim();
       const date = resDateInput.value; const time = resTimeSelect.value; const guests = document.getElementById('resGuests').value;
       const tableType = tableTypeSelect.value; const tableNumber = tableNumberSelect.value; const notesEl = document.getElementById('resNotes'); const notes = notesEl ? notesEl.value.trim() : '';
 
@@ -989,11 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast("Tizimga yuborilmoqda...", 'fa-spinner'); const submitBtn = reservationForm.querySelector('button[type="submit"]'); if (submitBtn) submitBtn.disabled = true;
 
       try {
-        const response = await fetch(`${API_URL}/book`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, phone, email: currentUser ? currentUser.email : '', date, time, tableType: tableTypeName, tableNumber, guests, notes })
-        });
+        const response = await fetch(`${API_URL}/book`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone, email: currentUser ? currentUser.email : '', date, time, tableType: tableTypeName, tableNumber, guests, notes }) });
         const result = await response.json();
         if (!result.success) { showToast(result.message, 'fa-exclamation-triangle'); checkAndFilterBookedTables(); isResSubmitting = false; if (submitBtn) submitBtn.disabled = false; return; }
         const bookingCode = 'STOL-' + Math.floor(1000 + Math.random() * 9000);
