@@ -1,16 +1,404 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (GOOGLE HISOB KICHIK EKRANDA HAMBURGER MENYU ICHIGA KIRADIGAN TO'LIQ VERSIYA)
+ * (CIRCULAR IRIS LENS PORTAL + CULINARY REEL + 3D PARALLAX + GOOGLE/TG OTP + CLICK/PAYME/PAYNET)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  /* ==========================================================================
+     0.0 YANGI "CIRCULAR IRIS LENS & CULINARY REEL" KIRISH ANIMATSIYASI
+     ========================================================================== */
+  const lensIntroStyle = document.createElement('style');
+  lensIntroStyle.textContent = `
+    #iqbolLensPortal {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      pointer-events: all;
+      user-select: none;
+    }
+
+    /* Dumaloq Linza: Atrofi 250vmax qorong'i zumrad qatlam bilan o'ralgan, kengayganda saytni ichkaridan ochadi */
+    .portal-iris-window {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      box-shadow: 
+        0 0 0 250vmax #04110c,
+        0 0 60px rgba(212, 175, 55, 0.75),
+        inset 0 0 40px rgba(212, 175, 55, 0.65);
+      border: 2.5px solid #d4af37;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: transform 1.25s cubic-bezier(0.85, 0, 0.15, 1), border-color 0.8s ease;
+      will-change: transform;
+      z-index: 2;
+    }
+
+    /* Linza ichidagi tez almashuvchi taomlar kadri */
+    .portal-reel-backdrop {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.42) contrast(1.15);
+      transform: scale(1.15);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+    }
+    .portal-inner-content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: opacity 0.4s ease, transform 0.45s ease;
+    }
+    .portal-crown-badge {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fff6d1, #d4af37, #9b7615);
+      color: #061710;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.9);
+      margin-bottom: 0.55rem;
+      animation: pulseBadge 1.5s infinite ease-in-out;
+    }
+    .portal-brand-name {
+      font-family: var(--font-display, 'Cormorant Garamond', serif);
+      font-size: 2.45rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: #ffffff;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.85);
+      line-height: 1;
+    }
+    .portal-pct-counter {
+      margin-top: 0.45rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      color: #f3d889;
+      background: rgba(5, 18, 13, 0.75);
+      padding: 3px 12px;
+      border-radius: 99px;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    /* Linza atrofida aylanuvchi 3D Oltin Matn Halqasi */
+    .portal-orbit-svg {
+      position: absolute;
+      width: 370px;
+      height: 370px;
+      z-index: 3;
+      pointer-events: none;
+      animation: orbitSpin 16s linear infinite;
+      transition: opacity 0.5s ease, transform 0.9s cubic-bezier(0.85, 0, 0.15, 1);
+    }
+    .portal-orbit-svg text {
+      fill: #f3d889;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 5.2px;
+      text-transform: uppercase;
+    }
+
+    /* Oltin Zarba To'lqini (Shockwave Ring) */
+    .portal-shockwave {
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      border: 2px solid rgba(243, 216, 137, 0.8);
+      box-shadow: 0 0 50px rgba(212, 175, 55, 0.6);
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    /* Pastki interaktiv yozuv */
+    .portal-bottom-caption {
+      position: absolute;
+      bottom: 7%;
+      z-index: 4;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.78rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      transition: opacity 0.4s ease;
+    }
+
+    /* LINZA KENGAYIB OCHILISH HOLATI (IRIS EXPAND) */
+    #iqbolLensPortal.lens-open {
+      pointer-events: none;
+    }
+    #iqbolLensPortal.lens-open .portal-reel-backdrop,
+    #iqbolLensPortal.lens-open .portal-inner-content,
+    #iqbolLensPortal.lens-open .portal-bottom-caption {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+    #iqbolLensPortal.lens-open .portal-orbit-svg {
+      opacity: 0;
+      transform: scale(2.4) rotate(45deg);
+    }
+    #iqbolLensPortal.lens-open .portal-iris-window {
+      transform: scale(18);
+      border-color: rgba(212, 175, 55, 0);
+    }
+    #iqbolLensPortal.lens-open .portal-shockwave {
+      animation: shockwaveExpand 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Bosh sahifa elementlarining ob'ektiv ichidan chiqib kelishi */
+    .hero-bg-video video {
+      transform: scale(1.28);
+      filter: brightness(0.3) blur(6px);
+      transition: transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.6s ease;
+    }
+    body.portal-revealed .hero-bg-video video {
+      transform: scale(1);
+      filter: brightness(0.6) blur(0px);
+    }
+    .hero-content > * {
+      opacity: 0;
+      transform: translateY(40px) scale(0.94);
+      transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    body.portal-revealed .hero-content > *:nth-child(1) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.15s; }
+    body.portal-revealed .hero-content > *:nth-child(2) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.28s; }
+    body.portal-revealed .hero-content > *:nth-child(3) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.42s; }
+    body.portal-revealed .hero-content > *:nth-child(4) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.56s; }
+    body.portal-revealed .hero-content > *:nth-child(5) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.70s; }
+
+    /* Maxsus Oltin Kursor va 3D Taom Kartochkalari */
+    @media (min-width: 992px) {
+      .iqbol-cursor-dot, .iqbol-cursor-ring {
+        position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998;
+        border-radius: 50%; transform: translate(-50%, -50%);
+      }
+      .iqbol-cursor-dot {
+        width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 10px #d4af37;
+      }
+      .iqbol-cursor-ring {
+        width: 36px; height: 36px; border: 1.5px solid rgba(212, 175, 55, 0.55);
+        background: rgba(212, 175, 55, 0.04);
+        transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s;
+      }
+      body.cursor-hover .iqbol-cursor-ring {
+        width: 56px; height: 56px; border-color: #f3d889; background: rgba(212, 175, 55, 0.15);
+      }
+    }
+
+    .dish-card { position: relative; transform-style: preserve-3d; will-change: transform; }
+    .dish-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+      background: radial-gradient(400px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(243, 216, 137, 0.18), transparent 60%);
+      opacity: 0; transition: opacity 0.3s ease; z-index: 3;
+    }
+    .dish-card.tilting::after { opacity: 1; }
+
+    .reveal-on-scroll {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.85s ease, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal-on-scroll.revealed { opacity: 1; transform: translateY(0); }
+
+    @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulseBadge {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(212, 175, 55, 0.7); }
+      50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(243, 216, 137, 1); }
+    }
+    @keyframes shockwaveExpand {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(8); opacity: 0; }
+    }
+    @media (max-width: 576px) {
+      .portal-iris-window { width: 210px; height: 210px; }
+      .portal-orbit-svg { width: 310px; height: 310px; }
+      .portal-brand-name { font-size: 2rem; }
+    }
+  `;
+  document.head.appendChild(lensIntroStyle);
+
+  const REEL_DISH_PHOTOS = [
+    'https://admin.easymenu.uz/media/menu/items/IMG_1559_ivfhlk7_b4QiKZs_1xvVAnx_91qKrDo_7q493Pq_BSjYFYO.jpg',
+    'https://admin.easymenu.uz/media/menu/items/IMG_1546_pEeqfr3.jpg',
+    'https://admin.easymenu.uz/media/menu/items/IMG_1613.jpg',
+    'https://admin.easymenu.uz/media/menu/items/IMG_1518_emfhioR.jpg'
+  ];
+
+  const lensPortal = document.createElement('div');
+  lensPortal.id = 'iqbolLensPortal';
+  lensPortal.innerHTML = `
+    <svg class="portal-orbit-svg" viewBox="0 0 300 300">
+      <defs>
+        <path id="textCirclePath" d="M 150, 150 m -120, 0 a 120,120 0 1,1 240,0 a 120,120 0 1,1 -240,0" />
+      </defs>
+      <text>
+        <textPath href="#textCirclePath" startOffset="0%">
+          • IQBOL OILAVIY RESTORAN • QARSHI • MILLIY VA UYG'UR TAOMLARI
+        </textPath>
+      </text>
+    </svg>
+    <div class="portal-shockwave"></div>
+    <div class="portal-iris-window">
+      <div id="portalReelBg" class="portal-reel-backdrop" style="background-image: url('${REEL_DISH_PHOTOS[0]}');"></div>
+      <div class="portal-inner-content">
+        <div class="portal-crown-badge"><i class="fas fa-crown"></i></div>
+        <div class="portal-brand-name">IQBOL</div>
+        <div id="portalPctText" class="portal-pct-counter">0%</div>
+      </div>
+    </div>
+    <div id="portalCaptionTxt" class="portal-bottom-caption">Lazzat olami yuklanmoqda...</div>
+  `;
+  document.body.appendChild(lensPortal);
+
+  const reelBgEl = document.getElementById('portalReelBg');
+  const pctTextEl = document.getElementById('portalPctText');
+  const capTextEl = document.getElementById('portalCaptionTxt');
+  let reelIdx = 0;
+  let loadPct = 0;
+
+  // Linza ichida taom rasmlarini kino lentasidek tez almashtirish
+  const reelSwitcher = setInterval(() => {
+    reelIdx = (reelIdx + 1) % REEL_DISH_PHOTOS.length;
+    if (reelBgEl) {
+      reelBgEl.style.backgroundImage = `url('${REEL_DISH_PHOTOS[reelIdx]}')`;
+      reelBgEl.style.transform = `scale(${1.1 + (reelIdx % 2) * 0.08})`;
+    }
+  }, 320);
+
+  function triggerPortalOpen() {
+    if (lensPortal.classList.contains('lens-open')) return;
+    clearInterval(reelSwitcher);
+    lensPortal.classList.add('lens-open');
+    document.body.classList.add('portal-revealed');
+    setTimeout(() => {
+      lensPortal.remove();
+    }, 1250);
+  }
+
+  const pctInterval = setInterval(() => {
+    loadPct += Math.floor(Math.random() * 9) + 5;
+    if (loadPct >= 55 && capTextEl) {
+      capTextEl.textContent = "Tandir & Shashliklar tayyor...";
+    }
+    if (loadPct >= 100) {
+      loadPct = 100;
+      clearInterval(pctInterval);
+      if (pctTextEl) pctTextEl.textContent = '100%';
+      setTimeout(triggerPortalOpen, 180);
+      return;
+    }
+    if (pctTextEl) pctTextEl.textContent = loadPct + '%';
+  }, 42);
+
+  lensPortal.addEventListener('click', () => {
+    clearInterval(pctInterval);
+    triggerPortalOpen();
+  });
+
+  // Kompyuterda Oltin Kursor + Hero 3D Parallax
+  if (window.innerWidth >= 992) {
+    const cursorDot = document.createElement('div');
+    cursorDot.className = 'iqbol-cursor-dot';
+    const cursorRing = document.createElement('div');
+    cursorRing.className = 'iqbol-cursor-ring';
+    document.body.appendChild(cursorDot);
+    document.body.appendChild(cursorRing);
+
+    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+    let ringX = mouseX, ringY = mouseY;
+    const heroContentEl = document.querySelector('.hero-content');
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX + 'px';
+      cursorDot.style.top = mouseY + 'px';
+
+      const interactive = e.target.closest('a, button, .dish-card, .gallery-item, input, select');
+      document.body.classList.toggle('cursor-hover', Boolean(interactive));
+
+      if (heroContentEl && window.scrollY < 500) {
+        const moveX = ((mouseX / window.innerWidth) - 0.5) * 14;
+        const moveY = ((mouseY / window.innerHeight) - 0.5) * 14;
+        heroContentEl.style.transform = `translate3d(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px, 0)`;
+      }
+    });
+
+    const animateCursor = () => {
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      cursorRing.style.left = ringX + 'px';
+      cursorRing.style.top = ringY + 'px';
+      requestAnimationFrame(animateCursor);
+    };
+    animateCursor();
+  }
+
+  // Taom kartochkalarida 3D Tilt va Oltin Glare
+  document.addEventListener('mousemove', (e) => {
+    if (window.innerWidth < 992) return;
+    const card = e.target.closest('.dish-card');
+    document.querySelectorAll('.dish-card.tilting').forEach(c => {
+      if (c !== card) {
+        c.style.transform = '';
+        c.classList.remove('tilting');
+      }
+    });
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const rotateY = ((x / rect.width) - 0.5) * 11;
+    const rotateX = (0.5 - (y / rect.height)) * 11;
+    card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
+    card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
+    card.classList.add('tilting');
+    card.style.transform = `perspective(750px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px)`;
+  });
+
+  // Scroll-Reveal: Bo'limlarning pastdan silliq suzib chiqishi
+  const revealTargets = document.querySelectorAll('.about-section, .why-section, .menu-section, .reservation-section, .gallery-section, .testimonials-section, .location-section');
+  revealTargets.forEach(sec => sec.classList.add('reveal-on-scroll'));
+  if ('IntersectionObserver' in window) {
+    const revObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          revObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealTargets.forEach(sec => revObserver.observe(sec));
+  } else {
+    revealTargets.forEach(sec => sec.classList.add('revealed'));
+  }
+
+  /* ==========================================================================
+     ASOSIY KONFIGURATSIYA
+     ========================================================================== */
   const RESTAURANT_CARD = '9860 1701 1569 3682';
   const RESTAURANT_CARD_RAW = '9860170115693682';
   const API_URL = 'https://iqbol.onrender.com/api';
   const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
   const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
 
-  // CLICK, PAYME, PAYNET ILOVALARI VA SAYTLARI
   const PAYMENT_APPS = {
     Click: {
       name: 'Click',
@@ -52,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(d => { if (d && d.username) tgBotUsername = d.username; })
     .catch(() => {});
 
-  // Hamburger menyu ochilganda Google hisob darhol tepada ko'rinishi uchun uni drawer-links tepasiga ko'chiramiz
   const drawerEl = document.getElementById('mobileNavDrawer');
   const drawerLinksEl = drawerEl ? drawerEl.querySelector('.drawer-links') : null;
   const mobileGoogleEl = document.getElementById('mobileGoogleContainer');
@@ -63,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (RESPONSIVE HAMBURGER INTEGRATSIYASI BILAN)
+     0. CSS VA INTERFEYS DIZAYNI (DARK MODE VA SAVAT RESPONSIVE FIX BILAN)
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
@@ -105,12 +492,73 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    /* Ekran kichrayganda (<= 900px) Google tugmasi va Profil kapsulasi Header'dan 100% yashirinib, Hamburger ichida chiqadi */
     @media (max-width: 900px) {
       html body #header #googleSignInContainer,
       html body #header #userProfileChip,
       html body #header #userProfileChip.user-profile-chip {
         display: none !important;
+      }
+
+      html body #header #themeToggle,
+      html body #header #cartBtn {
+        display: inline-flex !important;
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        border-radius: 50% !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+
+      html body #header .header-actions {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+      }
+
+      html body #header #headerReservationBtn {
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        padding: 0.4rem 0.75rem !important;
+        font-size: 0.74rem !important;
+      }
+
+      html body #mobileNavDrawer .brand-logo {
+        display: flex !important;
+      }
+      html body #mobileNavDrawer .contact-mini {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        margin-bottom: 14px !important;
+        font-size: 0.82rem !important;
+        color: var(--text-muted) !important;
+      }
+      html body #mobileNavDrawer .contact-mini i {
+        color: var(--accent-gold) !important;
+        width: 18px !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      html body #header #headerReservationBtn i {
+        display: none !important;
+      }
+      html body #header #headerReservationBtn {
+        padding: 0.36rem 0.55rem !important;
+        font-size: 0.68rem !important;
+      }
+      html body #header #themeToggle,
+      html body #header #cartBtn,
+      html body #header #hamburgerBtn {
+        width: 33px !important;
+        height: 33px !important;
+        min-width: 33px !important;
       }
     }
 
@@ -169,7 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     #userProfileChip .btn-logout:hover { background: #ff6b6b !important; color: #ffffff !important; }
 
-    /* Hamburger menyu ichidagi Google profil bloki dizayni */
     #mobileGoogleContainer:not(.force-hide-auth) {
       display: flex !important;
       justify-content: center !important;
@@ -492,7 +939,6 @@ document.addEventListener('DOMContentLoaded', () => {
         checkoutNotice.classList.add('force-hide-auth');
       }
 
-      // Inline display:inline-flex !important BERILMAYDI, shunda @media (max-width: 900px) uni tepadan yashirib, faqat hamburger ichida ko'rsatadi
       if (chip) {
         chip.removeAttribute('style');
         chip.classList.remove('force-hide-auth');
