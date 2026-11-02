@@ -1,11 +1,11 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (CIRCULAR IRIS LENS PORTAL + CULINARY REEL + 3D PARALLAX + GOOGLE/TG OTP + CLICK/PAYME/PAYNET)
+ * (3D ROYAL PORTAL INTRO + 60 TA TAOM + GOOGLE SIGN-IN + TELEGRAM OTP + CLICK/PAYME/PAYNET + RESPONSIVE FIX)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     0.0 YANGI "CIRCULAR IRIS LENS & CULINARY REEL" KIRISH ANIMATSIYASI
+     0.0 PROFESSIONAL 3D ROYAL PORTAL KIRISH ANIMATSIYASI (MENYUNI YASHIRMAYDIGAN)
      ========================================================================== */
   const lensIntroStyle = document.createElement('style');
   lensIntroStyle.textContent = `
@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
       user-select: none;
     }
 
-    /* Dumaloq Linza: Atrofi 250vmax qorong'i zumrad qatlam bilan o'ralgan, kengayganda saytni ichkaridan ochadi */
     .portal-iris-window {
       position: relative;
       width: 250px;
@@ -36,12 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      transition: transform 1.25s cubic-bezier(0.85, 0, 0.15, 1), border-color 0.8s ease;
+      transition: transform 1.2s cubic-bezier(0.85, 0, 0.15, 1), border-color 0.8s ease;
       will-change: transform;
       z-index: 2;
     }
 
-    /* Linza ichidagi tez almashuvchi taomlar kadri */
     .portal-reel-backdrop {
       position: absolute;
       inset: 0;
@@ -50,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
       background-position: center;
       filter: brightness(0.42) contrast(1.15);
       transform: scale(1.15);
-      transition: opacity 0.45s ease, transform 0.45s ease;
+      transition: opacity 0.4s ease, transform 0.4s ease;
     }
     .portal-inner-content {
       position: relative;
@@ -60,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
       align-items: center;
       justify-content: center;
       text-align: center;
-      transition: opacity 0.4s ease, transform 0.45s ease;
+      transition: opacity 0.4s ease, transform 0.4s ease;
     }
     .portal-crown-badge {
       width: 58px;
@@ -97,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
       border: 1px solid rgba(212, 175, 55, 0.4);
     }
 
-    /* Linza atrofida aylanuvchi 3D Oltin Matn Halqasi */
     .portal-orbit-svg {
       position: absolute;
       width: 370px;
@@ -115,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
       text-transform: uppercase;
     }
 
-    /* Oltin Zarba To'lqini (Shockwave Ring) */
     .portal-shockwave {
       position: absolute;
       width: 250px;
@@ -128,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
       opacity: 0;
     }
 
-    /* Pastki interaktiv yozuv */
     .portal-bottom-caption {
       position: absolute;
       bottom: 7%;
@@ -141,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
       transition: opacity 0.4s ease;
     }
 
-    /* LINZA KENGAYIB OCHILISH HOLATI (IRIS EXPAND) */
     #iqbolLensPortal.lens-open {
       pointer-events: none;
     }
@@ -163,32 +157,19 @@ document.addEventListener('DOMContentLoaded', () => {
       animation: shockwaveExpand 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Bosh sahifa elementlarining ob'ektiv ichidan chiqib kelishi */
-    .hero-bg-video video {
-      transform: scale(1.28);
-      filter: brightness(0.3) blur(6px);
-      transition: transform 2.2s cubic-bezier(0.16, 1, 0.3, 1), filter 1.6s ease;
+    /* Barcha bo'limlar va menyu har doim 100% ko'rinib turishini kafolatlaymiz */
+    .about-section, .why-section, .menu-section, .reservation-section, .gallery-section, .testimonials-section, .location-section, #dishesGrid {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: none !important;
     }
-    body.portal-revealed .hero-bg-video video {
-      transform: scale(1);
-      filter: brightness(0.6) blur(0px);
-    }
-    .hero-content > * {
-      opacity: 0;
-      transform: translateY(40px) scale(0.94);
-      transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    body.portal-revealed .hero-content > *:nth-child(1) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.15s; }
-    body.portal-revealed .hero-content > *:nth-child(2) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.28s; }
-    body.portal-revealed .hero-content > *:nth-child(3) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.42s; }
-    body.portal-revealed .hero-content > *:nth-child(4) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.56s; }
-    body.portal-revealed .hero-content > *:nth-child(5) { opacity: 1; transform: translateY(0) scale(1); transition-delay: 0.70s; }
 
-    /* Maxsus Oltin Kursor va 3D Taom Kartochkalari */
+    /* Maxsus Oltin Kursor (Faqat sichqoncha qimirlaganda chiqadi) */
     @media (min-width: 992px) {
       .iqbol-cursor-dot, .iqbol-cursor-ring {
-        position: fixed; top: 0; left: 0; pointer-events: none; z-index: 99998;
-        border-radius: 50%; transform: translate(-50%, -50%);
+        position: fixed; top: -100px; left: -100px; pointer-events: none; z-index: 99998;
+        border-radius: 50%; transform: translate(-50%, -50%); opacity: 0;
+        transition: opacity 0.25s ease;
       }
       .iqbol-cursor-dot {
         width: 7px; height: 7px; background: #d4af37; box-shadow: 0 0 10px #d4af37;
@@ -196,7 +177,11 @@ document.addEventListener('DOMContentLoaded', () => {
       .iqbol-cursor-ring {
         width: 36px; height: 36px; border: 1.5px solid rgba(212, 175, 55, 0.55);
         background: rgba(212, 175, 55, 0.04);
-        transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s;
+        transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s, opacity 0.25s;
+      }
+      body.cursor-active .iqbol-cursor-dot,
+      body.cursor-active .iqbol-cursor-ring {
+        opacity: 1;
       }
       body.cursor-hover .iqbol-cursor-ring {
         width: 56px; height: 56px; border-color: #f3d889; background: rgba(212, 175, 55, 0.15);
@@ -206,16 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .dish-card { position: relative; transform-style: preserve-3d; will-change: transform; }
     .dish-card::after {
       content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-      background: radial-gradient(400px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(243, 216, 137, 0.18), transparent 60%);
+      background: radial-gradient(380px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(243, 216, 137, 0.16), transparent 60%);
       opacity: 0; transition: opacity 0.3s ease; z-index: 3;
     }
     .dish-card.tilting::after { opacity: 1; }
-
-    .reveal-on-scroll {
-      opacity: 0; transform: translateY(40px);
-      transition: opacity 0.85s ease, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .reveal-on-scroll.revealed { opacity: 1; transform: translateY(0); }
 
     @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes pulseBadge {
@@ -273,27 +252,25 @@ document.addEventListener('DOMContentLoaded', () => {
   let reelIdx = 0;
   let loadPct = 0;
 
-  // Linza ichida taom rasmlarini kino lentasidek tez almashtirish
   const reelSwitcher = setInterval(() => {
     reelIdx = (reelIdx + 1) % REEL_DISH_PHOTOS.length;
     if (reelBgEl) {
       reelBgEl.style.backgroundImage = `url('${REEL_DISH_PHOTOS[reelIdx]}')`;
       reelBgEl.style.transform = `scale(${1.1 + (reelIdx % 2) * 0.08})`;
     }
-  }, 320);
+  }, 300);
 
   function triggerPortalOpen() {
     if (lensPortal.classList.contains('lens-open')) return;
     clearInterval(reelSwitcher);
     lensPortal.classList.add('lens-open');
-    document.body.classList.add('portal-revealed');
     setTimeout(() => {
       lensPortal.remove();
-    }, 1250);
+    }, 1200);
   }
 
   const pctInterval = setInterval(() => {
-    loadPct += Math.floor(Math.random() * 9) + 5;
+    loadPct += Math.floor(Math.random() * 10) + 6;
     if (loadPct >= 55 && capTextEl) {
       capTextEl.textContent = "Tandir & Shashliklar tayyor...";
     }
@@ -301,18 +278,17 @@ document.addEventListener('DOMContentLoaded', () => {
       loadPct = 100;
       clearInterval(pctInterval);
       if (pctTextEl) pctTextEl.textContent = '100%';
-      setTimeout(triggerPortalOpen, 180);
+      setTimeout(triggerPortalOpen, 150);
       return;
     }
     if (pctTextEl) pctTextEl.textContent = loadPct + '%';
-  }, 42);
+  }, 40);
 
   lensPortal.addEventListener('click', () => {
     clearInterval(pctInterval);
     triggerPortalOpen();
   });
 
-  // Kompyuterda Oltin Kursor + Hero 3D Parallax
   if (window.innerWidth >= 992) {
     const cursorDot = document.createElement('div');
     cursorDot.className = 'iqbol-cursor-dot';
@@ -321,11 +297,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(cursorDot);
     document.body.appendChild(cursorRing);
 
-    let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-    let ringX = mouseX, ringY = mouseY;
-    const heroContentEl = document.querySelector('.hero-content');
+    let mouseX = -100, mouseY = -100;
+    let ringX = -100, ringY = -100;
 
     window.addEventListener('mousemove', (e) => {
+      document.body.classList.add('cursor-active');
       mouseX = e.clientX;
       mouseY = e.clientY;
       cursorDot.style.left = mouseX + 'px';
@@ -333,17 +309,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const interactive = e.target.closest('a, button, .dish-card, .gallery-item, input, select');
       document.body.classList.toggle('cursor-hover', Boolean(interactive));
-
-      if (heroContentEl && window.scrollY < 500) {
-        const moveX = ((mouseX / window.innerWidth) - 0.5) * 14;
-        const moveY = ((mouseY / window.innerHeight) - 0.5) * 14;
-        heroContentEl.style.transform = `translate3d(${moveX.toFixed(1)}px, ${moveY.toFixed(1)}px, 0)`;
-      }
     });
 
     const animateCursor = () => {
-      ringX += (mouseX - ringX) * 0.18;
-      ringY += (mouseY - ringY) * 0.18;
+      ringX += (mouseX - ringX) * 0.2;
+      ringY += (mouseY - ringY) * 0.2;
       cursorRing.style.left = ringX + 'px';
       cursorRing.style.top = ringY + 'px';
       requestAnimationFrame(animateCursor);
@@ -351,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
     animateCursor();
   }
 
-  // Taom kartochkalarida 3D Tilt va Oltin Glare
   document.addEventListener('mousemove', (e) => {
     if (window.innerWidth < 992) return;
     const card = e.target.closest('.dish-card');
@@ -365,30 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const rect = card.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const rotateY = ((x / rect.width) - 0.5) * 11;
-    const rotateX = (0.5 - (y / rect.height)) * 11;
+    const rotateY = ((x / rect.width) - 0.5) * 10;
+    const rotateX = (0.5 - (y / rect.height)) * 10;
     card.style.setProperty('--glare-x', `${(x / rect.width) * 100}%`);
     card.style.setProperty('--glare-y', `${(y / rect.height) * 100}%`);
     card.classList.add('tilting');
     card.style.transform = `perspective(750px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px)`;
   });
-
-  // Scroll-Reveal: Bo'limlarning pastdan silliq suzib chiqishi
-  const revealTargets = document.querySelectorAll('.about-section, .why-section, .menu-section, .reservation-section, .gallery-section, .testimonials-section, .location-section');
-  revealTargets.forEach(sec => sec.classList.add('reveal-on-scroll'));
-  if ('IntersectionObserver' in window) {
-    const revObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('revealed');
-          revObserver.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    revealTargets.forEach(sec => revObserver.observe(sec));
-  } else {
-    revealTargets.forEach(sec => sec.classList.add('revealed'));
-  }
 
   /* ==========================================================================
      ASOSIY KONFIGURATSIYA
