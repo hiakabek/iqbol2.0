@@ -1,11 +1,11 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (3D ROYAL PORTAL INTRO + 60 TA TAOM + GOOGLE SIGN-IN + TELEGRAM OTP + CLICK/PAYME/PAYNET + RESPONSIVE FIX)
+ * (UZUM TEZKOR LIVE TRACKER + PRO OFITSIANT CHAQIRISH + STOL QR GENERATOR + 3D INTRO + GOOGLE/TG OTP + CLICK/PAYME/PAYNET)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
-     0.0 PROFESSIONAL 3D ROYAL PORTAL KIRISH ANIMATSIYASI (MENYUNI YASHIRMAYDIGAN)
+     0.0 PROFESSIONAL 3D ROYAL PORTAL KIRISH ANIMATSIYASI
      ========================================================================== */
   const lensIntroStyle = document.createElement('style');
   lensIntroStyle.textContent = `
@@ -136,9 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
       transition: opacity 0.4s ease;
     }
 
-    #iqbolLensPortal.lens-open {
-      pointer-events: none;
-    }
+    #iqbolLensPortal.lens-open { pointer-events: none; }
     #iqbolLensPortal.lens-open .portal-reel-backdrop,
     #iqbolLensPortal.lens-open .portal-inner-content,
     #iqbolLensPortal.lens-open .portal-bottom-caption {
@@ -157,14 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
       animation: shockwaveExpand 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Barcha bo'limlar va menyu har doim 100% ko'rinib turishini kafolatlaymiz */
     .about-section, .why-section, .menu-section, .reservation-section, .gallery-section, .testimonials-section, .location-section, #dishesGrid {
       opacity: 1 !important;
       visibility: visible !important;
       transform: none !important;
     }
 
-    /* Maxsus Oltin Kursor (Faqat sichqoncha qimirlaganda chiqadi) */
     @media (min-width: 992px) {
       .iqbol-cursor-dot, .iqbol-cursor-ring {
         position: fixed; top: -100px; left: -100px; pointer-events: none; z-index: 99998;
@@ -180,9 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         transition: width 0.25s, height 0.25s, border-color 0.25s, background 0.25s, opacity 0.25s;
       }
       body.cursor-active .iqbol-cursor-dot,
-      body.cursor-active .iqbol-cursor-ring {
-        opacity: 1;
-      }
+      body.cursor-active .iqbol-cursor-ring { opacity: 1; }
       body.cursor-hover .iqbol-cursor-ring {
         width: 56px; height: 56px; border-color: #f3d889; background: rgba(212, 175, 55, 0.15);
       }
@@ -195,6 +189,326 @@ document.addEventListener('DOMContentLoaded', () => {
       opacity: 0; transition: opacity 0.3s ease; z-index: 3;
     }
     .dish-card.tilting::after { opacity: 1; }
+
+    /* ==========================================================================
+       UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI VA QR-STOL CSS
+       ========================================================================== */
+    #waiterFloatBtn {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 990;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.72rem 1.2rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #112e23, #071912);
+      color: #f3d889;
+      border: 1.5px solid #d4af37;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(212, 175, 55, 0.25);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    #waiterFloatBtn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.65), 0 0 30px rgba(212, 175, 55, 0.45);
+    }
+    #waiterFloatBtn .bell-icon-wrap {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f3d889, #d4af37);
+      color: #071912;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    #waiterFloatBtn .bell-icon-wrap i {
+      animation: ringBell 2.5s infinite ease-in-out;
+    }
+    @keyframes ringBell {
+      0%, 80%, 100% { transform: rotate(0); }
+      85% { transform: rotate(16deg); }
+      90% { transform: rotate(-16deg); }
+      95% { transform: rotate(10deg); }
+    }
+
+    /* Uzum Tezkor Floating Mini-Widget */
+    #uzumFloatingTracker {
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150%);
+      z-index: 995;
+      width: min(92vw, 430px);
+      background: rgba(10, 31, 23, 0.97);
+      border: 1.5px solid rgba(212, 175, 55, 0.7);
+      border-radius: 20px;
+      padding: 0.85rem 1.15rem;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.65), 0 0 28px rgba(212, 175, 55, 0.3);
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #uzumFloatingTracker.active {
+      transform: translateX(-50%) translateY(0);
+    }
+    .uzum-float-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .uzum-float-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .uzum-float-anim-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(46, 204, 113, 0.2));
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      color: #f3d889;
+      flex-shrink: 0;
+    }
+    .uzum-eta-pill {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.03em;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.35);
+    }
+
+    /* Uzum Tezkor 4-Segmentli Progress Bar */
+    .uzum-segmented-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    .uzum-seg-item {
+      height: 5px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.14);
+      overflow: hidden;
+      position: relative;
+    }
+    .uzum-seg-item.done {
+      background: #2ecc71;
+      box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
+    }
+    .uzum-seg-item.active {
+      background: rgba(212, 175, 55, 0.28);
+    }
+    .uzum-seg-item.active::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, #f3d889, #2ecc71, transparent);
+      animation: uzumShimmer 1.3s infinite linear;
+    }
+    @keyframes uzumShimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* Uzum Tezkor Modal Ichki Dizayni */
+    .uzum-hero-status-box {
+      background: linear-gradient(145deg, rgba(17, 48, 37, 0.95), rgba(7, 24, 18, 0.98));
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 18px;
+      padding: 1.35rem 1.2rem;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .uzum-stage-visual {
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 30% 30%, rgba(243, 216, 137, 0.25), rgba(212, 175, 55, 0.08));
+      border: 1.5px solid rgba(212, 175, 55, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.9rem;
+      color: #f3d889;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      animation: floatStageIcon 2.2s infinite ease-in-out;
+    }
+    @keyframes floatStageIcon {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-5px) scale(1.06); }
+    }
+
+    .uzum-step-nodes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .uzum-node-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.3s ease;
+    }
+    .uzum-node-label.done { color: #2ecc71; }
+    .uzum-node-label.active { color: #f3d889; font-weight: 800; }
+
+    .uzum-order-receipt-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 0.95rem 1.1rem;
+      text-align: left;
+      margin-bottom: 1rem;
+      max-height: 165px;
+      overflow-y: auto;
+    }
+
+    /* Ofitsiant va QR Modal Tablari */
+    .service-tabs-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: var(--bg-card);
+      padding: 5px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 1.1rem;
+    }
+    .service-tab-btn {
+      padding: 0.6rem;
+      border-radius: 9px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.82rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .service-tab-btn.active {
+      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
+      color: #091e16;
+      box-shadow: 0 3px 10px rgba(212, 175, 55, 0.3);
+    }
+
+    .quick-table-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-bottom: 0.75rem;
+      scrollbar-width: none;
+    }
+    .quick-table-chip {
+      padding: 5px 11px;
+      border-radius: 99px;
+      border: 1px solid var(--border-gold);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-table-chip.active, .quick-table-chip:hover {
+      background: var(--accent-gold);
+      color: #091e16;
+    }
+
+    .waiter-action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-top: 0.5rem;
+    }
+    .waiter-action-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 0.9rem;
+      border-radius: 14px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-gold);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .waiter-action-card:hover {
+      background: linear-gradient(135deg, var(--color-gold-base), var(--color-gold-dark));
+      color: #091e16;
+      transform: translateY(-2px);
+    }
+    .waiter-action-card i {
+      font-size: 1.35rem;
+      color: var(--accent-gold);
+    }
+    .waiter-action-card:hover i { color: #091e16; }
+
+    /* Stol QR-Kod Kartochkasi */
+    .qr-stand-preview {
+      background: linear-gradient(145deg, #0d291e, #06150f);
+      border: 2px solid #d4af37;
+      border-radius: 18px;
+      padding: 1.25rem;
+      color: #ffffff;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      margin-bottom: 1rem;
+    }
+    .qr-img-box {
+      width: 175px;
+      height: 175px;
+      margin: 0.75rem auto;
+      padding: 10px;
+      background: #ffffff;
+      border-radius: 14px;
+      border: 2px solid #f3d889;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qr-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
     @keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @keyframes pulseBadge {
@@ -209,6 +523,9 @@ document.addEventListener('DOMContentLoaded', () => {
       .portal-iris-window { width: 210px; height: 210px; }
       .portal-orbit-svg { width: 310px; height: 310px; }
       .portal-brand-name { font-size: 2rem; }
+      #waiterFloatBtn { bottom: 16px; left: 14px; padding: 0.55rem 0.9rem; font-size: 0.76rem; }
+      #uzumFloatingTracker { bottom: 74px; padding: 0.75rem 0.95rem; }
+      .waiter-action-grid { grid-template-columns: 1fr; }
     }
   `;
   document.head.appendChild(lensIntroStyle);
@@ -480,9 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
         font-size: 0.74rem !important;
       }
 
-      html body #mobileNavDrawer .brand-logo {
-        display: flex !important;
-      }
+      html body #mobileNavDrawer .brand-logo { display: flex !important; }
       html body #mobileNavDrawer .contact-mini {
         display: flex !important;
         flex-direction: column !important;
@@ -498,9 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     @media (max-width: 420px) {
-      html body #header #headerReservationBtn i {
-        display: none !important;
-      }
+      html body #header #headerReservationBtn i { display: none !important; }
       html body #header #headerReservationBtn {
         padding: 0.36rem 0.55rem !important;
         font-size: 0.68rem !important;
@@ -634,6 +947,522 @@ document.addEventListener('DOMContentLoaded', () => {
       window.open(appInfo.webUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
+  /* ==========================================================================
+     0.03 QR-STOL ANIQLASH + PRO OFITSIANT CHAQIRISH + STOL QR GENERATORI
+     ========================================================================== */
+  const urlParams = new URLSearchParams(window.location.search);
+  const qrTableParam = urlParams.get('table') || urlParams.get('stol');
+  if (qrTableParam) {
+    const formattedTable = isNaN(qrTableParam) ? qrTableParam : `Stol #${qrTableParam}`;
+    localStorage.setItem('iqbol_qr_table', formattedTable);
+    setTimeout(() => {
+      showToast(`🪑 Xush kelibsiz! Sizning joyingiz: ${formattedTable}`, 'fa-chair');
+    }, 1500);
+  }
+  let savedQrTable = localStorage.getItem('iqbol_qr_table') || 'Stol #1';
+
+  const cTableInputEl = document.getElementById('checkoutTable');
+  if (cTableInputEl && savedQrTable) {
+    cTableInputEl.value = savedQrTable;
+  }
+
+  const waiterBtn = document.createElement('button');
+  waiterBtn.id = 'waiterFloatBtn';
+  waiterBtn.type = 'button';
+  waiterBtn.innerHTML = `
+    <span class="bell-icon-wrap"><i class="fas fa-concierge-bell"></i></span>
+    <span id="waiterBtnTxt">${savedQrTable} • Ofitsiant & QR</span>
+  `;
+  waiterBtn.onclick = () => window.openWaiterModal('waiter');
+  document.body.appendChild(waiterBtn);
+
+  const waiterModal = document.createElement('div');
+  waiterModal.id = 'waiterServiceModal';
+  waiterModal.className = 'modal-wrapper';
+  waiterModal.innerHTML = `
+    <div class="modal-overlay" onclick="window.closeWaiterModal()"></div>
+    <div class="modal-card" style="max-width: 460px; padding: 1.75rem; text-align: center;">
+      <button type="button" class="modal-close-btn" onclick="window.closeWaiterModal()"><i class="fas fa-times"></i></button>
+      
+      <div class="service-tabs-nav">
+        <button type="button" id="tabBtnWaiter" class="service-tab-btn active" onclick="window.switchServiceTab('waiter')">
+          <i class="fas fa-concierge-bell"></i> Ofitsiant chaqirish
+        </button>
+        <button type="button" id="tabBtnQr" class="service-tab-btn" onclick="window.switchServiceTab('qr')">
+          <i class="fas fa-qrcode"></i> Stol QR-kodi
+        </button>
+      </div>
+
+      <!-- TAB 1: OFITSIANT CHAQIRISH -->
+      <div id="serviceTabWaiter">
+        <h3 class="font-display" style="font-size: 1.55rem; color: var(--text-main); margin-bottom: 0.25rem;">Tezkor Stol Xizmati</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem;">Stolingizni tanlang va kerakli tugmani bosing — ofitsiant darhol yetib keladi:</p>
+
+        <div class="quick-table-chips" id="quickTableChipsWrap">
+          ${['Stol #1', 'Stol #2', 'Stol #3', 'Stol #5', 'Stol #7', 'Stol #10', 'VIP #1', 'VIP #2', 'VIP #3'].map(t => 
+            `<button type="button" class="quick-table-chip ${t === savedQrTable ? 'active' : ''}" onclick="window.selectQuickTable('${t}')">${t}</button>`
+          ).join('')}
+        </div>
+
+        <div style="text-align: left; margin-bottom: 0.75rem;">
+          <input type="text" id="waiterTableInput" placeholder="Stol raqami (masalan: Stol #7 yoki VIP #2)" value="${savedQrTable}" style="width: 100%; padding: 0.7rem 0.95rem; font-size: 0.92rem; font-weight: 700; border-radius: 10px; border: 1.5px solid var(--border-gold); background: var(--bg-card); color: var(--text-main);" />
+        </div>
+
+        <div style="text-align: left; margin-bottom: 0.75rem;">
+          <input type="text" id="waiterCustomNote" placeholder="Qo'shimcha izoh (ixtiyoriy: 2 ta ko'k choy, salfetka...)" style="width: 100%; padding: 0.65rem 0.95rem; font-size: 0.84rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main);" />
+        </div>
+
+        <div id="waiterCooldownBox" style="display:none; padding:0.75rem; border-radius:12px; background:rgba(46,204,113,0.14); border:1px solid #2ecc71; color:#2ecc71; font-weight:700; font-size:0.84rem; margin-bottom:0.75rem;">
+          <i class="fas fa-check-circle"></i> Ofitsiantga xabar yuborildi! (<span id="waiterCooldownTimer">60</span>s)
+        </div>
+
+        <div class="waiter-action-grid">
+          <button type="button" class="waiter-action-card" onclick="window.sendWaiterRequest('call', 'Ofitsiantni stolga chaqirish')">
+            <i class="fas fa-user-tie"></i>
+            <div>
+              <div>Ofitsiant chaqirish</div>
+              <small style="font-weight:400; opacity:0.75; font-size:0.74rem;">Xizmatchi stolga keladi</small>
+            </div>
+          </button>
+          <button type="button" class="waiter-action-card" onclick="window.sendWaiterRequest('bill', 'Hisobni (Chekni) olib kelish')">
+            <i class="fas fa-file-invoice-dollar"></i>
+            <div>
+              <div>Hisobni so'rash</div>
+              <small style="font-weight:400; opacity:0.75; font-size:0.74rem;">To'lov uchun chek</small>
+            </div>
+          </button>
+          <button type="button" class="waiter-action-card" onclick="window.sendWaiterRequest('tea_bread', 'Issiq non va choy olib kelish')">
+            <i class="fas fa-mug-hot"></i>
+            <div>
+              <div>Choy va Issiq non</div>
+              <small style="font-weight:400; opacity:0.75; font-size:0.74rem;">Tezkor qo'shimcha</small>
+            </div>
+          </button>
+          <button type="button" class="waiter-action-card" onclick="window.sendWaiterRequest('call', 'Stolni tozalash va salfetka olib kelish')">
+            <i class="fas fa-broom"></i>
+            <div>
+              <div>Stolni tozalash</div>
+              <small style="font-weight:400; opacity:0.75; font-size:0.74rem;">Salfetka / idishlarni olish</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: STOL QR-KODI GENERATORI VA CHOP ETISH -->
+      <div id="serviceTabQr" style="display:none;">
+        <div class="qr-stand-preview" id="qrPrintableCard">
+          <div style="font-size:0.72rem; letter-spacing:0.22em; color:#f3d889; text-transform:uppercase; font-weight:700;">IQBOL OILAVIY RESTORAN</div>
+          <div id="qrPreviewTableTitle" class="font-display" style="font-size:1.7rem; font-weight:800; color:#ffffff; margin-top:2px;">${savedQrTable}</div>
+          <div class="qr-img-box">
+            <img id="qrCodeGeneratedImg" src="" alt="Stol QR Kodi" />
+          </div>
+          <div style="font-size:0.8rem; color:#f3d889; font-weight:700;">📱 Menyuni ochish va Ofitsiant chaqirish</div>
+          <div id="qrPreviewUrlTxt" style="font-size:0.68rem; color:rgba(255,255,255,0.55); margin-top:4px; word-break:break-all;"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:0.85rem; text-align:left;">
+          <div>
+            <label style="font-size:0.74rem; font-weight:700; color:var(--text-main);">Zal turi:</label>
+            <select id="qrGenHallSelect" onchange="window.updateGeneratedTableQr()" style="width:100%; padding:0.6rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-weight:700; font-size:0.82rem;">
+              <option value="Stol">Asosiy zal (1–35)</option>
+              <option value="2-zal Stol">2-zal (1–8)</option>
+              <option value="VIP">VIP kabina (1–9)</option>
+              <option value="Ayvon">Tashqi ayvon (1–40)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.74rem; font-weight:700; color:var(--text-main);">Stol raqami:</label>
+            <input type="number" id="qrGenNumInput" value="1" min="1" max="50" oninput="window.updateGeneratedTableQr()" style="width:100%; padding:0.6rem; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-weight:700; font-size:0.85rem;" />
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-primary" style="flex:1;" onclick="window.printTableQrStand()">
+            <i class="fas fa-print"></i> <span>QR-Stendni Chop etish</span>
+          </button>
+          <button type="button" class="btn btn-outline-gold" onclick="window.copyTableQrLink()">
+            <i class="fas fa-link"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(waiterModal);
+
+  window.switchServiceTab = function(tab) {
+    const isW = tab === 'waiter';
+    document.getElementById('serviceTabWaiter').style.display = isW ? 'block' : 'none';
+    document.getElementById('serviceTabQr').style.display = isW ? 'none' : 'block';
+    document.getElementById('tabBtnWaiter').classList.toggle('active', isW);
+    document.getElementById('tabBtnQr').classList.toggle('active', !isW);
+    if (!isW) window.updateGeneratedTableQr();
+  };
+
+  window.selectQuickTable = function(tableName) {
+    savedQrTable = tableName;
+    localStorage.setItem('iqbol_qr_table', tableName);
+    const inp = document.getElementById('waiterTableInput');
+    if (inp) inp.value = tableName;
+    if (cTableInputEl) cTableInputEl.value = tableName;
+    const btnTxtEl = document.getElementById('waiterBtnTxt');
+    if (btnTxtEl) btnTxtEl.textContent = `${tableName} • Ofitsiant & QR`;
+    document.querySelectorAll('.quick-table-chip').forEach(c => {
+      c.classList.toggle('active', c.textContent === tableName);
+    });
+  };
+
+  window.updateGeneratedTableQr = function() {
+    const hall = document.getElementById('qrGenHallSelect').value;
+    const num = document.getElementById('qrGenNumInput').value || '1';
+    const fullTableLabel = `${hall} #${num}`;
+    const baseSiteUrl = window.location.origin && window.location.origin !== 'null'
+      ? window.location.origin + window.location.pathname
+      : 'https://iqbol2.vercel.app/';
+    const fullQrUrl = `${baseSiteUrl}?table=${encodeURIComponent(fullTableLabel)}`;
+    const qrApiImg = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=8&data=${encodeURIComponent(fullQrUrl)}`;
+
+    const titleEl = document.getElementById('qrPreviewTableTitle');
+    const imgEl = document.getElementById('qrCodeGeneratedImg');
+    const urlEl = document.getElementById('qrPreviewUrlTxt');
+    if (titleEl) titleEl.textContent = fullTableLabel;
+    if (imgEl) imgEl.src = qrApiImg;
+    if (urlEl) urlEl.textContent = fullQrUrl;
+    window.selectQuickTable(fullTableLabel);
+  };
+
+  window.copyTableQrLink = function() {
+    const urlEl = document.getElementById('qrPreviewUrlTxt');
+    if (urlEl && navigator.clipboard) {
+      navigator.clipboard.writeText(urlEl.textContent).catch(() => {});
+      showToast('Stol QR-havolasi nusxalandi!', 'fa-copy');
+    }
+  };
+
+  window.printTableQrStand = function() {
+    const title = document.getElementById('qrPreviewTableTitle').textContent;
+    const qrSrc = document.getElementById('qrCodeGeneratedImg').src;
+    const printWin = window.open('', '_blank', 'width=500,height=650');
+    if (!printWin) return showToast('Brauzerda pop-up oynaga ruxsat bering!', 'fa-exclamation-circle');
+    printWin.document.write(`
+      <html>
+        <head>
+          <title>IQBOL QR - ${title}</title>
+          <style>
+            body { font-family: Georgia, serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; background:#f5f5f5; }
+            .stand { width:320px; padding:28px; border-radius:24px; background:#091e16; color:#fff; border:4px solid #d4af37; text-align:center; }
+            .sub { color:#f3d889; font-size:12px; letter-spacing:4px; text-transform:uppercase; }
+            h1 { font-size:32px; margin:8px 0 4px 0; color:#fff; letter-spacing:3px; }
+            h2 { font-size:24px; margin:4px 0 16px 0; color:#f3d889; }
+            .qr-box { background:#fff; padding:14px; border-radius:18px; display:inline-block; border:3px solid #d4af37; }
+            .qr-box img { width:210px; height:210px; display:block; }
+            .foot { margin-top:16px; font-size:14px; color:#f3d889; font-family: sans-serif; font-weight:bold; }
+          </style>
+        </head>
+        <body>
+          <div class="stand">
+            <div class="sub">Oilaviy Restoran</div>
+            <h1>IQBOL</h1>
+            <h2>${title}</h2>
+            <div class="qr-box"><img src="${qrSrc}" onload="setTimeout(() => { window.print(); }, 300);" /></div>
+            <div class="foot">📱 Kamerani yo'naltiring:<br>Menyu • Buyurtma • Ofitsiant chaqirish</div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
+  window.openWaiterModal = function(defaultTab = 'waiter') {
+    const inp = document.getElementById('waiterTableInput');
+    if (inp && !inp.value && savedQrTable) inp.value = savedQrTable;
+    window.switchServiceTab(defaultTab);
+    waiterModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeWaiterModal = function() {
+    waiterModal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  let waiterCooldownInt = null;
+  window.sendWaiterRequest = async function(actionType, defaultNote) {
+    const inp = document.getElementById('waiterTableInput');
+    const customNoteEl = document.getElementById('waiterCustomNote');
+    const tableVal = inp ? inp.value.trim() : '';
+    if (!tableVal) {
+      showToast('Iltimos, avval stol yoki kabina raqamingizni yozing!', 'fa-exclamation-triangle');
+      if (inp) inp.focus();
+      return;
+    }
+    window.selectQuickTable(tableVal);
+    const noteVal = (customNoteEl && customNoteEl.value.trim()) ? `${defaultNote} (${customNoteEl.value.trim()})` : defaultNote;
+
+    try {
+      showToast('Ofitsiantga xabar yuborilmoqda...', 'fa-spinner');
+      const res = await fetch(`${API_URL}/waiter/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          table: tableVal,
+          actionType,
+          customerName: currentUser ? currentUser.name : 'Mehmon',
+          customerPhone: currentUser ? currentUser.phone : '',
+          note: noteVal
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (customNoteEl) customNoteEl.value = '';
+        showToast(`✅ ${tableVal} ga ofitsiant chaqirildi!`, 'fa-check-circle');
+        const cdBox = document.getElementById('waiterCooldownBox');
+        const cdTimer = document.getElementById('waiterCooldownTimer');
+        if (cdBox && cdTimer) {
+          cdBox.style.display = 'block';
+          let sec = 45;
+          cdTimer.textContent = sec;
+          if (waiterCooldownInt) clearInterval(waiterCooldownInt);
+          waiterCooldownInt = setInterval(() => {
+            sec--;
+            cdTimer.textContent = sec;
+            if (sec <= 0) {
+              clearInterval(waiterCooldownInt);
+              cdBox.style.display = 'none';
+            }
+          }, 1000);
+        }
+      } else {
+        showToast(data.message || 'Xatolik yuz berdi', 'fa-exclamation-circle');
+      }
+    } catch (e) {
+      showToast("Server bilan aloqa yo'q!", 'fa-wifi');
+    }
+  };
+
+  /* ==========================================================================
+     0.04 UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI (LIVE ORDER TRACKER)
+     ========================================================================== */
+  const uzumFloatWidget = document.createElement('div');
+  uzumFloatWidget.id = 'uzumFloatingTracker';
+  uzumFloatWidget.innerHTML = `
+    <div class="uzum-float-top">
+      <div class="uzum-float-left">
+        <div id="uzumFloatIcon" class="uzum-float-anim-icon"><i class="fas fa-fire-burner"></i></div>
+        <div style="text-align:left;">
+          <div id="uzumFloatTitle" style="font-weight:800; font-size:0.88rem; color:#ffffff; line-height:1.2;">Buyurtma qabul qilindi</div>
+          <div id="uzumFloatSub" style="font-size:0.73rem; color:#f3d889;">Oshxona tasdiqladi • Bosib ko'ring</div>
+        </div>
+      </div>
+      <span id="uzumFloatEta" class="uzum-eta-pill">~20-25 daq</span>
+    </div>
+    <div class="uzum-segmented-bar">
+      <div id="uFloatSeg_0" class="uzum-seg-item active"></div>
+      <div id="uFloatSeg_1" class="uzum-seg-item"></div>
+      <div id="uFloatSeg_2" class="uzum-seg-item"></div>
+      <div id="uFloatSeg_3" class="uzum-seg-item"></div>
+    </div>
+  `;
+  uzumFloatWidget.onclick = () => window.openLiveTrackerModal();
+  document.body.appendChild(uzumFloatWidget);
+
+  const trackerModal = document.createElement('div');
+  trackerModal.id = 'liveOrderModal';
+  trackerModal.className = 'modal-wrapper';
+  trackerModal.innerHTML = `
+    <div class="modal-overlay" onclick="window.closeLiveTrackerModal()"></div>
+    <div class="modal-card" style="max-width: 470px; padding: 1.75rem; text-align: center;">
+      <button type="button" class="modal-close-btn" onclick="window.closeLiveTrackerModal()"><i class="fas fa-times"></i></button>
+      
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.85rem;">
+        <span id="trackerModalOrderId" style="font-size:0.82rem; font-weight:800; color:var(--accent-gold); background:rgba(212,175,55,0.14); padding:4px 12px; border-radius:99px; border:1px solid rgba(212,175,55,0.35);">Buyurtma #IQB-000000</span>
+        <span id="trackerModalEtaBadge" class="uzum-eta-pill" style="margin-right:28px;">⏱ ~20-25 daqiqa</span>
+      </div>
+
+      <!-- UZUM TEZKOR HERO STATUS KARTOCHKASI -->
+      <div class="uzum-hero-status-box">
+        <div style="display:flex; align-items:center; gap:14px; margin-bottom:1.1rem;">
+          <div id="uzumModalStageIcon" class="uzum-stage-visual">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div style="flex:1;">
+            <h3 id="uzumModalStageTitle" class="font-display" style="font-size:1.45rem; font-weight:800; color:#ffffff; line-height:1.15; margin-bottom:4px;">Buyurtmangiz qabul qilindi</h3>
+            <p id="uzumModalStageDesc" style="font-size:0.8rem; color:rgba(255,255,255,0.75); line-height:1.35;">Oshxonamiz buyurtmangizni oldi va hozir tayyorlashni boshlaydi.</p>
+          </div>
+        </div>
+
+        <!-- 4 Bo'lakli Uzum Tezkor Progress Chizig'i -->
+        <div class="uzum-segmented-bar" style="height:6px;">
+          <div id="uModalSeg_0" class="uzum-seg-item active" style="height:6px;"></div>
+          <div id="uModalSeg_1" class="uzum-seg-item" style="height:6px;"></div>
+          <div id="uModalSeg_2" class="uzum-seg-item" style="height:6px;"></div>
+          <div id="uModalSeg_3" class="uzum-seg-item" style="height:6px;"></div>
+        </div>
+
+        <div class="uzum-step-nodes">
+          <div id="uNode_0" class="uzum-node-label active">
+            <i class="fas fa-check-circle"></i>
+            <span>Qabul qilindi</span>
+          </div>
+          <div id="uNode_1" class="uzum-node-label">
+            <i class="fas fa-fire-burner"></i>
+            <span>Pishirilmoqda</span>
+          </div>
+          <div id="uNode_2" class="uzum-node-label">
+            <i class="fas fa-motorcycle"></i>
+            <span>Yo'lda / Stolda</span>
+          </div>
+          <div id="uNode_3" class="uzum-node-label">
+            <i class="fas fa-utensils"></i>
+            <span>Topshirildi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BUYURTMA TARKIBI VA MANZIL -->
+      <div class="uzum-order-receipt-box">
+        <div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-gold); margin-bottom:6px;">
+          <i class="fas fa-receipt"></i> Buyurtma tafsilotlari
+        </div>
+        <div id="uzumTrackerOrderDetails" style="font-size:0.82rem; color:var(--text-main); white-space:pre-line; line-height:1.45;">
+          Buyurtma ma'lumotlari yuklanmoqda...
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn btn-outline-gold" style="flex:1;" onclick="window.closeLiveTrackerModal(); window.openWaiterModal('waiter');">
+          <i class="fas fa-concierge-bell"></i> <span>Ofitsiant</span>
+        </button>
+        <button type="button" class="btn btn-primary" style="flex:1;" onclick="window.closeLiveTrackerModal()">
+          <span>Yopish</span>
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(trackerModal);
+
+  let orderStatusPollInterval = null;
+  let lastKnownStep = '';
+
+  window.openLiveTrackerModal = function() {
+    trackerModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeLiveTrackerModal = function() {
+    trackerModal.classList.remove('open');
+    document.body.style.overflow = '';
+  };
+
+  const UZUM_STAGE_CONFIG = {
+    accepted: {
+      idx: 0,
+      icon: 'fa-clipboard-check',
+      floatTitle: 'Buyurtma qabul qilindi 📝',
+      floatSub: 'Oshxonaga uzatildi • Bosib kuzating',
+      modalTitle: 'Buyurtmangiz qabul qilindi!',
+      modalDesc: 'Oshxonamiz buyurtmangizni qabul qildi. Oshpazlarimiz saralangan masalliqlarni tayyorlamoqda.',
+      eta: '~20–25 daq'
+    },
+    cooking: {
+      idx: 1,
+      icon: 'fa-fire-burner',
+      floatTitle: 'Oshxonada pishirilmoqda 🔥',
+      floatSub: 'Oshpazlarimiz tayyorlamoqda • Jonli kuzatuv',
+      modalTitle: 'Taomingiz olovda pishirilmoqda!',
+      modalDesc: 'Usta oshpazlarimiz buyurtmangizni issiqqina va mazali qilib tayyorlashmoqda.',
+      eta: '~12–15 daq'
+    },
+    delivering: {
+      idx: 2,
+      icon: 'fa-motorcycle',
+      floatTitle: "Yo'lga chiqdi / Tortilmoqda 🛵",
+      floatSub: 'Issiqqina holatda siz tomonda!',
+      modalTitle: "Buyurtmangiz yo'lda / Stolga tortilmoqda!",
+      modalDesc: "Taom tayyor bo'ldi! Kuryerimiz yoki ofitsiantimiz uni sizga yetkazmoqda.",
+      eta: '~3–5 daq'
+    },
+    completed: {
+      idx: 3,
+      icon: 'fa-check-double',
+      floatTitle: 'Topshirildi • Yoqimli ishtaha! ✅',
+      floatSub: 'IQBOL restorani bilan bo\'lganingiz uchun rahmat',
+      modalTitle: 'Buyurtma topshirildi — Yoqimli ishtaha!',
+      modalDesc: 'Taomlarimiz sizga va oilangizga manzur bo\'ladi degan umiddamiz!',
+      eta: 'Tayyor ✅'
+    }
+  };
+
+  function updateTrackerStepUI(orderId, step) {
+    const cfg = UZUM_STAGE_CONFIG[step];
+    if (!cfg) return;
+
+    const idEl = document.getElementById('trackerModalOrderId');
+    if (idEl) idEl.textContent = `Buyurtma #${orderId}`;
+
+    document.getElementById('uzumFloatIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
+    document.getElementById('uzumFloatTitle').textContent = `${cfg.floatTitle}`;
+    document.getElementById('uzumFloatSub').textContent = `#${orderId} • ${cfg.floatSub}`;
+    document.getElementById('uzumFloatEta').textContent = cfg.eta;
+
+    document.getElementById('trackerModalEtaBadge').textContent = `⏱ ${cfg.eta}`;
+    document.getElementById('uzumModalStageIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
+    document.getElementById('uzumModalStageTitle').textContent = cfg.modalTitle;
+    document.getElementById('uzumModalStageDesc').textContent = cfg.modalDesc;
+
+    const savedReceipt = localStorage.getItem('iqbol_active_order_details');
+    const detEl = document.getElementById('uzumTrackerOrderDetails');
+    if (detEl && savedReceipt) detEl.textContent = savedReceipt;
+
+    for (let i = 0; i < 4; i++) {
+      const fSeg = document.getElementById(`uFloatSeg_${i}`);
+      const mSeg = document.getElementById(`uModalSeg_${i}`);
+      const mNode = document.getElementById(`uNode_${i}`);
+      [fSeg, mSeg, mNode].forEach(el => {
+        if (!el) return;
+        el.classList.remove('active', 'done');
+        if (i < cfg.idx || step === 'completed') el.classList.add('done');
+        else if (i === cfg.idx) el.classList.add('active');
+      });
+    }
+
+    if (lastKnownStep && lastKnownStep !== step) {
+      showToast(`${cfg.floatTitle} (#${orderId})`, 'fa-bell');
+    }
+    lastKnownStep = step;
+
+    if (step === 'completed') {
+      setTimeout(() => {
+        localStorage.removeItem('iqbol_active_order');
+        uzumFloatWidget.classList.remove('active');
+        if (orderStatusPollInterval) clearInterval(orderStatusPollInterval);
+      }, 30000);
+    }
+  }
+
+  function startLiveOrderTracking(orderId, receiptSummaryText) {
+    if (!orderId) return;
+    localStorage.setItem('iqbol_active_order', orderId);
+    if (receiptSummaryText) {
+      localStorage.setItem('iqbol_active_order_details', receiptSummaryText);
+    }
+    uzumFloatWidget.classList.add('active');
+    updateTrackerStepUI(orderId, 'accepted');
+
+    if (orderStatusPollInterval) clearInterval(orderStatusPollInterval);
+    orderStatusPollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_URL}/order/status/${orderId}`);
+        const data = await res.json();
+        if (data && data.success && data.step) {
+          updateTrackerStepUI(orderId, data.step);
+        }
+      } catch (e) {}
+    }, 2500);
+  }
+
+  const existingActiveOrd = localStorage.getItem('iqbol_active_order');
+  if (existingActiveOrd) {
+    startLiveOrderTracking(existingActiveOrd);
+  }
 
   /* ==========================================================================
      0.05 TO'LOVNI JONLI KUTISH VA TASDIQLASH OYNASI
@@ -788,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     0.2 GOOGLE SIGN-IN LOGIKASI (MOBILDA HAMBURGER ICHIGA JOYLASH)
+     0.2 GOOGLE SIGN-IN LOGIKASI
      ========================================================================== */
   function ensureHeaderGoogleContainerExists() {
     let headerContainer = document.getElementById('googleSignInContainer');
@@ -880,16 +1709,12 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `<small title="${currentUser.email}"><i class="fas fa-check-circle" style="color:#2ecc71;"></i> ${currentUser.phone}</small>`
         : `<small onclick="window.closeMobileNav(); window.openOtpModal()" style="color:#ffb142; text-decoration:underline; cursor:pointer;">+ Raqamni ulash</small>`;
 
-      if (googleWrap) {
-        googleWrap.remove();
-      }
+      if (googleWrap) googleWrap.remove();
       if (mobileGoogle) {
         mobileGoogle.innerHTML = '';
         mobileGoogle.classList.add('force-hide-auth');
       }
-      if (checkoutNotice) {
-        checkoutNotice.classList.add('force-hide-auth');
-      }
+      if (checkoutNotice) checkoutNotice.classList.add('force-hide-auth');
 
       if (chip) {
         chip.removeAttribute('style');
@@ -926,12 +1751,8 @@ document.addEventListener('DOMContentLoaded', () => {
         mobileChip.removeAttribute('style');
         mobileChip.classList.add('force-hide-auth');
       }
-      if (mobileGoogle) {
-        mobileGoogle.classList.remove('force-hide-auth');
-      }
-      if (checkoutNotice) {
-        checkoutNotice.classList.remove('force-hide-auth');
-      }
+      if (mobileGoogle) mobileGoogle.classList.remove('force-hide-auth');
+      if (checkoutNotice) checkoutNotice.classList.remove('force-hide-auth');
       if (cPhone) cPhone.readOnly = false;
       if (rPhone) rPhone.readOnly = false;
 
@@ -1273,7 +2094,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI
+     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI + UZUM TEZKOR LIVE TRACKING
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -1282,6 +2103,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (checkoutModal) {
       checkoutModal.classList.add('open');
       document.body.style.overflow = 'hidden';
+      if (cTableInputEl && !cTableInputEl.value && savedQrTable) cTableInputEl.value = savedQrTable;
       ensureDeliveryZoneSelect();
       ensurePaymentSelectorUI();
       renderUserUI();
@@ -1414,30 +2236,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
       let totalSum = subtotal + extraFee;
       const orderId = 'IQB-' + Math.floor(100000 + Math.random() * 900000);
-      const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || 'Tanlanmagan'}`;
+      const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || savedQrTable || 'Tanlanmagan'}`;
+      const receiptSummaryText = `📍 ${deliveryText}\n💳 To'lov: ${selectedPaymentMethod} | Jami: ${formatPrice(totalSum)}\n\n${orderLinesText}`;
 
       if (selectedPaymentMethod === 'Naqd') {
         isSubmitting = true;
         const submitBtn = checkoutForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
 
-        const BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns'; 
-        const FOOD_CHAT_ID = '8072569639';
-        const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}`;
-        
         try {
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: FOOD_CHAT_ID, text: tgText })
+          await fetch(`${API_URL}/order/create-cash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId, name, phone, email: currentUser.email,
+              deliveryText, orderLinesText,
+              subtotalText: formatPrice(subtotal),
+              feeTitle, extraFeeText: formatPrice(extraFee),
+              totalText: formatPrice(totalSum), note
+            })
           });
         } catch (err) {}
 
         window.closeCheckout();
-        showSuccessModal({
-          title: 'Buyurtmangiz qabul qilindi!',
-          subtitle: `Raqam: #${orderId} | To'lov: Naqd`,
-          message: `Tez orada operator aloqaga chiqadi.`,
-          details: `${deliveryText}\nGoogle: ${currentUser.email}\nTel: ${phone}\nJami: ${formatPrice(totalSum)}\n\n${orderLinesText}`
-        });
+        startLiveOrderTracking(orderId, receiptSummaryText);
+        window.openLiveTrackerModal();
         cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
         return;
       }
@@ -1498,8 +2321,9 @@ document.addEventListener('DOMContentLoaded', () => {
               iconEl.innerHTML = '<i class="fas fa-check"></i>';
               titleEl.textContent = "✅ To'lov tasdiqlandi!";
               descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi va buyurtmangiz (#${orderId}) oshxonaga yuborildi!`;
-              actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal()">Yopish</button>`;
+              actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal(); window.openLiveTrackerModal();">Uzum Tezkor kuzatuvini ochish</button>`;
               cart = []; saveCart();
+              startLiveOrderTracking(orderId, receiptSummaryText);
             } else if (stData.status === 'rejected') {
               clearInterval(payPollInterval);
               spinnerEl.style.display = 'none';
@@ -1672,7 +2496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeLightbox = function() { if (!lightboxModal) return; lightboxModal.classList.remove('open'); document.body.style.overflow = ''; };
   window.changeLightbox = function(step) { activeLightboxIndex += step; if (activeLightboxIndex < 0) activeLightboxIndex = GALLERY_IMAGES.length - 1; if (activeLightboxIndex >= GALLERY_IMAGES.length) activeLightboxIndex = 0; const item = GALLERY_IMAGES[activeLightboxIndex]; if (item) { lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; } };
 
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox(); window.closeOtpModal(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox(); window.closeOtpModal(); window.closeWaiterModal(); window.closeLiveTrackerModal(); } });
 
   const heroVideo = document.getElementById('heroVideo'); if (heroVideo) { heroVideo.muted = true; heroVideo.play().catch(() => {}); }
 
