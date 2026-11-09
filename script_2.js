@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (UZUM TEZKOR LIVE TRACKER + PRO OFITSIANT CHAQIRISH + STOL QR GENERATOR + 3D INTRO + GOOGLE/TG OTP + CLICK/PAYME/PAYNET)
+ * (CHEF VA DASTAVSHIK TELEGRAM BOSHQARUVI + 100% ZAKAZ TUSHIRISH KAFOLATI + UZUM TEZKOR TRACKER + QR STOL)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -237,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
       95% { transform: rotate(10deg); }
     }
 
-    /* Uzum Tezkor Floating Mini-Widget */
     #uzumFloatingTracker {
       position: fixed;
       bottom: 22px;
@@ -296,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
       box-shadow: 0 4px 12px rgba(46, 204, 113, 0.35);
     }
 
-    /* Uzum Tezkor 4-Segmentli Progress Bar */
     .uzum-segmented-bar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -329,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
       100% { transform: translateX(100%); }
     }
 
-    /* Uzum Tezkor Modal Ichki Dizayni */
     .uzum-hero-status-box {
       background: linear-gradient(145deg, rgba(17, 48, 37, 0.95), rgba(7, 24, 18, 0.98));
       border: 1px solid rgba(212, 175, 55, 0.4);
@@ -391,7 +388,6 @@ document.addEventListener('DOMContentLoaded', () => {
       overflow-y: auto;
     }
 
-    /* Ofitsiant va QR Modal Tablari */
     .service-tabs-nav {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -481,7 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     .waiter-action-card:hover i { color: #091e16; }
 
-    /* Stol QR-Kod Kartochkasi */
     .qr-stand-preview {
       background: linear-gradient(145deg, #0d291e, #06150f);
       border: 2px solid #d4af37;
@@ -660,13 +655,54 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ==========================================================================
-     ASOSIY KONFIGURATSIYA
+     ASOSIY KONFIGURATSIYA VA 100% ISHLAYDIGAN TELEGRAM MULTI-CHAT YUBORUVCHI
      ========================================================================== */
   const RESTAURANT_CARD = '9860 1701 1569 3682';
   const RESTAURANT_CARD_RAW = '9860170115693682';
   const API_URL = 'https://iqbol.onrender.com/api';
   const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
   const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
+
+  const DIRECT_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
+  // Ikkala ID ga ham yuboramiz: 7225335915 (Asosiy) va 8072569639
+  const DIRECT_STAFF_CHAT_IDS = ['7225335915', '8072569639'];
+
+  async function sendDirectTelegramToAllStaff(text, replyMarkup = null) {
+    let anySuccess = false;
+    for (const chatId of DIRECT_STAFF_CHAT_IDS) {
+      try {
+        const payload = { chat_id: chatId, text };
+        if (replyMarkup) payload.reply_markup = replyMarkup;
+        const res = await fetch(`https://api.telegram.org/bot${DIRECT_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data && data.ok) anySuccess = true;
+      } catch (e) {}
+    }
+    return anySuccess;
+  }
+
+  function buildChefAndCourierInlineKeyboard(orderId) {
+    return {
+      inline_keyboard: [
+        [
+          { text: "🔥 Chef: 10-15 daq", callback_data: `c_15_${orderId}` },
+          { text: "🔥 Chef: 20-25 daq", callback_data: `c_25_${orderId}` },
+          { text: "🔥 Chef: 30-40 daq", callback_data: `c_35_${orderId}` }
+        ],
+        [
+          { text: "👨‍🍳✅ CHEF: OVQAT TAYYOR BO'LDI!", callback_data: `c_rdy_${orderId}` }
+        ],
+        [
+          { text: "🛵 Dastavshik: Yo'lga chiqdim", callback_data: `d_way_${orderId}` },
+          { text: "🏁 Topshirildi (Yopish)", callback_data: `d_end_${orderId}` }
+        ]
+      ]
+    };
+  }
 
   const PAYMENT_APPS = {
     Click: {
@@ -719,7 +755,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI (DARK MODE VA SAVAT RESPONSIVE FIX BILAN)
+     0. CSS VA INTERFEYS DIZAYNI
      ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
@@ -994,7 +1030,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </button>
       </div>
 
-      <!-- TAB 1: OFITSIANT CHAQIRISH -->
       <div id="serviceTabWaiter">
         <h3 class="font-display" style="font-size: 1.55rem; color: var(--text-main); margin-bottom: 0.25rem;">Tezkor Stol Xizmati</h3>
         <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.85rem;">Stolingizni tanlang va kerakli tugmani bosing — ofitsiant darhol yetib keladi:</p>
@@ -1014,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div id="waiterCooldownBox" style="display:none; padding:0.75rem; border-radius:12px; background:rgba(46,204,113,0.14); border:1px solid #2ecc71; color:#2ecc71; font-weight:700; font-size:0.84rem; margin-bottom:0.75rem;">
-          <i class="fas fa-check-circle"></i> Ofitsiantga xabar yuborildi! (<span id="waiterCooldownTimer">60</span>s)
+          <i class="fas fa-check-circle"></i> Ofitsiantga xabar yuborildi! (<span id="waiterCooldownTimer">45</span>s)
         </div>
 
         <div class="waiter-action-grid">
@@ -1049,7 +1084,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- TAB 2: STOL QR-KODI GENERATORI VA CHOP ETISH -->
       <div id="serviceTabQr" style="display:none;">
         <div class="qr-stand-preview" id="qrPrintableCard">
           <div style="font-size:0.72rem; letter-spacing:0.22em; color:#f3d889; text-transform:uppercase; font-weight:700;">IQBOL OILAVIY RESTORAN</div>
@@ -1197,50 +1231,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.selectQuickTable(tableVal);
     const noteVal = (customNoteEl && customNoteEl.value.trim()) ? `${defaultNote} (${customNoteEl.value.trim()})` : defaultNote;
+    const customerName = currentUser ? currentUser.name : 'Mehmon';
+    const customerPhone = currentUser ? (currentUser.phone || 'Kiritilmagan') : 'Kiritilmagan';
 
-    try {
-      showToast('Ofitsiantga xabar yuborilmoqda...', 'fa-spinner');
-      const res = await fetch(`${API_URL}/waiter/call`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          table: tableVal,
-          actionType,
-          customerName: currentUser ? currentUser.name : 'Mehmon',
-          customerPhone: currentUser ? currentUser.phone : '',
-          note: noteVal
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        if (customNoteEl) customNoteEl.value = '';
-        showToast(`✅ ${tableVal} ga ofitsiant chaqirildi!`, 'fa-check-circle');
-        const cdBox = document.getElementById('waiterCooldownBox');
-        const cdTimer = document.getElementById('waiterCooldownTimer');
-        if (cdBox && cdTimer) {
-          cdBox.style.display = 'block';
-          let sec = 45;
+    showToast('Ofitsiantga xabar yuborilmoqda...', 'fa-spinner');
+
+    const callId = Math.floor(1000 + Math.random() * 9000);
+    let actionTitle = '🛎 OFITSIANT CHAQIRUVI!';
+    if (actionType === 'bill') actionTitle = "🧾 HISOBNI (CHEKNI) SO'RASH!";
+    if (actionType === 'tea_bread') actionTitle = "🫖 CHOY / NON QO'SHISH SO'ROVI!";
+
+    const msgText = `🚨 ${actionTitle}\n\n🪑 Stol / Joy: ${tableVal}\n👤 Mijoz: ${customerName}\n📞 Tel: ${customerPhone}\n📝 Izoh: ${noteVal}\n⏰ Vaqt: ${new Date().toLocaleTimeString('uz-UZ')}`;
+
+    // Bevosita Telegram API ga yuboramiz (7225335915 va 8072569639 ga darhol tushadi)
+    const delivered = await sendDirectTelegramToAllStaff(msgText, {
+      inline_keyboard: [[{ text: "✅ Xizmat ko'rsatildi", callback_data: `waiter_done_${callId}` }]]
+    });
+
+    if (delivered) {
+      if (customNoteEl) customNoteEl.value = '';
+      showToast(`✅ ${tableVal} ga ofitsiant chaqirildi!`, 'fa-check-circle');
+      const cdBox = document.getElementById('waiterCooldownBox');
+      const cdTimer = document.getElementById('waiterCooldownTimer');
+      if (cdBox && cdTimer) {
+        cdBox.style.display = 'block';
+        let sec = 45;
+        cdTimer.textContent = sec;
+        if (waiterCooldownInt) clearInterval(waiterCooldownInt);
+        waiterCooldownInt = setInterval(() => {
+          sec--;
           cdTimer.textContent = sec;
-          if (waiterCooldownInt) clearInterval(waiterCooldownInt);
-          waiterCooldownInt = setInterval(() => {
-            sec--;
-            cdTimer.textContent = sec;
-            if (sec <= 0) {
-              clearInterval(waiterCooldownInt);
-              cdBox.style.display = 'none';
-            }
-          }, 1000);
-        }
-      } else {
-        showToast(data.message || 'Xatolik yuz berdi', 'fa-exclamation-circle');
+          if (sec <= 0) {
+            clearInterval(waiterCooldownInt);
+            cdBox.style.display = 'none';
+          }
+        }, 1000);
       }
-    } catch (e) {
-      showToast("Server bilan aloqa yo'q!", 'fa-wifi');
+    } else {
+      showToast("Internet aloqangizni tekshiring!", 'fa-wifi');
     }
   };
 
   /* ==========================================================================
-     0.04 UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI (LIVE ORDER TRACKER)
+     0.04 UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI (CHEF VA DASTAVSHIK BILAN)
      ========================================================================== */
   const uzumFloatWidget = document.createElement('div');
   uzumFloatWidget.id = 'uzumFloatingTracker';
@@ -1250,10 +1283,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="uzumFloatIcon" class="uzum-float-anim-icon"><i class="fas fa-fire-burner"></i></div>
         <div style="text-align:left;">
           <div id="uzumFloatTitle" style="font-weight:800; font-size:0.88rem; color:#ffffff; line-height:1.2;">Buyurtma qabul qilindi</div>
-          <div id="uzumFloatSub" style="font-size:0.73rem; color:#f3d889;">Oshxona tasdiqladi • Bosib ko'ring</div>
+          <div id="uzumFloatSub" style="font-size:0.73rem; color:#f3d889;">Chef tasdiqlamoqda • Bosib ko'ring</div>
         </div>
       </div>
-      <span id="uzumFloatEta" class="uzum-eta-pill">~20-25 daq</span>
+      <span id="uzumFloatEta" class="uzum-eta-pill">⏳ Chef...</span>
     </div>
     <div class="uzum-segmented-bar">
       <div id="uFloatSeg_0" class="uzum-seg-item active"></div>
@@ -1275,10 +1308,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.85rem;">
         <span id="trackerModalOrderId" style="font-size:0.82rem; font-weight:800; color:var(--accent-gold); background:rgba(212,175,55,0.14); padding:4px 12px; border-radius:99px; border:1px solid rgba(212,175,55,0.35);">Buyurtma #IQB-000000</span>
-        <span id="trackerModalEtaBadge" class="uzum-eta-pill" style="margin-right:28px;">⏱ ~20-25 daqiqa</span>
+        <span id="trackerModalEtaBadge" class="uzum-eta-pill" style="margin-right:28px;">⏳ Chef belgilamoqda</span>
       </div>
 
-      <!-- UZUM TEZKOR HERO STATUS KARTOCHKASI -->
       <div class="uzum-hero-status-box">
         <div style="display:flex; align-items:center; gap:14px; margin-bottom:1.1rem;">
           <div id="uzumModalStageIcon" class="uzum-stage-visual">
@@ -1286,11 +1318,10 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div style="flex:1;">
             <h3 id="uzumModalStageTitle" class="font-display" style="font-size:1.45rem; font-weight:800; color:#ffffff; line-height:1.15; margin-bottom:4px;">Buyurtmangiz qabul qilindi</h3>
-            <p id="uzumModalStageDesc" style="font-size:0.8rem; color:rgba(255,255,255,0.75); line-height:1.35;">Oshxonamiz buyurtmangizni oldi va hozir tayyorlashni boshlaydi.</p>
+            <p id="uzumModalStageDesc" style="font-size:0.8rem; color:rgba(255,255,255,0.75); line-height:1.35;">Buyurtmangiz Bosh oshpazga (Chef) yuborildi. Hozir tayyor bo'lish vaqti belgilanadi.</p>
           </div>
         </div>
 
-        <!-- 4 Bo'lakli Uzum Tezkor Progress Chizig'i -->
         <div class="uzum-segmented-bar" style="height:6px;">
           <div id="uModalSeg_0" class="uzum-seg-item active" style="height:6px;"></div>
           <div id="uModalSeg_1" class="uzum-seg-item" style="height:6px;"></div>
@@ -1305,11 +1336,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div id="uNode_1" class="uzum-node-label">
             <i class="fas fa-fire-burner"></i>
-            <span>Pishirilmoqda</span>
+            <span>Chef pishirmoqda</span>
           </div>
           <div id="uNode_2" class="uzum-node-label">
             <i class="fas fa-motorcycle"></i>
-            <span>Yo'lda / Stolda</span>
+            <span>Tayyor / Yo'lda</span>
           </div>
           <div id="uNode_3" class="uzum-node-label">
             <i class="fas fa-utensils"></i>
@@ -1318,7 +1349,6 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- BUYURTMA TARKIBI VA MANZIL -->
       <div class="uzum-order-receipt-box">
         <div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-gold); margin-bottom:6px;">
           <i class="fas fa-receipt"></i> Buyurtma tafsilotlari
@@ -1341,7 +1371,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(trackerModal);
 
   let orderStatusPollInterval = null;
-  let lastKnownStep = '';
+  let lastKnownStepKey = '';
 
   window.openLiveTrackerModal = function() {
     trackerModal.classList.add('open');
@@ -1356,29 +1386,38 @@ document.addEventListener('DOMContentLoaded', () => {
     accepted: {
       idx: 0,
       icon: 'fa-clipboard-check',
-      floatTitle: 'Buyurtma qabul qilindi 📝',
-      floatSub: 'Oshxonaga uzatildi • Bosib kuzating',
+      floatTitle: 'Buyurtma Chefga yuborildi 📝',
+      floatSub: 'Chef tayyor bo\'lish vaqtini belgilamoqda...',
       modalTitle: 'Buyurtmangiz qabul qilindi!',
-      modalDesc: 'Oshxonamiz buyurtmangizni qabul qildi. Oshpazlarimiz saralangan masalliqlarni tayyorlamoqda.',
-      eta: '~20–25 daq'
+      modalDesc: 'Oshxonamiz buyurtmangizni qabul qildi. Hozir Bosh oshpaz (Chef) pishirish vaqtini tasdiqlaydi.',
+      defaultEta: '⏳ Chef kutilyapti'
     },
     cooking: {
       idx: 1,
       icon: 'fa-fire-burner',
-      floatTitle: 'Oshxonada pishirilmoqda 🔥',
-      floatSub: 'Oshpazlarimiz tayyorlamoqda • Jonli kuzatuv',
-      modalTitle: 'Taomingiz olovda pishirilmoqda!',
-      modalDesc: 'Usta oshpazlarimiz buyurtmangizni issiqqina va mazali qilib tayyorlashmoqda.',
-      eta: '~12–15 daq'
+      floatTitle: 'Chef ovqatni pishirmoqda 🔥',
+      floatSub: 'Oshpazimiz tayyorlamoqda • Jonli kuzatuv',
+      modalTitle: 'Chef taomingizni pishirmoqda!',
+      modalDesc: 'Bosh oshpaz buyurtmangizni pishirishni boshladi va tayyor bo\'lish vaqtini belgiladi.',
+      defaultEta: '~15–20 daq'
+    },
+    ready: {
+      idx: 2,
+      icon: 'fa-bell-concierge',
+      floatTitle: "Ovqat TAYYOR bo'ldi! 👨‍🍳✅",
+      floatSub: 'Dastavshik / Ofitsiantga topshirildi!',
+      modalTitle: "Chef: Ovqatingiz tayyor bo'ldi!",
+      modalDesc: "Taomingiz pishib tayyor bo'ldi va qadoqlandi! Hozir Dastavshik yoki Ofitsiant sizga olib boradi.",
+      defaultEta: '🔥 Tayyor!'
     },
     delivering: {
       idx: 2,
       icon: 'fa-motorcycle',
-      floatTitle: "Yo'lga chiqdi / Tortilmoqda 🛵",
+      floatTitle: "Dastavshik yo'lda / Tortilmoqda 🛵",
       floatSub: 'Issiqqina holatda siz tomonda!',
-      modalTitle: "Buyurtmangiz yo'lda / Stolga tortilmoqda!",
-      modalDesc: "Taom tayyor bo'ldi! Kuryerimiz yoki ofitsiantimiz uni sizga yetkazmoqda.",
-      eta: '~3–5 daq'
+      modalTitle: "Dastavshik yo'lga chiqdi!",
+      modalDesc: "Dastavshik (yoki ofitsiant) tayyor taomni oldi va sizga yetkazmoqda.",
+      defaultEta: '🛵 ~5–10 daq'
     },
     completed: {
       idx: 3,
@@ -1387,13 +1426,15 @@ document.addEventListener('DOMContentLoaded', () => {
       floatSub: 'IQBOL restorani bilan bo\'lganingiz uchun rahmat',
       modalTitle: 'Buyurtma topshirildi — Yoqimli ishtaha!',
       modalDesc: 'Taomlarimiz sizga va oilangizga manzur bo\'ladi degan umiddamiz!',
-      eta: 'Tayyor ✅'
+      defaultEta: 'Topshirildi ✅'
     }
   };
 
-  function updateTrackerStepUI(orderId, step) {
+  function updateTrackerStepUI(orderId, step, customEta) {
     const cfg = UZUM_STAGE_CONFIG[step];
     if (!cfg) return;
+
+    const displayEta = customEta || cfg.defaultEta;
 
     const idEl = document.getElementById('trackerModalOrderId');
     if (idEl) idEl.textContent = `Buyurtma #${orderId}`;
@@ -1401,9 +1442,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('uzumFloatIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
     document.getElementById('uzumFloatTitle').textContent = `${cfg.floatTitle}`;
     document.getElementById('uzumFloatSub').textContent = `#${orderId} • ${cfg.floatSub}`;
-    document.getElementById('uzumFloatEta').textContent = cfg.eta;
+    document.getElementById('uzumFloatEta').textContent = displayEta;
 
-    document.getElementById('trackerModalEtaBadge').textContent = `⏱ ${cfg.eta}`;
+    document.getElementById('trackerModalEtaBadge').textContent = `⏱ ${displayEta}`;
     document.getElementById('uzumModalStageIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
     document.getElementById('uzumModalStageTitle').textContent = cfg.modalTitle;
     document.getElementById('uzumModalStageDesc').textContent = cfg.modalDesc;
@@ -1424,10 +1465,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    if (lastKnownStep && lastKnownStep !== step) {
-      showToast(`${cfg.floatTitle} (#${orderId})`, 'fa-bell');
+    const stateKey = `${step}_${displayEta}`;
+    if (lastKnownStepKey && lastKnownStepKey !== stateKey) {
+      showToast(`${cfg.floatTitle} (${displayEta})`, 'fa-bell');
     }
-    lastKnownStep = step;
+    lastKnownStepKey = stateKey;
 
     if (step === 'completed') {
       setTimeout(() => {
@@ -1453,7 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch(`${API_URL}/order/status/${orderId}`);
         const data = await res.json();
         if (data && data.success && data.step) {
-          updateTrackerStepUI(orderId, data.step);
+          updateTrackerStepUI(orderId, data.step, data.eta);
         }
       } catch (e) {}
     }, 2500);
@@ -2094,7 +2136,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & REAL-TIME TO'LOV TEKSHIRUVI + UZUM TEZKOR LIVE TRACKING
+     4. CHECKOUT & CHEF/DASTAVSHIK TELEGRAM INTEGRATSIYASI
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -2244,19 +2286,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitBtn = checkoutForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
 
-        try {
-          await fetch(`${API_URL}/order/create-cash`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              orderId, name, phone, email: currentUser.email,
-              deliveryText, orderLinesText,
-              subtotalText: formatPrice(subtotal),
-              feeTitle, extraFeeText: formatPrice(extraFee),
-              totalText: formatPrice(totalSum), note
-            })
-          });
-        } catch (err) {}
+        const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
+
+        // 1. Darhol to'g'ridan-to'g'ri Telegram Botga (7225335915 va 8072569639 ga) Chef va Dastavshik tugmalari bilan yuboramiz!
+        await sendDirectTelegramToAllStaff(tgText, buildChefAndCourierInlineKeyboard(orderId));
+
+        // 2. Render serverni ham fonda xabardor qilib qo'yamiz
+        fetch(`${API_URL}/order/create-cash`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId, name, phone, email: currentUser.email,
+            deliveryText, orderLinesText,
+            subtotalText: formatPrice(subtotal),
+            feeTitle, extraFeeText: formatPrice(extraFee),
+            totalText: formatPrice(totalSum), note
+          })
+        }).catch(() => {});
 
         window.closeCheckout();
         startLiveOrderTracking(orderId, receiptSummaryText);
@@ -2265,89 +2311,97 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      // ONLAYN TO'LOV (CLICK / PAYME / PAYNET)
       isSubmitting = true;
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
 
-      try {
-        await fetch(`${API_URL}/payment/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId, name, phone, email: currentUser.email,
-            deliveryText, payMethod: `${selectedPaymentMethod} (${RESTAURANT_CARD})`,
-            orderLinesText, subtotalText: formatPrice(subtotal),
-            feeTitle, extraFeeText: formatPrice(extraFee),
-            totalText: formatPrice(totalSum), note
-          })
-        });
+      const tgPayText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${selectedPaymentMethod} (${RESTAURANT_CARD})\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Kutilayotgan summa: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${formatPrice(totalSum)} tushganini tekshirib, pastdagi tugmani bosing:`;
 
-        window.closeCheckout();
+      // 1. Darhol Telegram botga yuboramiz (7225335915 va 8072569639)
+      await sendDirectTelegramToAllStaff(tgPayText, {
+        inline_keyboard: [[
+          { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
+          { text: "❌ Tushmadi (Rad etish)", callback_data: `p_no_${orderId}` }
+        ]]
+      });
 
-        const spinnerEl = document.getElementById('payVerifySpinner');
-        const iconEl = document.getElementById('payVerifyIcon');
-        const titleEl = document.getElementById('payVerifyTitle');
-        const descEl = document.getElementById('payVerifyDesc');
-        const actEl = document.getElementById('payVerifyActions');
+      // 2. Render serverga ham yozib qo'yamiz
+      fetch(`${API_URL}/payment/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId, name, phone, email: currentUser.email,
+          deliveryText, payMethod: `${selectedPaymentMethod} (${RESTAURANT_CARD})`,
+          orderLinesText, subtotalText: formatPrice(subtotal),
+          feeTitle, extraFeeText: formatPrice(extraFee),
+          totalText: formatPrice(totalSum), note
+        })
+      }).catch(() => {});
 
-        spinnerEl.style.display = 'block';
-        iconEl.style.display = 'none';
-        titleEl.textContent = "To'lov tekshirilmoqda...";
-        descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${selectedPaymentMethod}</b> orqali <b>${formatPrice(totalSum)}</b> tushishi kutilmoqda.<br><br><small>Agar hali to'lov qilmagan bo'lsangiz, pastdagi tugma orqali ${selectedPaymentMethod} ilovasida to'lovni amalga oshiring:</small>`;
-        
-        const appInfo = PAYMENT_APPS[selectedPaymentMethod];
-        actEl.innerHTML = `
-          <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
-            <i class="fas fa-external-link-alt"></i> ${selectedPaymentMethod} ilovasini ochish (${formatPrice(totalSum)})
-          </button>
-          <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Bekor qilish</button>
-        `;
+      window.closeCheckout();
 
-        payCheckModal.classList.add('open');
-        document.body.style.overflow = 'hidden';
+      const spinnerEl = document.getElementById('payVerifySpinner');
+      const iconEl = document.getElementById('payVerifyIcon');
+      const titleEl = document.getElementById('payVerifyTitle');
+      const descEl = document.getElementById('payVerifyDesc');
+      const actEl = document.getElementById('payVerifyActions');
 
-        if (payPollInterval) clearInterval(payPollInterval);
-        payPollInterval = setInterval(async () => {
-          try {
-            const stRes = await fetch(`${API_URL}/payment/status/${orderId}`);
-            const stData = await stRes.json();
+      spinnerEl.style.display = 'block';
+      iconEl.style.display = 'none';
+      titleEl.textContent = "To'lov tekshirilmoqda...";
+      descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${selectedPaymentMethod}</b> orqali <b>${formatPrice(totalSum)}</b> tushishi kutilmoqda.<br><br><small>Agar hali to'lov qilmagan bo'lsangiz, pastdagi tugma orqali ${selectedPaymentMethod} ilovasida to'lovni amalga oshiring:</small>`;
+      
+      const appInfo = PAYMENT_APPS[selectedPaymentMethod];
+      actEl.innerHTML = `
+        <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
+          <i class="fas fa-external-link-alt"></i> ${selectedPaymentMethod} ilovasini ochish (${formatPrice(totalSum)})
+        </button>
+        <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Bekor qilish</button>
+      `;
 
-            if (stData.status === 'approved') {
-              clearInterval(payPollInterval);
-              spinnerEl.style.display = 'none';
-              iconEl.style.display = 'flex';
-              iconEl.style.background = 'rgba(46, 204, 113, 0.18)';
-              iconEl.style.color = '#2ecc71';
-              iconEl.innerHTML = '<i class="fas fa-check"></i>';
-              titleEl.textContent = "✅ To'lov tasdiqlandi!";
-              descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi va buyurtmangiz (#${orderId}) oshxonaga yuborildi!`;
-              actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal(); window.openLiveTrackerModal();">Uzum Tezkor kuzatuvini ochish</button>`;
-              cart = []; saveCart();
-              startLiveOrderTracking(orderId, receiptSummaryText);
-            } else if (stData.status === 'rejected') {
-              clearInterval(payPollInterval);
-              spinnerEl.style.display = 'none';
-              iconEl.style.display = 'flex';
-              iconEl.style.background = 'rgba(255, 107, 107, 0.18)';
-              iconEl.style.color = '#ff6b6b';
-              iconEl.innerHTML = '<i class="fas fa-times"></i>';
-              titleEl.textContent = "❌ To'lov tasdiqlanmadi!";
-              descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${formatPrice(totalSum)}</b> tushmadi!<br>Iltimos, to'lovni amalga oshirib qaytadan urinib ko'ring.`;
-              actEl.innerHTML = `
-                <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
-                  <i class="fas fa-redo"></i> ${selectedPaymentMethod} orqali qayta to'lash
-                </button>
-                <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Yopish</button>
-              `;
-            }
-          } catch (e) {}
-        }, 2000);
-      } catch (err) {
-        showToast("Server bilan aloqa yo'q!", 'fa-wifi');
-      } finally {
-        isSubmitting = false;
-        if (submitBtn) submitBtn.disabled = false;
-      }
+      payCheckModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (payPollInterval) clearInterval(payPollInterval);
+      payPollInterval = setInterval(async () => {
+        try {
+          const stRes = await fetch(`${API_URL}/payment/status/${orderId}`);
+          const stData = await stRes.json();
+
+          if (stData.status === 'approved') {
+            clearInterval(payPollInterval);
+            spinnerEl.style.display = 'none';
+            iconEl.style.display = 'flex';
+            iconEl.style.background = 'rgba(46, 204, 113, 0.18)';
+            iconEl.style.color = '#2ecc71';
+            iconEl.innerHTML = '<i class="fas fa-check"></i>';
+            titleEl.textContent = "✅ To'lov tasdiqlandi!";
+            descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi va buyurtmangiz (#${orderId}) Bosh oshpazga (Chef) yuborildi!`;
+            actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal(); window.openLiveTrackerModal();">Jonli kuzatuvni ochish</button>`;
+            cart = []; saveCart();
+            startLiveOrderTracking(orderId, receiptSummaryText);
+          } else if (stData.status === 'rejected') {
+            clearInterval(payPollInterval);
+            spinnerEl.style.display = 'none';
+            iconEl.style.display = 'flex';
+            iconEl.style.background = 'rgba(255, 107, 107, 0.18)';
+            iconEl.style.color = '#ff6b6b';
+            iconEl.innerHTML = '<i class="fas fa-times"></i>';
+            titleEl.textContent = "❌ To'lov tasdiqlanmadi!";
+            descEl.innerHTML = `<b>${RESTAURANT_CARD}</b> kartasiga <b>${formatPrice(totalSum)}</b> tushmadi!<br>Iltimos, to'lovni amalga oshirib qaytadan urinib ko'ring.`;
+            actEl.innerHTML = `
+              <button type="button" class="open-app-btn" style="background:${appInfo ? appInfo.color : '#0099ff'};" onclick="window.openPaymentApp('${selectedPaymentMethod}')">
+                <i class="fas fa-redo"></i> ${selectedPaymentMethod} orqali qayta to'lash
+              </button>
+              <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()" style="margin-top:6px;">Yopish</button>
+            `;
+          }
+        } catch (e) {}
+      }, 2000);
+
+      isSubmitting = false;
+      if (submitBtn) submitBtn.disabled = false;
     });
   }
 
@@ -2525,4 +2579,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPhoneMask(document.getElementById('resPhone'));
   setupPhoneMask(document.getElementById('checkoutPhone'));
   setupPhoneMask(document.getElementById('otpPhoneInput'));
-});
+}); 
