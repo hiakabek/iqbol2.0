@@ -6,13 +6,11 @@ const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
 const RESERVATION_CHAT_ID = '7225335915'; 
 const NEW_USER_CHAT_ID = '7225335915';
 
-// Telegram "Open" tugmasi bosilganda FAQAT JARAYON (Tracker) ochilishi uchun maxsus manzil:
+// Telegram "Open" tugmasi bosilganda FAQAT JARAYON (Tracker) ochilishi uchun manzil:
 const WEBAPP_TRACKER_URL = process.env.WEBAPP_URL || 'https://iqbol2.vercel.app/?mode=tracker';
 
-// Barcha zakazlar boradigan asosiy Admin, Chef va Dastavshik ID'lari
-const STAFF_CHAT_IDS = new Set(['7225335915', '8072569639']);
-const CHEF_CHAT_IDS = new Set(['7225335915', '8072569639']);
-const COURIER_CHAT_IDS = new Set(['7225335915', '8072569639']);
+// Asosiy qabul qiluvchi Admin/Chef ID (Bitta zakaz ikki marta kelmasligi uchun yagona ro'yxat)
+const STAFF_CHAT_IDS = new Set(['7225335915']);
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL || 'https://iqbol.onrender.com';
@@ -28,7 +26,8 @@ let pendingTgPhones = {};
 let otpStore = {};        
 let googleUserPhones = {}; 
 let paymentOrders = {}; 
-let activeOrders = {};  // orderId -> { orderId, step, eta, receiptText, phone, customerName, updatedAt }
+let activeOrders = {};  
+const sentOrderIds = new Set(); // Bitta buyurtma botga faqat 1 marta borishini kafolatlaydi!
 const seenUsers = new Set();
 let botUsername = '';
 
@@ -60,7 +59,6 @@ function tgRequest(method, payload, callback) {
     req.end();
 }
 
-// Botga ko'k "Open" tugmasini (Faqat Jarayonni ko'rsatadigan qilib) o'rnatish
 function setupTelegramOpenButton() {
     tgRequest('setChatMenuButton', {
         menu_button: {
@@ -70,8 +68,6 @@ function setupTelegramOpenButton() {
                 url: WEBAPP_TRACKER_URL
             }
         }
-    }, (res) => {
-        console.log("📲 Telegram 'Open' (Faqat Jarayon) tugmasi o'rnatildi:", res);
     });
 }
 
@@ -184,14 +180,12 @@ app.post('/api/auth/verify-otp', (req, res) => {
     res.json({ success: true, phone: formattedPhone, tgName: record.name });
 });
 
-// 3. NAQD BUYURTMA YARATISH VA CHEF TELEFONIGA YUBORISH
+// 3. NAQD BUYURTMA YARATISH (FAQAT 1 MARTA XABAR YUBORADI)
 app.post('/api/order/create-cash', (req, res) => {
     const { orderId, name, phone, email, deliveryText, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
 
     const receiptText = `📍 ${deliveryText}\n💳 To'lov: Naqd | Jami: ${totalText}\n\n${orderLinesText}`;
-    const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Jami to'lov: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
-
     activeOrders[orderId] = {
         orderId,
         step: 'accepted',
@@ -202,19 +196,22 @@ app.post('/api/order/create-cash', (req, res) => {
         updatedAt: Date.now()
     };
 
-    broadcastToStaff(STAFF_CHAT_IDS, tgText, getChefAndCourierKeyboard(orderId));
+    // Dublikat xabar ketishidan himoya
+    if (!sentOrderIds.has(orderId)) {
+        sentOrderIds.add(orderId);
+        const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Jami to'lov: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
+        broadcastToStaff(STAFF_CHAT_IDS, tgText, getChefAndCourierKeyboard(orderId));
+    }
 
-    res.json({ success: true, orderId, step: 'accepted' });
+    res.json({ success: true, orderId, step: 'accepted', botUsername });
 });
 
-// 4. ONLAYN TO'LOVNI YARATISH VA TELEGRAMGA YUBORISH
+// 4. ONLAYN TO'LOVNI YARATISH (FAQAT 1 MARTA XABAR YUBORADI)
 app.post('/api/payment/create', (req, res) => {
     const { orderId, name, phone, email, deliveryText, payMethod, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
 
     const receiptText = `📍 ${deliveryText}\n💳 To'lov: ${payMethod} | Jami: ${totalText}\n\n${orderLinesText}`;
-    const tgText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${payMethod}\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Kutilayotgan summa: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${totalText} tushganini tekshirib, pastdagi tugmani bosing:`;
-
     paymentOrders[orderId] = { status: 'pending', createdAt: Date.now() };
     activeOrders[orderId] = {
         orderId,
@@ -226,19 +223,23 @@ app.post('/api/payment/create', (req, res) => {
         updatedAt: Date.now()
     };
 
-    broadcastToStaff(STAFF_CHAT_IDS, tgText, {
-        inline_keyboard: [
-            [
-                { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
-                { text: "❌ Tushmadi (Rad etish)", callback_data: `p_no_${orderId}` }
+    if (!sentOrderIds.has(orderId)) {
+        sentOrderIds.add(orderId);
+        const tgText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${payMethod}\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Kutilayotgan summa: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${totalText} tushganini tekshirib, pastdagi tugmani bosing:`;
+        broadcastToStaff(STAFF_CHAT_IDS, tgText, {
+            inline_keyboard: [
+                [
+                    { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
+                    { text: "❌ Tushmadi (Rad etish)", callback_data: `p_no_${orderId}` }
+                ]
             ]
-        ]
-    });
+        });
+    }
 
-    res.json({ success: true, orderId, status: 'pending' });
+    res.json({ success: true, orderId, status: 'pending', botUsername });
 });
 
-// 5. SAYTDAN VA TELEGRAM "OPEN" MINI-APP'DAN BUYURTMA HOLATINI TEKSHIRISH
+// 5. BUYURTMA HOLATINI TEKSHIRISH
 app.get('/api/payment/status/:orderId', (req, res) => {
     const { orderId } = req.params;
     const order = paymentOrders[orderId];
@@ -261,7 +262,6 @@ app.get('/api/order/status/:orderId', (req, res) => {
     });
 });
 
-// Telegram "Open" bosilganda oxirgi faol buyurtmalarni avtomatik topib berish
 app.get('/api/order/latest-list', (req, res) => {
     const list = Object.values(activeOrders)
         .sort((a, b) => b.updatedAt - a.updatedAt)
@@ -318,13 +318,11 @@ app.post('/api/telegram-webhook', (req, res) => {
 
         if (msg.text === '/chef') {
             STAFF_CHAT_IDS.add(chatId);
-            CHEF_CHAT_IDS.add(chatId);
             tgRequest('sendMessage', { chat_id: chatId, text: "👨‍🍳 Sizning telefoningiz BOSH OSHPAZ (Chef) sifatida ulandi!" });
             return res.sendStatus(200);
         }
         if (msg.text === '/kuryer') {
             STAFF_CHAT_IDS.add(chatId);
-            COURIER_CHAT_IDS.add(chatId);
             tgRequest('sendMessage', { chat_id: chatId, text: "🛵 Sizning telefoningiz DASTAVSHIK (Kuryer/Ofitsiant) sifatida ulandi!" });
             return res.sendStatus(200);
         }
@@ -332,6 +330,25 @@ app.post('/api/telegram-webhook', (req, res) => {
         if (msg.text && msg.text.startsWith('/start')) {
             const parts = msg.text.split(' ');
             const payload = parts[1] || '';
+
+            // 1. Mijoz saytdagi "Telegram botga o'tish" tugmasini bosib kelganda (track_IQB-...)
+            if (payload.startsWith('track_')) {
+                const ordId = payload.replace('track_', '');
+                const specificTrackerUrl = `${WEBAPP_TRACKER_URL}${WEBAPP_TRACKER_URL.includes('?') ? '&' : '?'}order=${encodeURIComponent(ordId)}`;
+                tgRequest('sendMessage', {
+                    chat_id: chatId,
+                    text: `👑 *IQBOL Restorani — Jonli Kuzatuv*\n\n📦 Sizning buyurtmangiz: *#${ordId}*\n\nBuyurtmangiz qachon pishishi va yetkazilishini jonli kuzatish uchun pastdagi tugmani bosing 👇`,
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: `🔥 #${ordId} jarayonini ko'rish (Open)`, web_app: { url: specificTrackerUrl } }]
+                        ]
+                    }
+                });
+                return res.sendStatus(200);
+            }
+
+            // 2. Telefon raqamni tasdiqlash uchun kelganda
             if (payload.startsWith('login_')) {
                 const requestedPhone = normalizePhone(payload.replace('login_', ''));
                 pendingTgPhones[chatId] = requestedPhone;

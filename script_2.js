@@ -1,6 +1,6 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (SAYTDA JARAYON KO'RINMAYDI — FAQAT TELEGRAM "OPEN" TUGMASIDA JARAYON OCHILADI)
+ * ("TELEGRAM BOTGA O'TISH" TUGMASI + FAQAT 1 TA XABAR YUBORISH KAFOLATI + TELEGRAM "OPEN" TRACKER)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
   const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
 
+  // Zaxira (faqat Render server ishlamay qolgandagina 1 marta ishlatiladi)
   const DIRECT_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
-  const DIRECT_STAFF_CHAT_IDS = ['7225335915', '8072569639'];
+  const PRIMARY_ADMIN_CHAT_ID = '7225335915';
 
-  // Sahifa Telegram "Open" (Mini App) orqali ochilganini aniqlash:
   const urlParams = new URLSearchParams(window.location.search);
   const isTelegramTrackerApp =
     urlParams.get('mode') === 'tracker' ||
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="tg-receipt-box" style="padding:0.9rem;">
         <div style="font-size:0.75rem; color:#f3d889; font-weight:700; margin-bottom:6px;">Boshqa buyurtma raqamini tekshirish:</div>
         <div style="display:flex; gap:8px;">
-          <input type="text" id="tgManualOrderIdInput" placeholder="Masalan: IQB-738540" style="flex:1; padding:0.65rem 0.9rem; border-radius:10px; border:1px solid rgba(212,175,55,0.45); background:rgba(0,0,0,0.35); color:#fff; font-weight:700; font-size:0.85rem;" />
+          <input type="text" id="tgManualOrderIdInput" placeholder="Masalan: IQB-507912" style="flex:1; padding:0.65rem 0.9rem; border-radius:10px; border:1px solid rgba(212,175,55,0.45); background:rgba(0,0,0,0.35); color:#fff; font-weight:700; font-size:0.85rem;" />
           <button type="button" id="tgManualSearchBtn" style="padding:0.65rem 1.1rem; border-radius:10px; border:none; background:linear-gradient(135deg,#f3d889,#d4af37); color:#061710; font-weight:800; font-size:0.82rem; cursor:pointer;">Topish</button>
         </div>
       </div>
@@ -321,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchAndSyncOrder() {
       try {
-        // Agar aniq orderId hali tanlanmagan bo'lsa, serverdan oxirgi faol buyurtmalarni olamiz
         const listRes = await fetch(`${API_URL}/order/latest-list`);
         const listData = await listRes.json();
         if (listData && listData.success && Array.isArray(listData.orders) && listData.orders.length > 0) {
@@ -369,11 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchAndSyncOrder();
     setInterval(fetchAndSyncOrder, 2500);
-    return; // Telegram "Open" rejimida asosiy sayt yuklanmaydi!
+    return;
   }
 
   /* ==========================================================================
-     ODDIY SAYT REJIMI (BU YERDA BUYURTMA JARAYONI KO'RINMAYDI!)
+     ODDIY SAYT REJIMI
      ========================================================================== */
   const lensIntroStyle = document.createElement('style');
   lensIntroStyle.textContent = `
@@ -601,6 +600,34 @@ document.addEventListener('DOMContentLoaded', () => {
       85% { transform: rotate(16deg); }
       90% { transform: rotate(-16deg); }
       95% { transform: rotate(10deg); }
+    }
+
+    /* "Telegram botga o'tish" maxsus tugmasi dizayni */
+    .btn-go-tg-bot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 0.85rem 1.3rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #24a1de, #1b82b5);
+      color: #ffffff !important;
+      font-weight: 800;
+      font-size: 0.92rem;
+      border: none;
+      box-shadow: 0 8px 22px rgba(36, 161, 222, 0.4);
+      cursor: pointer;
+      text-decoration: none !important;
+      margin-bottom: 0.65rem;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-go-tg-bot:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(36, 161, 222, 0.6);
+    }
+    .btn-go-tg-bot i {
+      font-size: 1.2rem;
     }
 
     .service-tabs-nav {
@@ -868,22 +895,21 @@ document.addEventListener('DOMContentLoaded', () => {
     card.style.transform = `perspective(750px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px)`;
   });
 
-  async function sendDirectTelegramToAllStaff(text, replyMarkup = null) {
-    let anySuccess = false;
-    for (const chatId of DIRECT_STAFF_CHAT_IDS) {
-      try {
-        const payload = { chat_id: chatId, text };
-        if (replyMarkup) payload.reply_markup = replyMarkup;
-        const res = await fetch(`https://api.telegram.org/bot${DIRECT_BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (data && data.ok) anySuccess = true;
-      } catch (e) {}
+  // Zaxira sifatida faqat 1 ta asosiy adminga xabar yuboruvchi funksiya (Render uxlayotgan bo'lsa)
+  async function sendSingleFallbackTelegram(text, replyMarkup = null) {
+    try {
+      const payload = { chat_id: PRIMARY_ADMIN_CHAT_ID, text };
+      if (replyMarkup) payload.reply_markup = replyMarkup;
+      const res = await fetch(`https://api.telegram.org/bot${DIRECT_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      return Boolean(data && data.ok);
+    } catch (e) {
+      return false;
     }
-    return anySuccess;
   }
 
   function buildChefAndCourierInlineKeyboard(orderId) {
@@ -941,10 +967,26 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   let tgBotUsername = '';
+  // Bot username-ni ham Render serverdan, ham to'g'ridan-to'g'ri Telegramdan aniqlab qo'yamiz
   fetch(`${API_URL}/bot-info`)
     .then(r => r.json())
     .then(d => { if (d && d.username) tgBotUsername = d.username; })
     .catch(() => {});
+
+  fetch(`https://api.telegram.org/bot${DIRECT_BOT_TOKEN}/getMe`)
+    .then(r => r.json())
+    .then(d => { if (d && d.ok && d.result && d.result.username) tgBotUsername = d.result.username; })
+    .catch(() => {});
+
+  window.getTelegramBotOrderUrl = function(orderId) {
+    const cleanOrd = String(orderId || localStorage.getItem('iqbol_active_order') || '').replace('#', '');
+    if (tgBotUsername) {
+      return cleanOrd
+        ? `https://t.me/${tgBotUsername}?start=track_${cleanOrd}`
+        : `https://t.me/${tgBotUsername}`;
+    }
+    return `https://t.me/`;
+  };
 
   const drawerEl = document.getElementById('mobileNavDrawer');
   const drawerLinksEl = drawerEl ? drawerEl.querySelector('.drawer-links') : null;
@@ -1417,7 +1459,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   let waiterCooldownInt = null;
+  let isCallingWaiter = false;
   window.sendWaiterRequest = async function(actionType, defaultNote) {
+    if (isCallingWaiter) return;
     const inp = document.getElementById('waiterTableInput');
     const customNoteEl = document.getElementById('waiterCustomNote');
     const tableVal = inp ? inp.value.trim() : '';
@@ -1426,6 +1470,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (inp) inp.focus();
       return;
     }
+    isCallingWaiter = true;
     window.selectQuickTable(tableVal);
     const noteVal = (customNoteEl && customNoteEl.value.trim()) ? `${defaultNote} (${customNoteEl.value.trim()})` : defaultNote;
     const customerName = currentUser ? currentUser.name : 'Mehmon';
@@ -1433,16 +1478,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showToast('Ofitsiantga xabar yuborilmoqda...', 'fa-spinner');
 
-    const callId = Math.floor(1000 + Math.random() * 9000);
-    let actionTitle = '🛎 OFITSIANT CHAQIRUVI!';
-    if (actionType === 'bill') actionTitle = "🧾 HISOBNI (CHEKNI) SO'RASH!";
-    if (actionType === 'tea_bread') actionTitle = "🫖 CHOY / NON QO'SHISH SO'ROVI!";
+    let delivered = false;
+    try {
+      const res = await fetch(`${API_URL}/waiter/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table: tableVal, actionType, customerName, customerPhone, note: noteVal })
+      });
+      if (res.ok) delivered = true;
+    } catch (e) {}
 
-    const msgText = `🚨 ${actionTitle}\n\n🪑 Stol / Joy: ${tableVal}\n👤 Mijoz: ${customerName}\n📞 Tel: ${customerPhone}\n📝 Izoh: ${noteVal}\n⏰ Vaqt: ${new Date().toLocaleTimeString('uz-UZ')}`;
+    // Faqatgina Render server uxlayotgan bo'lsagina zaxira 1 ta xabar yuboriladi
+    if (!delivered) {
+      const callId = Math.floor(1000 + Math.random() * 9000);
+      let actionTitle = '🛎 OFITSIANT CHAQIRUVI!';
+      if (actionType === 'bill') actionTitle = "🧾 HISOBNI (CHEKNI) SO'RASH!";
+      if (actionType === 'tea_bread') actionTitle = "🫖 CHOY / NON QO'SHISH SO'ROVI!";
+      const msgText = `🚨 ${actionTitle}\n\n🪑 Stol / Joy: ${tableVal}\n👤 Mijoz: ${customerName}\n📞 Tel: ${customerPhone}\n📝 Izoh: ${noteVal}\n⏰ Vaqt: ${new Date().toLocaleTimeString('uz-UZ')}`;
+      delivered = await sendSingleFallbackTelegram(msgText, {
+        inline_keyboard: [[{ text: "✅ Xizmat ko'rsatildi", callback_data: `waiter_done_${callId}` }]]
+      });
+    }
 
-    const delivered = await sendDirectTelegramToAllStaff(msgText, {
-      inline_keyboard: [[{ text: "✅ Xizmat ko'rsatildi", callback_data: `waiter_done_${callId}` }]]
-    });
+    isCallingWaiter = false;
 
     if (delivered) {
       if (customNoteEl) customNoteEl.value = '';
@@ -2098,7 +2156,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT (BUYURTMA BERILGACH JARAYON SAYTDA EMAS, TELEGRAM "OPEN" DA KUZATILADI)
+     4. CHECKOUT (FAQAT 1 MARTA XABAR YUBORISH + "TELEGRAM BOTGA O'TISH" TUGMASI)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -2246,62 +2304,85 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('iqbol_active_order', orderId);
       localStorage.setItem('iqbol_active_order_details', receiptSummaryText);
 
+      // A) NAQD BUYURTMA (FAQAT 1 MARTA YUBORILADI!)
       if (selectedPaymentMethod === 'Naqd') {
         isSubmitting = true;
         const submitBtn = checkoutForm.querySelector('button[type="submit"]');
         if (submitBtn) submitBtn.disabled = true;
 
-        const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
+        let sentByServer = false;
+        try {
+          const res = await fetch(`${API_URL}/order/create-cash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId, name, phone, email: currentUser.email,
+              deliveryText, orderLinesText,
+              subtotalText: formatPrice(subtotal),
+              feeTitle, extraFeeText: formatPrice(extraFee),
+              totalText: formatPrice(totalSum), note
+            })
+          });
+          if (res.ok) {
+            const d = await res.json();
+            if (d && d.botUsername) tgBotUsername = d.botUsername;
+            sentByServer = true;
+          }
+        } catch (err) {}
 
-        await sendDirectTelegramToAllStaff(tgText, buildChefAndCourierInlineKeyboard(orderId));
-
-        fetch(`${API_URL}/order/create-cash`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId, name, phone, email: currentUser.email,
-            deliveryText, orderLinesText,
-            subtotalText: formatPrice(subtotal),
-            feeTitle, extraFeeText: formatPrice(extraFee),
-            totalText: formatPrice(totalSum), note
-          })
-        }).catch(() => {});
+        // Agar Render server uxlayotgan bo'lsagina, 1 dona zaxira xabar yuboramiz
+        if (!sentByServer) {
+          const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
+          await sendSingleFallbackTelegram(tgText, buildChefAndCourierInlineKeyboard(orderId));
+        }
 
         window.closeCheckout();
         showSuccessModal({
           title: 'Buyurtmangiz qabul qilindi!',
           subtitle: `Buyurtma raqami: #${orderId}`,
           message: `📲 Buyurtmangiz tayyor bo'lish jarayonini Telegram botimizdagi «Open» tugmasi orqali jonli kuzatishingiz mumkin!`,
-          details: receiptSummaryText
+          details: receiptSummaryText,
+          orderId: orderId,
+          showTelegramBotBtn: true
         });
         cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
+      // B) ONLAYN TO'LOV (CLICK / PAYME / PAYNET — FAQAT 1 MARTA YUBORILADI!)
       isSubmitting = true;
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
 
-      const tgPayText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${selectedPaymentMethod} (${RESTAURANT_CARD})\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Kutilayotgan summa: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${formatPrice(totalSum)} tushganini tekshirib, pastdagi tugmani bosing:`;
+      let paySentByServer = false;
+      try {
+        const res = await fetch(`${API_URL}/payment/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId, name, phone, email: currentUser.email,
+            deliveryText, payMethod: `${selectedPaymentMethod} (${RESTAURANT_CARD})`,
+            orderLinesText, subtotalText: formatPrice(subtotal),
+            feeTitle, extraFeeText: formatPrice(extraFee),
+            totalText: formatPrice(totalSum), note
+          })
+        });
+        if (res.ok) {
+          const d = await res.json();
+          if (d && d.botUsername) tgBotUsername = d.botUsername;
+          paySentByServer = true;
+        }
+      } catch (err) {}
 
-      await sendDirectTelegramToAllStaff(tgPayText, {
-        inline_keyboard: [[
-          { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
-          { text: "❌ Tushmadi (Rad etish)", callback_data: `p_no_${orderId}` }
-        ]]
-      });
-
-      fetch(`${API_URL}/payment/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId, name, phone, email: currentUser.email,
-          deliveryText, payMethod: `${selectedPaymentMethod} (${RESTAURANT_CARD})`,
-          orderLinesText, subtotalText: formatPrice(subtotal),
-          feeTitle, extraFeeText: formatPrice(extraFee),
-          totalText: formatPrice(totalSum), note
-        })
-      }).catch(() => {});
+      if (!paySentByServer) {
+        const tgPayText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${selectedPaymentMethod} (${RESTAURANT_CARD})\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Kutilayotgan summa: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${formatPrice(totalSum)} tushganini tekshirib, pastdagi tugmani bosing:`;
+        await sendSingleFallbackTelegram(tgPayText, {
+          inline_keyboard: [[
+            { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
+            { text: "❌ Tushmadi (Rad etish)", callback_data: `p_no_${orderId}` }
+          ]]
+        });
+      }
 
       window.closeCheckout();
 
@@ -2342,7 +2423,14 @@ document.addEventListener('DOMContentLoaded', () => {
             iconEl.innerHTML = '<i class="fas fa-check"></i>';
             titleEl.textContent = "✅ To'lov tasdiqlandi!";
             descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi (#${orderId}).<br><br>📲 Ovqat tayyor bo'lish jarayonini Telegram botimizdagi <b>«Open»</b> tugmasi orqali kuzatishingiz mumkin!`;
-            actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal()">Yopish</button>`;
+            const botLink = window.getTelegramBotOrderUrl(orderId);
+            actEl.innerHTML = `
+              <a href="${botLink}" target="_blank" rel="noopener noreferrer" class="btn-go-tg-bot">
+                <i class="fab fa-telegram-plane"></i>
+                <span>Telegram botga o'tish (Kuzatish)</span>
+              </a>
+              <button type="button" class="btn btn-outline-gold" onclick="window.closePayVerifyModal()">Yopish</button>
+            `;
             cart = []; saveCart();
           } else if (stData.status === 'rejected') {
             clearInterval(payPollInterval);
@@ -2440,7 +2528,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
         if (!result.success) { showToast(result.message, 'fa-exclamation-triangle'); checkAndFilterBookedTables(); isResSubmitting = false; if (submitBtn) submitBtn.disabled = false; return; }
         const bookingCode = 'STOL-' + Math.floor(1000 + Math.random() * 9000);
-        showSuccessModal({ title: 'Stol muvaffaqiyatli band qilindi!', subtitle: `Kod: #${bookingCode}`, message: `Hurmatli ${name}, joyingiz ro'yxatga olindi. Sizni kutamiz!`, details: `Joy turi: ${tableTypeName}\nStol: ${tableNumber}\nTelefon: ${phone}` });
+        showSuccessModal({
+          title: 'Stol muvaffaqiyatli band qilindi!',
+          subtitle: `Kod: #${bookingCode}`,
+          message: `Hurmatli ${name}, joyingiz ro'yxatga olindi. Sizni kutamiz!`,
+          details: `Joy turi: ${tableTypeName}\nStol: ${tableNumber}\nTelefon: ${phone}`,
+          showTelegramBotBtn: false
+        });
         reservationForm.reset();
         renderUserUI();
         checkAndFilterBookedTables(); 
@@ -2449,14 +2543,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /* ==========================================================================
-     6. SUCCESS MODAL, THEME & GALLERY
+     6. SUCCESS MODAL ("TELEGRAM BOTGA O'TISH" TUGMASI BILAN), THEME & GALLERY
      ========================================================================== */
   const successModal = document.getElementById('successModal');
   function showSuccessModal(data) {
     if (!successModal) return;
-    const titleEl = document.getElementById('successTitle'); const subEl = document.getElementById('successSubtitle'); const msgEl = document.getElementById('successMessage'); const detEl = document.getElementById('successDetails');
-    if (titleEl) titleEl.textContent = data.title || ''; if (subEl) subEl.textContent = data.subtitle || ''; if (msgEl) msgEl.textContent = data.message || ''; if (detEl) detEl.textContent = data.details || '';
-    successModal.classList.add('open'); document.body.style.overflow = 'hidden';
+    const titleEl = document.getElementById('successTitle');
+    const subEl = document.getElementById('successSubtitle');
+    const msgEl = document.getElementById('successMessage');
+    const detEl = document.getElementById('successDetails');
+    if (titleEl) titleEl.textContent = data.title || '';
+    if (subEl) subEl.textContent = data.subtitle || '';
+    if (msgEl) msgEl.textContent = data.message || '';
+    if (detEl) detEl.textContent = data.details || '';
+
+    // "Yopish" tugmasining tepasiga "Telegram botga o'tish" tugmasini joylash
+    let goBotBtn = document.getElementById('successGoTelegramBotBtn');
+    const modalCard = successModal.querySelector('.modal-card');
+    const closeBtn = modalCard ? modalCard.querySelector('button:not(.modal-close-btn)') : null;
+
+    if (!goBotBtn && modalCard) {
+      goBotBtn = document.createElement('a');
+      goBotBtn.id = 'successGoTelegramBotBtn';
+      goBotBtn.className = 'btn-go-tg-bot';
+      goBotBtn.target = '_blank';
+      goBotBtn.rel = 'noopener noreferrer';
+      goBotBtn.innerHTML = `<i class="fab fa-telegram-plane"></i> <span>Telegram botga o'tish (Jarayonni ko'rish)</span>`;
+      if (closeBtn) {
+        modalCard.insertBefore(goBotBtn, closeBtn);
+      } else {
+        modalCard.appendChild(goBotBtn);
+      }
+    }
+
+    if (goBotBtn) {
+      if (data.showTelegramBotBtn !== false) {
+        goBotBtn.href = window.getTelegramBotOrderUrl(data.orderId);
+        goBotBtn.style.display = 'inline-flex';
+      } else {
+        goBotBtn.style.display = 'none';
+      }
+    }
+
+    successModal.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
   window.closeSuccessModal = function() { if (successModal) { successModal.classList.remove('open'); document.body.style.overflow = ''; } };
 
