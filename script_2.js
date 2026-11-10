@@ -1,11 +1,379 @@
 /**
  * IQBOL OILAVIY RESTORAN — JAVASCRIPT
- * (CHEF VA DASTAVSHIK TELEGRAM BOSHQARUVI + 100% ZAKAZ TUSHIRISH KAFOLATI + UZUM TEZKOR TRACKER + QR STOL)
+ * (SAYTDA JARAYON KO'RINMAYDI — FAQAT TELEGRAM "OPEN" TUGMASIDA JARAYON OCHILADI)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  const RESTAURANT_CARD = '9860 1701 1569 3682';
+  const RESTAURANT_CARD_RAW = '9860170115693682';
+  const API_URL = 'https://iqbol.onrender.com/api';
+  const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
+  const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
+
+  const DIRECT_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
+  const DIRECT_STAFF_CHAT_IDS = ['7225335915', '8072569639'];
+
+  // Sahifa Telegram "Open" (Mini App) orqali ochilganini aniqlash:
+  const urlParams = new URLSearchParams(window.location.search);
+  const isTelegramTrackerApp =
+    urlParams.get('mode') === 'tracker' ||
+    window.location.hash.includes('tgWebAppData') ||
+    window.location.search.includes('tgWebAppStartParam') ||
+    Boolean(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData);
+
   /* ==========================================================================
-     0.0 PROFESSIONAL 3D ROYAL PORTAL KIRISH ANIMATSIYASI
+     AGAR TELEGRAM "OPEN" TUGMASI BOSILGAN BO'LSA -> FAQAT BUYURTMA JARAYONI OCHILADI!
+     ========================================================================== */
+  if (isTelegramTrackerApp) {
+    const tgOnlyStyle = document.createElement('style');
+    tgOnlyStyle.textContent = `
+      body > *:not(#iqbolTelegramTrackerApp) {
+        display: none !important;
+      }
+      body {
+        background: radial-gradient(circle at top, #102d22 0%, #05120d 100%) !important;
+        color: #ffffff !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden !important;
+        font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif) !important;
+      }
+      #iqbolTelegramTrackerApp {
+        min-height: 100vh;
+        padding: 1.25rem 1rem 2.5rem 1rem;
+        max-width: 480px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .tg-app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1.1rem;
+        border-radius: 18px;
+        background: rgba(15, 44, 34, 0.9);
+        border: 1px solid rgba(212, 175, 55, 0.45);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+      }
+      .tg-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tg-crown-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #fff6d1, #d4af37);
+        color: #061710;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        box-shadow: 0 0 18px rgba(212, 175, 55, 0.6);
+      }
+      .tg-eta-badge {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: #ffffff;
+        font-size: 0.76rem;
+        font-weight: 800;
+        padding: 6px 12px;
+        border-radius: 999px;
+        box-shadow: 0 4px 14px rgba(46, 204, 113, 0.4);
+      }
+      .tg-hero-card {
+        background: linear-gradient(145deg, rgba(17, 48, 37, 0.96), rgba(7, 24, 18, 0.99));
+        border: 1.5px solid rgba(212, 175, 55, 0.55);
+        border-radius: 22px;
+        padding: 1.4rem 1.25rem;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+      }
+      .tg-stage-icon {
+        width: 66px;
+        height: 66px;
+        border-radius: 18px;
+        background: radial-gradient(circle at 30% 30%, rgba(243, 216, 137, 0.28), rgba(212, 175, 55, 0.08));
+        border: 1.5px solid rgba(212, 175, 55, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.95rem;
+        color: #f3d889;
+        flex-shrink: 0;
+        animation: tgFloat 2.2s infinite ease-in-out;
+      }
+      @keyframes tgFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+      }
+      .tg-seg-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+        margin: 1.25rem 0 0.7rem 0;
+      }
+      .tg-seg {
+        height: 6px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        position: relative;
+      }
+      .tg-seg.done {
+        background: #2ecc71;
+        box-shadow: 0 0 10px rgba(46, 204, 113, 0.7);
+      }
+      .tg-seg.active {
+        background: rgba(212, 175, 55, 0.3);
+      }
+      .tg-seg.active::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, #f3d889, #2ecc71, transparent);
+        animation: tgShimmer 1.3s infinite linear;
+      }
+      @keyframes tgShimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      .tg-nodes {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 4px;
+        text-align: center;
+      }
+      .tg-node {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.45);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+      .tg-node.done { color: #2ecc71; }
+      .tg-node.active { color: #f3d889; font-weight: 800; }
+      .tg-receipt-box {
+        background: rgba(15, 44, 34, 0.75);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 18px;
+        padding: 1.1rem;
+      }
+      .tg-orders-chips {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .tg-order-chip {
+        padding: 6px 12px;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        color: #f3d889;
+        font-size: 0.76rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .tg-order-chip.active {
+        background: linear-gradient(135deg, #f3d889, #d4af37);
+        color: #061710;
+      }
+    `;
+    document.head.appendChild(tgOnlyStyle);
+
+    const trackerApp = document.createElement('div');
+    trackerApp.id = 'iqbolTelegramTrackerApp';
+    trackerApp.innerHTML = `
+      <div class="tg-app-header">
+        <div class="tg-brand-row">
+          <div class="tg-crown-circle"><i class="fas fa-crown"></i></div>
+          <div>
+            <div style="font-weight:800; font-size:1.05rem; letter-spacing:0.08em;">IQBOL</div>
+            <div style="font-size:0.7rem; color:#f3d889;">Jonli Buyurtma Jarayoni</div>
+          </div>
+        </div>
+        <span id="tgAppEtaBadge" class="tg-eta-badge">⏳ Kutilmoqda</span>
+      </div>
+
+      <div id="tgActiveOrdersBar" class="tg-orders-chips" style="display:none;"></div>
+
+      <div class="tg-hero-card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.9rem;">
+          <span id="tgAppOrderIdBadge" style="font-size:0.8rem; font-weight:800; color:#f3d889; background:rgba(212,175,55,0.16); padding:4px 12px; border-radius:99px; border:1px solid rgba(212,175,55,0.4);">Buyurtma qidirilmoqda...</span>
+          <span style="font-size:0.72rem; color:rgba(255,255,255,0.6);"><i class="fas fa-sync-alt fa-spin"></i> Jonli aloqa</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div id="tgAppStageIcon" class="tg-stage-icon">
+            <i class="fas fa-clipboard-check"></i>
+          </div>
+          <div style="flex:1;">
+            <h2 id="tgAppStageTitle" style="font-family:var(--font-display, serif); font-size:1.45rem; font-weight:800; color:#ffffff; margin:0 0 4px 0; line-height:1.15;">Buyurtma holati</h2>
+            <p id="tgAppStageDesc" style="font-size:0.82rem; color:rgba(255,255,255,0.78); margin:0; line-height:1.4;">Chef va Dastavshik ma'lumotlari jonli yangilanmoqda...</p>
+          </div>
+        </div>
+
+        <div class="tg-seg-bar">
+          <div id="tgSeg_0" class="tg-seg active"></div>
+          <div id="tgSeg_1" class="tg-seg"></div>
+          <div id="tgSeg_2" class="tg-seg"></div>
+          <div id="tgSeg_3" class="tg-seg"></div>
+        </div>
+
+        <div class="tg-nodes">
+          <div id="tgNode_0" class="tg-node active"><i class="fas fa-check-circle"></i><span>Qabul qilindi</span></div>
+          <div id="tgNode_1" class="tg-node"><i class="fas fa-fire-burner"></i><span>Pishirilmoqda</span></div>
+          <div id="tgNode_2" class="tg-node"><i class="fas fa-motorcycle"></i><span>Yo'lda / Stolda</span></div>
+          <div id="tgNode_3" class="tg-node"><i class="fas fa-utensils"></i><span>Topshirildi</span></div>
+        </div>
+      </div>
+
+      <div class="tg-receipt-box">
+        <div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#f3d889; margin-bottom:8px;">
+          <i class="fas fa-receipt"></i> Buyurtma tafsilotlari
+        </div>
+        <div id="tgAppReceiptText" style="font-size:0.84rem; color:#ffffff; white-space:pre-line; line-height:1.5;">
+          Faol buyurtma yuklanmoqda...
+        </div>
+      </div>
+
+      <div class="tg-receipt-box" style="padding:0.9rem;">
+        <div style="font-size:0.75rem; color:#f3d889; font-weight:700; margin-bottom:6px;">Boshqa buyurtma raqamini tekshirish:</div>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="tgManualOrderIdInput" placeholder="Masalan: IQB-738540" style="flex:1; padding:0.65rem 0.9rem; border-radius:10px; border:1px solid rgba(212,175,55,0.45); background:rgba(0,0,0,0.35); color:#fff; font-weight:700; font-size:0.85rem;" />
+          <button type="button" id="tgManualSearchBtn" style="padding:0.65rem 1.1rem; border-radius:10px; border:none; background:linear-gradient(135deg,#f3d889,#d4af37); color:#061710; font-weight:800; font-size:0.82rem; cursor:pointer;">Topish</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(trackerApp);
+
+    const TG_STAGES = {
+      accepted: {
+        idx: 0,
+        icon: 'fa-clipboard-check',
+        title: 'Buyurtmangiz qabul qilindi!',
+        desc: 'Oshxonamiz buyurtmangizni qabul qildi. Hozir Bosh oshpaz (Chef) tayyor bo\'lish vaqtini belgilaydi.',
+        eta: '⏳ Chef kutilyapti'
+      },
+      cooking: {
+        idx: 1,
+        icon: 'fa-fire-burner',
+        title: 'Chef taomingizni pishirmoqda! 🔥',
+        desc: 'Usta oshpazimiz buyurtmangizni olovda issiqqina qilib tayyorlamoqda.',
+        eta: '~15–20 daq'
+      },
+      ready: {
+        idx: 2,
+        icon: 'fa-bell-concierge',
+        title: "Ovqatingiz TAYYOR bo'ldi! 👨‍🍳✅",
+        desc: "Chef taomni pishirib bo'ldi! Hozir Dastavshik (yoki ofitsiant) sizga yetkazadi.",
+        eta: '🔥 Tayyor!'
+      },
+      delivering: {
+        idx: 2,
+        icon: 'fa-motorcycle',
+        title: "Dastavshik yo'lda / Tortilmoqda! 🛵",
+        desc: "Buyurtmangiz issiqqina holatda siz tomonga yetkazilmoqda.",
+        eta: '🛵 ~5–10 daq'
+      },
+      completed: {
+        idx: 3,
+        icon: 'fa-check-double',
+        title: 'Topshirildi — Yoqimli ishtaha! ✅',
+        desc: 'IQBOL oilaviy restorani bilan bo\'lganingiz uchun tashakkur!',
+        eta: 'Topshirildi ✅'
+      }
+    };
+
+    let currentTrackedId = urlParams.get('order') || localStorage.getItem('iqbol_active_order') || '';
+
+    function renderTelegramTrackerState(ordId, step, eta, receiptText) {
+      const cfg = TG_STAGES[step] || TG_STAGES.accepted;
+      const finalEta = eta || cfg.eta;
+
+      document.getElementById('tgAppOrderIdBadge').textContent = `Buyurtma #${ordId}`;
+      document.getElementById('tgAppEtaBadge').textContent = `⏱ ${finalEta}`;
+      document.getElementById('tgAppStageIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
+      document.getElementById('tgAppStageTitle').textContent = cfg.title;
+      document.getElementById('tgAppStageDesc').textContent = cfg.desc;
+
+      if (receiptText) {
+        document.getElementById('tgAppReceiptText').textContent = receiptText;
+      }
+
+      for (let i = 0; i < 4; i++) {
+        const seg = document.getElementById(`tgSeg_${i}`);
+        const node = document.getElementById(`tgNode_${i}`);
+        [seg, node].forEach(el => {
+          if (!el) return;
+          el.classList.remove('active', 'done');
+          if (i < cfg.idx || step === 'completed') el.classList.add('done');
+          else if (i === cfg.idx) el.classList.add('active');
+        });
+      }
+    }
+
+    async function fetchAndSyncOrder() {
+      try {
+        // Agar aniq orderId hali tanlanmagan bo'lsa, serverdan oxirgi faol buyurtmalarni olamiz
+        const listRes = await fetch(`${API_URL}/order/latest-list`);
+        const listData = await listRes.json();
+        if (listData && listData.success && Array.isArray(listData.orders) && listData.orders.length > 0) {
+          const barEl = document.getElementById('tgActiveOrdersBar');
+          barEl.style.display = 'flex';
+          if (!currentTrackedId) {
+            currentTrackedId = listData.orders[0].orderId;
+          }
+          barEl.innerHTML = listData.orders.map(o => `
+            <button type="button" class="tg-order-chip ${o.orderId === currentTrackedId ? 'active' : ''}" onclick="window.selectTgOrder('${o.orderId}')">
+              #${o.orderId} (${o.customerName || 'Mijoz'})
+            </button>
+          `).join('');
+        }
+
+        if (currentTrackedId) {
+          const stRes = await fetch(`${API_URL}/order/status/${currentTrackedId}`);
+          const stData = await stRes.json();
+          if (stData && stData.success) {
+            renderTelegramTrackerState(currentTrackedId, stData.step, stData.eta, stData.receiptText);
+          } else {
+            const localRec = localStorage.getItem('iqbol_active_order_details') || 'Buyurtma ma\'lumotlari';
+            renderTelegramTrackerState(currentTrackedId, 'accepted', '⏳ Chef kutilyapti', localRec);
+          }
+        } else {
+          document.getElementById('tgAppOrderIdBadge').textContent = 'Faol buyurtma topilmadi';
+          document.getElementById('tgAppReceiptText').textContent = 'Hozircha faol buyurtma yo\'q yoki pastdagi katakka buyurtma raqamingizni (#IQB-...) yozib tekshiring.';
+        }
+      } catch (e) {}
+    }
+
+    window.selectTgOrder = function(ordId) {
+      currentTrackedId = ordId;
+      localStorage.setItem('iqbol_active_order', ordId);
+      fetchAndSyncOrder();
+    };
+
+    document.getElementById('tgManualSearchBtn').addEventListener('click', () => {
+      let val = document.getElementById('tgManualOrderIdInput').value.trim().toUpperCase().replace('#', '');
+      if (!val) return;
+      if (!val.startsWith('IQB-')) val = 'IQB-' + val;
+      currentTrackedId = val;
+      fetchAndSyncOrder();
+    });
+
+    fetchAndSyncOrder();
+    setInterval(fetchAndSyncOrder, 2500);
+    return; // Telegram "Open" rejimida asosiy sayt yuklanmaydi!
+  }
+
+  /* ==========================================================================
+     ODDIY SAYT REJIMI (BU YERDA BUYURTMA JARAYONI KO'RINMAYDI!)
      ========================================================================== */
   const lensIntroStyle = document.createElement('style');
   lensIntroStyle.textContent = `
@@ -190,9 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     .dish-card.tilting::after { opacity: 1; }
 
-    /* ==========================================================================
-       UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI VA QR-STOL CSS
-       ========================================================================== */
+    /* OFITSIANT VA STOL QR TUGMASI CSS */
     #waiterFloatBtn {
       position: fixed;
       bottom: 24px;
@@ -235,157 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
       85% { transform: rotate(16deg); }
       90% { transform: rotate(-16deg); }
       95% { transform: rotate(10deg); }
-    }
-
-    #uzumFloatingTracker {
-      position: fixed;
-      bottom: 22px;
-      left: 50%;
-      transform: translateX(-50%) translateY(150%);
-      z-index: 995;
-      width: min(92vw, 430px);
-      background: rgba(10, 31, 23, 0.97);
-      border: 1.5px solid rgba(212, 175, 55, 0.7);
-      border-radius: 20px;
-      padding: 0.85rem 1.15rem;
-      color: #ffffff;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: 0 16px 42px rgba(0, 0, 0, 0.65), 0 0 28px rgba(212, 175, 55, 0.3);
-      cursor: pointer;
-      backdrop-filter: blur(16px);
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    #uzumFloatingTracker.active {
-      transform: translateX(-50%) translateY(0);
-    }
-    .uzum-float-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .uzum-float-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .uzum-float-anim-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(46, 204, 113, 0.2));
-      border: 1px solid rgba(212, 175, 55, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.15rem;
-      color: #f3d889;
-      flex-shrink: 0;
-    }
-    .uzum-eta-pill {
-      background: linear-gradient(135deg, #2ecc71, #27ae60);
-      color: #ffffff;
-      font-size: 0.72rem;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 999px;
-      letter-spacing: 0.03em;
-      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.35);
-    }
-
-    .uzum-segmented-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      width: 100%;
-    }
-    .uzum-seg-item {
-      height: 5px;
-      border-radius: 99px;
-      background: rgba(255, 255, 255, 0.14);
-      overflow: hidden;
-      position: relative;
-    }
-    .uzum-seg-item.done {
-      background: #2ecc71;
-      box-shadow: 0 0 8px rgba(46, 204, 113, 0.6);
-    }
-    .uzum-seg-item.active {
-      background: rgba(212, 175, 55, 0.28);
-    }
-    .uzum-seg-item.active::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, #f3d889, #2ecc71, transparent);
-      animation: uzumShimmer 1.3s infinite linear;
-    }
-    @keyframes uzumShimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-
-    .uzum-hero-status-box {
-      background: linear-gradient(145deg, rgba(17, 48, 37, 0.95), rgba(7, 24, 18, 0.98));
-      border: 1px solid rgba(212, 175, 55, 0.4);
-      border-radius: 18px;
-      padding: 1.35rem 1.2rem;
-      color: #ffffff;
-      margin-bottom: 1rem;
-      text-align: left;
-      position: relative;
-      overflow: hidden;
-    }
-    .uzum-stage-visual {
-      width: 64px;
-      height: 64px;
-      border-radius: 18px;
-      background: radial-gradient(circle at 30% 30%, rgba(243, 216, 137, 0.25), rgba(212, 175, 55, 0.08));
-      border: 1.5px solid rgba(212, 175, 55, 0.55);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.9rem;
-      color: #f3d889;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-      animation: floatStageIcon 2.2s infinite ease-in-out;
-    }
-    @keyframes floatStageIcon {
-      0%, 100% { transform: translateY(0) scale(1); }
-      50% { transform: translateY(-5px) scale(1.06); }
-    }
-
-    .uzum-step-nodes {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-top: 10px;
-      text-align: center;
-    }
-    .uzum-node-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.45);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      transition: color 0.3s ease;
-    }
-    .uzum-node-label.done { color: #2ecc71; }
-    .uzum-node-label.active { color: #f3d889; font-weight: 800; }
-
-    .uzum-order-receipt-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 0.95rem 1.1rem;
-      text-align: left;
-      margin-bottom: 1rem;
-      max-height: 165px;
-      overflow-y: auto;
     }
 
     .service-tabs-nav {
@@ -519,7 +734,6 @@ document.addEventListener('DOMContentLoaded', () => {
       .portal-orbit-svg { width: 310px; height: 310px; }
       .portal-brand-name { font-size: 2rem; }
       #waiterFloatBtn { bottom: 16px; left: 14px; padding: 0.55rem 0.9rem; font-size: 0.76rem; }
-      #uzumFloatingTracker { bottom: 74px; padding: 0.75rem 0.95rem; }
       .waiter-action-grid { grid-template-columns: 1fr; }
     }
   `;
@@ -654,19 +868,6 @@ document.addEventListener('DOMContentLoaded', () => {
     card.style.transform = `perspective(750px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-6px)`;
   });
 
-  /* ==========================================================================
-     ASOSIY KONFIGURATSIYA VA 100% ISHLAYDIGAN TELEGRAM MULTI-CHAT YUBORUVCHI
-     ========================================================================== */
-  const RESTAURANT_CARD = '9860 1701 1569 3682';
-  const RESTAURANT_CARD_RAW = '9860170115693682';
-  const API_URL = 'https://iqbol.onrender.com/api';
-  const GOOGLE_CLIENT_ID = '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
-  const GOOGLE_AUTH_API = `${API_URL}/auth/google`;
-
-  const DIRECT_BOT_TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
-  // Ikkala ID ga ham yuboramiz: 7225335915 (Asosiy) va 8072569639
-  const DIRECT_STAFF_CHAT_IDS = ['7225335915', '8072569639'];
-
   async function sendDirectTelegramToAllStaff(text, replyMarkup = null) {
     let anySuccess = false;
     for (const chatId of DIRECT_STAFF_CHAT_IDS) {
@@ -754,9 +955,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileChipEl) drawerEl.insertBefore(mobileChipEl, drawerLinksEl);
   }
 
-  /* ==========================================================================
-     0. CSS VA INTERFEYS DIZAYNI
-     ========================================================================== */
   const customStyle = document.createElement('style');
   customStyle.textContent = `
     html body #header #googleSignInContainer.force-hide-auth,
@@ -987,7 +1185,6 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ==========================================================================
      0.03 QR-STOL ANIQLASH + PRO OFITSIANT CHAQIRISH + STOL QR GENERATORI
      ========================================================================== */
-  const urlParams = new URLSearchParams(window.location.search);
   const qrTableParam = urlParams.get('table') || urlParams.get('stol');
   if (qrTableParam) {
     const formattedTable = isNaN(qrTableParam) ? qrTableParam : `Stol #${qrTableParam}`;
@@ -1243,7 +1440,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const msgText = `🚨 ${actionTitle}\n\n🪑 Stol / Joy: ${tableVal}\n👤 Mijoz: ${customerName}\n📞 Tel: ${customerPhone}\n📝 Izoh: ${noteVal}\n⏰ Vaqt: ${new Date().toLocaleTimeString('uz-UZ')}`;
 
-    // Bevosita Telegram API ga yuboramiz (7225335915 va 8072569639 ga darhol tushadi)
     const delivered = await sendDirectTelegramToAllStaff(msgText, {
       inline_keyboard: [[{ text: "✅ Xizmat ko'rsatildi", callback_data: `waiter_done_${callId}` }]]
     });
@@ -1271,240 +1467,6 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast("Internet aloqangizni tekshiring!", 'fa-wifi');
     }
   };
-
-  /* ==========================================================================
-     0.04 UZUM TEZKOR USLUBIDAGI JONLI BUYURTMA KUZATUVI (CHEF VA DASTAVSHIK BILAN)
-     ========================================================================== */
-  const uzumFloatWidget = document.createElement('div');
-  uzumFloatWidget.id = 'uzumFloatingTracker';
-  uzumFloatWidget.innerHTML = `
-    <div class="uzum-float-top">
-      <div class="uzum-float-left">
-        <div id="uzumFloatIcon" class="uzum-float-anim-icon"><i class="fas fa-fire-burner"></i></div>
-        <div style="text-align:left;">
-          <div id="uzumFloatTitle" style="font-weight:800; font-size:0.88rem; color:#ffffff; line-height:1.2;">Buyurtma qabul qilindi</div>
-          <div id="uzumFloatSub" style="font-size:0.73rem; color:#f3d889;">Chef tasdiqlamoqda • Bosib ko'ring</div>
-        </div>
-      </div>
-      <span id="uzumFloatEta" class="uzum-eta-pill">⏳ Chef...</span>
-    </div>
-    <div class="uzum-segmented-bar">
-      <div id="uFloatSeg_0" class="uzum-seg-item active"></div>
-      <div id="uFloatSeg_1" class="uzum-seg-item"></div>
-      <div id="uFloatSeg_2" class="uzum-seg-item"></div>
-      <div id="uFloatSeg_3" class="uzum-seg-item"></div>
-    </div>
-  `;
-  uzumFloatWidget.onclick = () => window.openLiveTrackerModal();
-  document.body.appendChild(uzumFloatWidget);
-
-  const trackerModal = document.createElement('div');
-  trackerModal.id = 'liveOrderModal';
-  trackerModal.className = 'modal-wrapper';
-  trackerModal.innerHTML = `
-    <div class="modal-overlay" onclick="window.closeLiveTrackerModal()"></div>
-    <div class="modal-card" style="max-width: 470px; padding: 1.75rem; text-align: center;">
-      <button type="button" class="modal-close-btn" onclick="window.closeLiveTrackerModal()"><i class="fas fa-times"></i></button>
-      
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.85rem;">
-        <span id="trackerModalOrderId" style="font-size:0.82rem; font-weight:800; color:var(--accent-gold); background:rgba(212,175,55,0.14); padding:4px 12px; border-radius:99px; border:1px solid rgba(212,175,55,0.35);">Buyurtma #IQB-000000</span>
-        <span id="trackerModalEtaBadge" class="uzum-eta-pill" style="margin-right:28px;">⏳ Chef belgilamoqda</span>
-      </div>
-
-      <div class="uzum-hero-status-box">
-        <div style="display:flex; align-items:center; gap:14px; margin-bottom:1.1rem;">
-          <div id="uzumModalStageIcon" class="uzum-stage-visual">
-            <i class="fas fa-clipboard-check"></i>
-          </div>
-          <div style="flex:1;">
-            <h3 id="uzumModalStageTitle" class="font-display" style="font-size:1.45rem; font-weight:800; color:#ffffff; line-height:1.15; margin-bottom:4px;">Buyurtmangiz qabul qilindi</h3>
-            <p id="uzumModalStageDesc" style="font-size:0.8rem; color:rgba(255,255,255,0.75); line-height:1.35;">Buyurtmangiz Bosh oshpazga (Chef) yuborildi. Hozir tayyor bo'lish vaqti belgilanadi.</p>
-          </div>
-        </div>
-
-        <div class="uzum-segmented-bar" style="height:6px;">
-          <div id="uModalSeg_0" class="uzum-seg-item active" style="height:6px;"></div>
-          <div id="uModalSeg_1" class="uzum-seg-item" style="height:6px;"></div>
-          <div id="uModalSeg_2" class="uzum-seg-item" style="height:6px;"></div>
-          <div id="uModalSeg_3" class="uzum-seg-item" style="height:6px;"></div>
-        </div>
-
-        <div class="uzum-step-nodes">
-          <div id="uNode_0" class="uzum-node-label active">
-            <i class="fas fa-check-circle"></i>
-            <span>Qabul qilindi</span>
-          </div>
-          <div id="uNode_1" class="uzum-node-label">
-            <i class="fas fa-fire-burner"></i>
-            <span>Chef pishirmoqda</span>
-          </div>
-          <div id="uNode_2" class="uzum-node-label">
-            <i class="fas fa-motorcycle"></i>
-            <span>Tayyor / Yo'lda</span>
-          </div>
-          <div id="uNode_3" class="uzum-node-label">
-            <i class="fas fa-utensils"></i>
-            <span>Topshirildi</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="uzum-order-receipt-box">
-        <div style="font-size:0.76rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent-gold); margin-bottom:6px;">
-          <i class="fas fa-receipt"></i> Buyurtma tafsilotlari
-        </div>
-        <div id="uzumTrackerOrderDetails" style="font-size:0.82rem; color:var(--text-main); white-space:pre-line; line-height:1.45;">
-          Buyurtma ma'lumotlari yuklanmoqda...
-        </div>
-      </div>
-
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn btn-outline-gold" style="flex:1;" onclick="window.closeLiveTrackerModal(); window.openWaiterModal('waiter');">
-          <i class="fas fa-concierge-bell"></i> <span>Ofitsiant</span>
-        </button>
-        <button type="button" class="btn btn-primary" style="flex:1;" onclick="window.closeLiveTrackerModal()">
-          <span>Yopish</span>
-        </button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(trackerModal);
-
-  let orderStatusPollInterval = null;
-  let lastKnownStepKey = '';
-
-  window.openLiveTrackerModal = function() {
-    trackerModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  };
-  window.closeLiveTrackerModal = function() {
-    trackerModal.classList.remove('open');
-    document.body.style.overflow = '';
-  };
-
-  const UZUM_STAGE_CONFIG = {
-    accepted: {
-      idx: 0,
-      icon: 'fa-clipboard-check',
-      floatTitle: 'Buyurtma Chefga yuborildi 📝',
-      floatSub: 'Chef tayyor bo\'lish vaqtini belgilamoqda...',
-      modalTitle: 'Buyurtmangiz qabul qilindi!',
-      modalDesc: 'Oshxonamiz buyurtmangizni qabul qildi. Hozir Bosh oshpaz (Chef) pishirish vaqtini tasdiqlaydi.',
-      defaultEta: '⏳ Chef kutilyapti'
-    },
-    cooking: {
-      idx: 1,
-      icon: 'fa-fire-burner',
-      floatTitle: 'Chef ovqatni pishirmoqda 🔥',
-      floatSub: 'Oshpazimiz tayyorlamoqda • Jonli kuzatuv',
-      modalTitle: 'Chef taomingizni pishirmoqda!',
-      modalDesc: 'Bosh oshpaz buyurtmangizni pishirishni boshladi va tayyor bo\'lish vaqtini belgiladi.',
-      defaultEta: '~15–20 daq'
-    },
-    ready: {
-      idx: 2,
-      icon: 'fa-bell-concierge',
-      floatTitle: "Ovqat TAYYOR bo'ldi! 👨‍🍳✅",
-      floatSub: 'Dastavshik / Ofitsiantga topshirildi!',
-      modalTitle: "Chef: Ovqatingiz tayyor bo'ldi!",
-      modalDesc: "Taomingiz pishib tayyor bo'ldi va qadoqlandi! Hozir Dastavshik yoki Ofitsiant sizga olib boradi.",
-      defaultEta: '🔥 Tayyor!'
-    },
-    delivering: {
-      idx: 2,
-      icon: 'fa-motorcycle',
-      floatTitle: "Dastavshik yo'lda / Tortilmoqda 🛵",
-      floatSub: 'Issiqqina holatda siz tomonda!',
-      modalTitle: "Dastavshik yo'lga chiqdi!",
-      modalDesc: "Dastavshik (yoki ofitsiant) tayyor taomni oldi va sizga yetkazmoqda.",
-      defaultEta: '🛵 ~5–10 daq'
-    },
-    completed: {
-      idx: 3,
-      icon: 'fa-check-double',
-      floatTitle: 'Topshirildi • Yoqimli ishtaha! ✅',
-      floatSub: 'IQBOL restorani bilan bo\'lganingiz uchun rahmat',
-      modalTitle: 'Buyurtma topshirildi — Yoqimli ishtaha!',
-      modalDesc: 'Taomlarimiz sizga va oilangizga manzur bo\'ladi degan umiddamiz!',
-      defaultEta: 'Topshirildi ✅'
-    }
-  };
-
-  function updateTrackerStepUI(orderId, step, customEta) {
-    const cfg = UZUM_STAGE_CONFIG[step];
-    if (!cfg) return;
-
-    const displayEta = customEta || cfg.defaultEta;
-
-    const idEl = document.getElementById('trackerModalOrderId');
-    if (idEl) idEl.textContent = `Buyurtma #${orderId}`;
-
-    document.getElementById('uzumFloatIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
-    document.getElementById('uzumFloatTitle').textContent = `${cfg.floatTitle}`;
-    document.getElementById('uzumFloatSub').textContent = `#${orderId} • ${cfg.floatSub}`;
-    document.getElementById('uzumFloatEta').textContent = displayEta;
-
-    document.getElementById('trackerModalEtaBadge').textContent = `⏱ ${displayEta}`;
-    document.getElementById('uzumModalStageIcon').innerHTML = `<i class="fas ${cfg.icon}"></i>`;
-    document.getElementById('uzumModalStageTitle').textContent = cfg.modalTitle;
-    document.getElementById('uzumModalStageDesc').textContent = cfg.modalDesc;
-
-    const savedReceipt = localStorage.getItem('iqbol_active_order_details');
-    const detEl = document.getElementById('uzumTrackerOrderDetails');
-    if (detEl && savedReceipt) detEl.textContent = savedReceipt;
-
-    for (let i = 0; i < 4; i++) {
-      const fSeg = document.getElementById(`uFloatSeg_${i}`);
-      const mSeg = document.getElementById(`uModalSeg_${i}`);
-      const mNode = document.getElementById(`uNode_${i}`);
-      [fSeg, mSeg, mNode].forEach(el => {
-        if (!el) return;
-        el.classList.remove('active', 'done');
-        if (i < cfg.idx || step === 'completed') el.classList.add('done');
-        else if (i === cfg.idx) el.classList.add('active');
-      });
-    }
-
-    const stateKey = `${step}_${displayEta}`;
-    if (lastKnownStepKey && lastKnownStepKey !== stateKey) {
-      showToast(`${cfg.floatTitle} (${displayEta})`, 'fa-bell');
-    }
-    lastKnownStepKey = stateKey;
-
-    if (step === 'completed') {
-      setTimeout(() => {
-        localStorage.removeItem('iqbol_active_order');
-        uzumFloatWidget.classList.remove('active');
-        if (orderStatusPollInterval) clearInterval(orderStatusPollInterval);
-      }, 30000);
-    }
-  }
-
-  function startLiveOrderTracking(orderId, receiptSummaryText) {
-    if (!orderId) return;
-    localStorage.setItem('iqbol_active_order', orderId);
-    if (receiptSummaryText) {
-      localStorage.setItem('iqbol_active_order_details', receiptSummaryText);
-    }
-    uzumFloatWidget.classList.add('active');
-    updateTrackerStepUI(orderId, 'accepted');
-
-    if (orderStatusPollInterval) clearInterval(orderStatusPollInterval);
-    orderStatusPollInterval = setInterval(async () => {
-      try {
-        const res = await fetch(`${API_URL}/order/status/${orderId}`);
-        const data = await res.json();
-        if (data && data.success && data.step) {
-          updateTrackerStepUI(orderId, data.step, data.eta);
-        }
-      } catch (e) {}
-    }, 2500);
-  }
-
-  const existingActiveOrd = localStorage.getItem('iqbol_active_order');
-  if (existingActiveOrd) {
-    startLiveOrderTracking(existingActiveOrd);
-  }
 
   /* ==========================================================================
      0.05 TO'LOVNI JONLI KUTISH VA TASDIQLASH OYNASI
@@ -2136,7 +2098,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeCart = function() { if (cartDrawer && cartOverlay) { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; } };
 
   /* ==========================================================================
-     4. CHECKOUT & CHEF/DASTAVSHIK TELEGRAM INTEGRATSIYASI
+     4. CHECKOUT (BUYURTMA BERILGACH JARAYON SAYTDA EMAS, TELEGRAM "OPEN" DA KUZATILADI)
      ========================================================================== */
   const checkoutModal = document.getElementById('checkoutModal');
   window.openCheckout = function() {
@@ -2281,6 +2243,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const deliveryText = orderType === 'delivery' ? `Yetkazish: ${address} (${feeTitle})` : `Restoranda: ${table || savedQrTable || 'Tanlanmagan'}`;
       const receiptSummaryText = `📍 ${deliveryText}\n💳 To'lov: ${selectedPaymentMethod} | Jami: ${formatPrice(totalSum)}\n\n${orderLinesText}`;
 
+      localStorage.setItem('iqbol_active_order', orderId);
+      localStorage.setItem('iqbol_active_order_details', receiptSummaryText);
+
       if (selectedPaymentMethod === 'Naqd') {
         isSubmitting = true;
         const submitBtn = checkoutForm.querySelector('button[type="submit"]');
@@ -2288,10 +2253,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Jami to'lov: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
 
-        // 1. Darhol to'g'ridan-to'g'ri Telegram Botga (7225335915 va 8072569639 ga) Chef va Dastavshik tugmalari bilan yuboramiz!
         await sendDirectTelegramToAllStaff(tgText, buildChefAndCourierInlineKeyboard(orderId));
 
-        // 2. Render serverni ham fonda xabardor qilib qo'yamiz
         fetch(`${API_URL}/order/create-cash`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2305,20 +2268,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(() => {});
 
         window.closeCheckout();
-        startLiveOrderTracking(orderId, receiptSummaryText);
-        window.openLiveTrackerModal();
+        showSuccessModal({
+          title: 'Buyurtmangiz qabul qilindi!',
+          subtitle: `Buyurtma raqami: #${orderId}`,
+          message: `📲 Buyurtmangiz tayyor bo'lish jarayonini Telegram botimizdagi «Open» tugmasi orqali jonli kuzatishingiz mumkin!`,
+          details: receiptSummaryText
+        });
         cart = []; saveCart(); isSubmitting = false; if (submitBtn) submitBtn.disabled = false;
         return;
       }
 
-      // ONLAYN TO'LOV (CLICK / PAYME / PAYNET)
       isSubmitting = true;
       const submitBtn = checkoutForm.querySelector('button[type="submit"]');
       if (submitBtn) submitBtn.disabled = true;
 
       const tgPayText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${currentUser.email}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${selectedPaymentMethod} (${RESTAURANT_CARD})\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${formatPrice(subtotal)}\n${feeTitle}: ${formatPrice(extraFee)}\n💰 Kutilayotgan summa: ${formatPrice(totalSum)}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${formatPrice(totalSum)} tushganini tekshirib, pastdagi tugmani bosing:`;
 
-      // 1. Darhol Telegram botga yuboramiz (7225335915 va 8072569639)
       await sendDirectTelegramToAllStaff(tgPayText, {
         inline_keyboard: [[
           { text: "✅ Pul tushdi (Chefga o'tkazish)", callback_data: `p_ok_${orderId}` },
@@ -2326,7 +2291,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ]]
       });
 
-      // 2. Render serverga ham yozib qo'yamiz
       fetch(`${API_URL}/payment/create`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2377,10 +2341,9 @@ document.addEventListener('DOMContentLoaded', () => {
             iconEl.style.color = '#2ecc71';
             iconEl.innerHTML = '<i class="fas fa-check"></i>';
             titleEl.textContent = "✅ To'lov tasdiqlandi!";
-            descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi va buyurtmangiz (#${orderId}) Bosh oshpazga (Chef) yuborildi!`;
-            actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal(); window.openLiveTrackerModal();">Jonli kuzatuvni ochish</button>`;
+            descEl.innerHTML = `<b>${formatPrice(totalSum)}</b> to'lovingiz qabul qilindi (#${orderId}).<br><br>📲 Ovqat tayyor bo'lish jarayonini Telegram botimizdagi <b>«Open»</b> tugmasi orqali kuzatishingiz mumkin!`;
+            actEl.innerHTML = `<button type="button" class="btn btn-primary" onclick="window.closePayVerifyModal()">Yopish</button>`;
             cart = []; saveCart();
-            startLiveOrderTracking(orderId, receiptSummaryText);
           } else if (stData.status === 'rejected') {
             clearInterval(payPollInterval);
             spinnerEl.style.display = 'none';
@@ -2550,7 +2513,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeLightbox = function() { if (!lightboxModal) return; lightboxModal.classList.remove('open'); document.body.style.overflow = ''; };
   window.changeLightbox = function(step) { activeLightboxIndex += step; if (activeLightboxIndex < 0) activeLightboxIndex = GALLERY_IMAGES.length - 1; if (activeLightboxIndex >= GALLERY_IMAGES.length) activeLightboxIndex = 0; const item = GALLERY_IMAGES[activeLightboxIndex]; if (item) { lightboxImg.src = item.url; lightboxCaption.textContent = item.caption; } };
 
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox(); window.closeOtpModal(); window.closeWaiterModal(); window.closeLiveTrackerModal(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { window.closeDishModal(); window.closeCart(); window.closeCheckout(); window.closeSuccessModal(); window.closeMobileNav(); window.closeLightbox(); window.closeOtpModal(); window.closeWaiterModal(); } });
 
   const heroVideo = document.getElementById('heroVideo'); if (heroVideo) { heroVideo.muted = true; heroVideo.play().catch(() => {}); }
 
@@ -2579,4 +2542,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPhoneMask(document.getElementById('resPhone'));
   setupPhoneMask(document.getElementById('checkoutPhone'));
   setupPhoneMask(document.getElementById('otpPhoneInput'));
-}); 
+});

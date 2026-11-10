@@ -6,6 +6,9 @@ const TOKEN = '8634601019:AAEKyiMwJhM5py5e5Q7iiLQH0lezK3g66Ns';
 const RESERVATION_CHAT_ID = '7225335915'; 
 const NEW_USER_CHAT_ID = '7225335915';
 
+// Telegram "Open" tugmasi bosilganda FAQAT JARAYON (Tracker) ochilishi uchun maxsus manzil:
+const WEBAPP_TRACKER_URL = process.env.WEBAPP_URL || 'https://iqbol2.vercel.app/?mode=tracker';
+
 // Barcha zakazlar boradigan asosiy Admin, Chef va Dastavshik ID'lari
 const STAFF_CHAT_IDS = new Set(['7225335915', '8072569639']);
 const CHEF_CHAT_IDS = new Set(['7225335915', '8072569639']);
@@ -25,7 +28,7 @@ let pendingTgPhones = {};
 let otpStore = {};        
 let googleUserPhones = {}; 
 let paymentOrders = {}; 
-let activeOrders = {};  // orderId -> { step, eta, detailsText, updatedAt }
+let activeOrders = {};  // orderId -> { orderId, step, eta, receiptText, phone, customerName, updatedAt }
 const seenUsers = new Set();
 let botUsername = '';
 
@@ -57,7 +60,21 @@ function tgRequest(method, payload, callback) {
     req.end();
 }
 
-// Barcha ulangan Admin/Chef/Kuryerlarga xabar yuborish
+// Botga ko'k "Open" tugmasini (Faqat Jarayonni ko'rsatadigan qilib) o'rnatish
+function setupTelegramOpenButton() {
+    tgRequest('setChatMenuButton', {
+        menu_button: {
+            type: 'web_app',
+            text: 'Open',
+            web_app: {
+                url: WEBAPP_TRACKER_URL
+            }
+        }
+    }, (res) => {
+        console.log("📲 Telegram 'Open' (Faqat Jarayon) tugmasi o'rnatildi:", res);
+    });
+}
+
 function broadcastToStaff(targetSet, text, replyMarkup) {
     targetSet.forEach((chatId) => {
         const payload = { chat_id: chatId, text };
@@ -66,7 +83,6 @@ function broadcastToStaff(targetSet, text, replyMarkup) {
     });
 }
 
-// CHEF VA DASTAVSHIK UCHUN BOSQICHMA-BOSQICH TUGMALAR
 function getChefAndCourierKeyboard(orderId) {
     return {
         inline_keyboard: [
@@ -103,6 +119,7 @@ httpsGetJson(`https://api.telegram.org/bot${TOKEN}/getMe`)
         if (parsed && parsed.ok && parsed.result && parsed.result.username) {
             botUsername = parsed.result.username;
             console.log("🤖 Bot tayyor: @" + botUsername);
+            setupTelegramOpenButton();
         }
     })
     .catch((err) => console.error("Bot info xatosi:", err.message));
@@ -172,12 +189,16 @@ app.post('/api/order/create-cash', (req, res) => {
     const { orderId, name, phone, email, deliveryText, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
 
+    const receiptText = `📍 ${deliveryText}\n💳 To'lov: Naqd | Jami: ${totalText}\n\n${orderLinesText}`;
     const tgText = `📦 YANGI TAOM BUYURTMASI! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n💳 To'lov usuli: Naqd\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Jami to'lov: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n👨‍🍳 CHEF VA 🛵 DASTAVSHIK BOSHQARUVI:`;
 
     activeOrders[orderId] = {
+        orderId,
         step: 'accepted',
         eta: '⏳ Chef vaqtni belgilamoqda...',
-        detailsText: tgText,
+        receiptText,
+        phone: normalizePhone(phone),
+        customerName: name,
         updatedAt: Date.now()
     };
 
@@ -191,13 +212,17 @@ app.post('/api/payment/create', (req, res) => {
     const { orderId, name, phone, email, deliveryText, payMethod, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
 
+    const receiptText = `📍 ${deliveryText}\n💳 To'lov: ${payMethod} | Jami: ${totalText}\n\n${orderLinesText}`;
     const tgText = `💳 TO'LOV TEKSHIRUVI KUTILMOQDA! (#${orderId})\n\n👤 Mijoz: ${name}\n📧 Google: ${email || 'Kiritilmagan'}\n📞 Tel: ${phone} (✅ Tasdiqlangan)\n📍 ${deliveryText}\n🏦 To'lov usuli: ${payMethod}\n\n🛒 Buyurtmalar:\n${orderLinesText}\n\n-------------------\nTaomlar: ${subtotalText}\n${feeTitle}: ${extraFeeText}\n💰 Kutilayotgan summa: ${totalText}\n📝 Izoh: ${note || "Yo'q"}\n\n⚠️ DIQQAT: 9860 1701 1569 3682 kartaga ${totalText} tushganini tekshirib, pastdagi tugmani bosing:`;
 
     paymentOrders[orderId] = { status: 'pending', createdAt: Date.now() };
     activeOrders[orderId] = {
+        orderId,
         step: 'accepted',
         eta: '⏳ Chef vaqtni belgilamoqda...',
-        detailsText: tgText,
+        receiptText,
+        phone: normalizePhone(phone),
+        customerName: name,
         updatedAt: Date.now()
     };
 
@@ -213,7 +238,7 @@ app.post('/api/payment/create', (req, res) => {
     res.json({ success: true, orderId, status: 'pending' });
 });
 
-// 5. SAYTDAN TO'LOV VA BUYURTMA HOLATINI TEKSHIRISH (POLLING)
+// 5. SAYTDAN VA TELEGRAM "OPEN" MINI-APP'DAN BUYURTMA HOLATINI TEKSHIRISH
 app.get('/api/payment/status/:orderId', (req, res) => {
     const { orderId } = req.params;
     const order = paymentOrders[orderId];
@@ -227,13 +252,24 @@ app.get('/api/order/status/:orderId', (req, res) => {
     if (!track) return res.json({ success: false, step: 'not_found' });
     res.json({
         success: true,
+        orderId: track.orderId,
         step: track.step,
         eta: track.eta || '~20–25 daq',
+        receiptText: track.receiptText || '',
+        customerName: track.customerName || '',
         updatedAt: track.updatedAt
     });
 });
 
-// 6. QR-STOL ORQALI OFITSIANT CHAQIRISH YOKI HISOB SO'RASH
+// Telegram "Open" bosilganda oxirgi faol buyurtmalarni avtomatik topib berish
+app.get('/api/order/latest-list', (req, res) => {
+    const list = Object.values(activeOrders)
+        .sort((a, b) => b.updatedAt - a.updatedAt)
+        .slice(0, 10);
+    res.json({ success: true, orders: list });
+});
+
+// 6. QR-STOL ORQALI OFITSIANT CHAQIRISH
 app.post('/api/waiter/call', (req, res) => {
     const { table, actionType, customerName, customerPhone, note } = req.body;
     if (!table) return res.status(400).json({ success: false, message: 'Stol raqamini kiriting!' });
@@ -273,24 +309,23 @@ app.post('/api/book', (req, res) => {
 
 app.get('/api/booked', (req, res) => { res.json(bookedTables); });
 
-// 8. Telegram Webhook (OTP + Chef va Dastavshik tugmalari)
+// 8. Telegram Webhook
 app.post('/api/telegram-webhook', (req, res) => {
     const update = req.body;
     if (update && update.message) {
         const msg = update.message;
         const chatId = String(msg.chat.id);
 
-        // Chef yoki Kuryer o'z telefonini botga ulashi uchun komandalar
         if (msg.text === '/chef') {
             STAFF_CHAT_IDS.add(chatId);
             CHEF_CHAT_IDS.add(chatId);
-            tgRequest('sendMessage', { chat_id: chatId, text: "👨‍🍳 Sizning telefoningiz BOSH OSHPAZ (Chef) sifatida ulandi! Endi barcha yangi buyurtmalar shu yerga tushadi." });
+            tgRequest('sendMessage', { chat_id: chatId, text: "👨‍🍳 Sizning telefoningiz BOSH OSHPAZ (Chef) sifatida ulandi!" });
             return res.sendStatus(200);
         }
         if (msg.text === '/kuryer') {
             STAFF_CHAT_IDS.add(chatId);
             COURIER_CHAT_IDS.add(chatId);
-            tgRequest('sendMessage', { chat_id: chatId, text: "🛵 Sizning telefoningiz DASTAVSHIK (Kuryer/Ofitsiant) sifatida ulandi! Tayyor bo'lgan buyurtmalar shu yerga tushadi." });
+            tgRequest('sendMessage', { chat_id: chatId, text: "🛵 Sizning telefoningiz DASTAVSHIK (Kuryer/Ofitsiant) sifatida ulandi!" });
             return res.sendStatus(200);
         }
 
@@ -308,8 +343,13 @@ app.post('/api/telegram-webhook', (req, res) => {
             } else {
                 tgRequest('sendMessage', {
                     chat_id: chatId,
-                    text: "👋 IQBOL Restorani rasmiy botiga xush kelibsiz!\n\n📱 Mijoz bo'lsangiz: Tasdiqlash kodini olish uchun pastdagi tugmani bosing.\n👨‍🍳 Xodim bo'lsangiz: /chef yoki /kuryer deb yozing.",
-                    reply_markup: { keyboard: [[{ text: "📱 Raqamni tasdiqlash va kod olish", request_contact: true }]], resize_keyboard: true, one_time_keyboard: true }
+                    text: "👑 *IQBOL Oilaviy Restorani* rasmiy botiga xush kelibsiz!\n\n🔥 Buyurtmangiz tayyor bo'lish jarayonini jonli kuzatish uchun pastdagi *«Open / Jarayonni kuzatish»* tugmasini bosing:",
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: "🔥 Buyurtma jarayonini kuzatish (Open)", web_app: { url: WEBAPP_TRACKER_URL } }]
+                        ]
+                    }
                 });
             }
         }
@@ -329,7 +369,11 @@ app.post('/api/telegram-webhook', (req, res) => {
             const firstName = msg.contact.first_name || (msg.from && msg.from.first_name) || 'Mijoz';
             otpStore[actualPhone] = { code: otpCode, name: firstName, phone: '+' + actualPhone, tgId: msg.from ? msg.from.id : chatId, expires: Date.now() + 10 * 60 * 1000 };
             delete pendingTgPhones[chatId];
-            tgRequest('sendMessage', { chat_id: chatId, text: `✅ Raqamingiz tasdiqlandi: +${actualPhone}\n\n🔐 Kodingiz: 👉 ${otpCode}`, reply_markup: { remove_keyboard: true } });
+            tgRequest('sendMessage', {
+                chat_id: chatId,
+                text: `✅ Raqamingiz tasdiqlandi: +${actualPhone}\n\n🔐 Kodingiz: 👉 ${otpCode}`,
+                reply_markup: { remove_keyboard: true }
+            });
         }
     }
 
@@ -341,7 +385,6 @@ app.post('/api/telegram-webhook', (req, res) => {
         const originalText = update.callback_query.message.text || '';
         const cleanBaseText = originalText.split('\n\n👨‍🍳 HOLAT:')[0].split('\n\n🔥 HOLAT:')[0].split('\n\n🛵 HOLAT:')[0].split('\n\n✅ HOLAT:')[0];
 
-        // 1. Stolni bo'shatish
         if (callbackData.startsWith('free_')) {
             const bookingKey = callbackData.replace('free_', '');
             delete bookedTables[bookingKey];
@@ -349,11 +392,13 @@ app.post('/api/telegram-webhook', (req, res) => {
             tgRequest('editMessageText', { chat_id: chatId, message_id: messageId, text: originalText + `\n\n🟢 HOLAT: Yopilgan` });
         }
 
-        // 2. To'lov tasdiqlandi -> Chef tugmalarini ochish
         if (callbackData.startsWith('p_ok_') || callbackData.startsWith('pay_ok_')) {
             const orderId = callbackData.replace('p_ok_', '').replace('pay_ok_', '');
             paymentOrders[orderId] = { status: 'approved' };
-            activeOrders[orderId] = { step: 'accepted', eta: '⏳ Chef vaqtni belgilamoqda...', updatedAt: Date.now() };
+            if (!activeOrders[orderId]) activeOrders[orderId] = { orderId };
+            activeOrders[orderId].step = 'accepted';
+            activeOrders[orderId].eta = '⏳ Chef vaqtni belgilamoqda...';
+            activeOrders[orderId].updatedAt = Date.now();
 
             tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: "To'lov tasdiqlandi! Endi Chef vaqtni belgilashi mumkin." });
             tgRequest('editMessageText', {
@@ -364,7 +409,6 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 3. To'lov rad etildi
         if (callbackData.startsWith('p_no_') || callbackData.startsWith('pay_no_')) {
             const orderId = callbackData.replace('p_no_', '').replace('pay_no_', '');
             paymentOrders[orderId] = { status: 'rejected' };
@@ -376,7 +420,6 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 4. CHEF PISHIRISH VAQTINI BELGILADI (10-15, 20-25 yoki 30-40 daq)
         if (callbackData.startsWith('c_15_') || callbackData.startsWith('c_25_') || callbackData.startsWith('c_35_') || callbackData.startsWith('ord_cook_')) {
             let etaText = '~20–25 daq';
             let orderId = '';
@@ -385,8 +428,12 @@ app.post('/api/telegram-webhook', (req, res) => {
             else if (callbackData.startsWith('c_35_')) { etaText = '~30–40 daq'; orderId = callbackData.replace('c_35_', ''); }
             else { orderId = callbackData.replace('ord_cook_', ''); }
 
-            activeOrders[orderId] = { step: 'cooking', eta: etaText, updatedAt: Date.now() };
-            tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: `Mijozga "Pishirilmoqda (${etaText})" deb yuborildi!` });
+            if (!activeOrders[orderId]) activeOrders[orderId] = { orderId };
+            activeOrders[orderId].step = 'cooking';
+            activeOrders[orderId].eta = etaText;
+            activeOrders[orderId].updatedAt = Date.now();
+
+            tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: `Telegram Open oynasida "Pishirilmoqda (${etaText})" deb ko'rsatildi!` });
             tgRequest('editMessageText', {
                 chat_id: chatId,
                 message_id: messageId,
@@ -395,10 +442,13 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 5. CHEF: OVQAT TAYYOR BO'LDI! (Dastavshik / Ofitsiantga xabar berish)
         if (callbackData.startsWith('c_rdy_')) {
             const orderId = callbackData.replace('c_rdy_', '');
-            activeOrders[orderId] = { step: 'ready', eta: 'Tayyor! Yetkazilmoqda', updatedAt: Date.now() };
+            if (!activeOrders[orderId]) activeOrders[orderId] = { orderId };
+            activeOrders[orderId].step = 'ready';
+            activeOrders[orderId].eta = 'Tayyor! Yetkazilmoqda';
+            activeOrders[orderId].updatedAt = Date.now();
+
             tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: "Ovqat tayyor! Dastavshik va mijozga xabar berildi!" });
             tgRequest('editMessageText', {
                 chat_id: chatId,
@@ -408,10 +458,13 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 6. DASTAVSHIK: ZAKAZNI OLDIM — YO'LGA CHIQDIM!
         if (callbackData.startsWith('d_way_') || callbackData.startsWith('ord_deliv_')) {
             const orderId = callbackData.replace('d_way_', '').replace('ord_deliv_', '');
-            activeOrders[orderId] = { step: 'delivering', eta: '~5–10 daq', updatedAt: Date.now() };
+            if (!activeOrders[orderId]) activeOrders[orderId] = { orderId };
+            activeOrders[orderId].step = 'delivering';
+            activeOrders[orderId].eta = '~5–10 daq';
+            activeOrders[orderId].updatedAt = Date.now();
+
             tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: "Mijozga 'Dastavshik yo'lda 🛵' deb ko'rsatildi!" });
             tgRequest('editMessageText', {
                 chat_id: chatId,
@@ -421,10 +474,13 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 7. DASTAVSHIK: MIJOZGA TOPSHIRILDI (YAKUNLASH)
         if (callbackData.startsWith('d_end_') || callbackData.startsWith('ord_done_')) {
             const orderId = callbackData.replace('d_end_', '').replace('ord_done_', '');
-            activeOrders[orderId] = { step: 'completed', eta: 'Topshirildi ✅', updatedAt: Date.now() };
+            if (!activeOrders[orderId]) activeOrders[orderId] = { orderId };
+            activeOrders[orderId].step = 'completed';
+            activeOrders[orderId].eta = 'Topshirildi ✅';
+            activeOrders[orderId].updatedAt = Date.now();
+
             tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: "Buyurtma muvaffaqiyatli yakunlandi!" });
             tgRequest('editMessageText', {
                 chat_id: chatId,
@@ -433,7 +489,6 @@ app.post('/api/telegram-webhook', (req, res) => {
             });
         }
 
-        // 8. Ofitsiant chaqiruvi bajarildi
         if (callbackData.startsWith('waiter_done_')) {
             tgRequest('answerCallbackQuery', { callback_query_id: callbackQueryId, text: "Bajarildi!" });
             tgRequest('editMessageText', {
@@ -450,4 +505,5 @@ app.listen(PORT, () => {
     console.log(`✅ Server port ${PORT} da ishlamoqda...`);
     const webhookUrl = `${RENDER_URL}/api/telegram-webhook`;
     https.get(`https://api.telegram.org/bot${TOKEN}/setWebhook?url=${webhookUrl}`);
+    setupTelegramOpenButton();
 });
