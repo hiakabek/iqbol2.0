@@ -2548,10 +2548,6 @@ h1, h2, h3, h4, .font-display {
 }
 
 /* ==========================================================================
-   18. SMART RESPONSIVE (EKRAN KICHRAYGANDA MOSLASHUVCHAN MENYU VA NAVIGATSIYA)
-   ========================================================================== */
-/* Telefonda Header va Navigatsiyani to'g'rilash */
-/* ==========================================================================
    18. SMART RESPONSIVE (BARCHA EKRANLARGA TO'G'RILANGAN)
    ========================================================================== */
 
@@ -2565,10 +2561,10 @@ h1, h2, h3, h4, .font-display {
 }
 
 .nav-link {
-  white-space: nowrap !important; /* So'zlar 2 qatorga bo'linmasligi uchun */
+  white-space: nowrap !important;
 }
 
-/* 2. Kompyuter va Noutbuklar uchun (Google tugmasi qo'shilganda joy yetishi uchun) */
+/* 2. Kompyuter va Noutbuklar uchun */
 @media (max-width: 1250px) and (min-width: 1025px) {
   .nav-menu { gap: 1rem; }
   .nav-link { font-size: 0.85rem; }
@@ -2603,8 +2599,6 @@ h1, h2, h3, h4, .font-display {
   .brand-logo { gap: 0.5rem; }
   .brand-logo .logo-icon-wrap { width: 34px; height: 34px; font-size: 1rem; }
   .brand-logo .logo-title { font-size: 1.25rem; }
-  
-  /* "Oilaviy restoran" yozuvini telefonda yashirib, joy tejaymiz */
   .brand-logo .logo-sub { display: none; }
 
   .header-actions {
@@ -2618,13 +2612,7 @@ h1, h2, h3, h4, .font-display {
   .btn-icon { width: 32px; height: 32px; font-size: 0.85rem; }
   .hamburger-btn { width: 32px; height: 32px; padding: 6px; }
 
-  /* Google tugmasini mobilda yashiramiz (chunki u pastdagi menyuda bor) */
   #googleSignInContainer { display: none !important; }
-
-  /* Kirgan foydalanuvchi profilini kichraytirish */
-  .user-profile-chip { padding: 0.2rem 0.5rem 0.2rem 0.2rem; }
-  .user-profile-chip .user-avatar { width: 26px; height: 26px; }
-  .user-profile-chip .user-name { display: none; } /* Faqat avatar qoladi */
 
   /* Taomlar kartochkalari */
   .dishes-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
@@ -2639,11 +2627,11 @@ h1, h2, h3, h4, .font-display {
 @media (max-width: 360px) {
   .dishes-grid { grid-template-columns: 1fr; }
 }
+
 /* ==========================================================================
    HEADER TO'LIQ TO'G'RILASH (Ustma-ust tushishni yo'qotish)
    ========================================================================== */
 
-/* 1. Logotipdagi toj (crown) belgisini majburan ko'rinadigan qilish */
 .logo-icon-wrap {
   width: 42px !important;
   height: 42px !important;
@@ -2654,41 +2642,37 @@ h1, h2, h3, h4, .font-display {
 }
 
 .logo-icon-wrap i {
-  color: #112219 !important; /* Tojning rangi (qora-yashil) */
+  color: #112219 !important;
   font-size: 1.3rem !important;
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
 }
 
-/* 2. O'ng tomondagi tugmalar bir-birining ustiga chiqmasligi uchun */
 .header-actions {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  gap: 0.4rem !important; /* Tugmalar orasidagi masofa */
+  gap: 0.4rem !important;
   flex-wrap: nowrap !important;
   flex-shrink: 0 !important;
 }
 
-/* 3. Google tugmasini to'g'rilash (Ustma-ust tushishini oldini olish) */
 #googleSignInContainer {
-  transform: none !important; /* Eski noto'g'ri masshtabni o'chiramiz */
+  transform: none !important;
   margin-right: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
-  width: 145px !important; /* Tugma uchun aniq joy ajratamiz */
-  overflow: hidden !important; /* Tashqariga chiqib ketishini to'xtatamiz */
+  width: 145px !important;
+  overflow: hidden !important;
 }
 
-/* Google ichidagi iframe'ni kichraytirish */
 #googleSignInContainer iframe {
   transform: scale(0.85) !important;
   transform-origin: right center !important;
 }
 
-/* 4. "Stol band qilish" tugmasi yozuvi bilan chiroyli turishi uchun */
 #headerReservationBtn {
   padding: 0.5rem 1rem !important;
   width: auto !important;
@@ -2704,35 +2688,31 @@ h1, h2, h3, h4, .font-display {
   display: inline-block !important;
 }
 
-/* 5. Menyu va boshqa piktogrammalarni ixchamlash */
 .nav-menu { gap: 0.6rem !important; }
 .nav-link { font-size: 0.85rem !important; padding: 0.5rem 0 !important; }
 .btn-icon { width: 34px !important; height: 34px !important; font-size: 0.85rem !important; }
 .lang-btn { font-size: 0.65rem !important; padding: 3px 5px !important; }
+
 /* ==========================================================================
    KICHIK EKRANLARDA LOGOTIPNI YASHIRISH VA TUGMALARNI TEKISLASH
    ========================================================================== */
 
 @media (max-width: 900px) {
-  /* 1. Logoni butunlay yashirish */
   .brand-logo {
     display: none !important;
   }
   
-  /* 2. Header ichidagi qolgan narsalarni butun ekranga tekislash */
   .header-inner {
-    justify-content: center !important; /* O'rtaga yoki o'ngga tekislash */
+    justify-content: center !important;
   }
   
-  /* 3. Tepa qismdagi tugmalar (Til, Stol band qilish, Hamburger) */
   .header-actions {
-    width: 100% !important; /* Butun kenglikni egallaydi */
-    justify-content: space-between !important; /* Ular orasida teng bo'shliq qoldiradi */
+    width: 100% !important;
+    justify-content: space-between !important;
     padding: 0 !important;
     gap: 0 !important;
   }
   
-  /* 4. Ortiqcha narsalarni yashirish (Google, Savat, Tungi rejim) */
   #googleSignInContainer,
   #userProfileChip,
   #themeToggle,
@@ -2740,13 +2720,12 @@ h1, h2, h3, h4, .font-display {
     display: none !important;
   }
 
-  /* 5. Stol band qilish tugmasi va Hamburger chiroyli turishi uchun */
   #headerReservationBtn {
     display: inline-flex !important;
     padding: 0.4rem 0.8rem !important;
     font-size: 0.75rem !important;
     white-space: nowrap !important;
-    margin-right: auto !important; /* Hamburger va til o'rtasida turishi uchun */
+    margin-right: auto !important;
     margin-left: 0.5rem !important;
   }
 
@@ -2754,36 +2733,170 @@ h1, h2, h3, h4, .font-display {
     display: flex !important;
   }
 }
+
 /* Footer'dagi maxfiylik siyosati uchun dizayn */
 .footer-privacy {
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05); /* Juda nozik chiziq */
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .footer-privacy p {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4); /* Oq rangning xira (shaffof) ko'rinishi */
+  color: rgba(255, 255, 255, 0.4);
   line-height: 1.6;
   max-width: 800px;
   margin: 0 auto;
 }
-    /* TIZIMGA KIRGANDA GOOGLE TUGMASINI MAJBURAN YO'QOTISH */
-    body.logged-in #googleSignInContainer,
-    body.logged-in #mobileGoogleContainer,
-    body.logged-in #checkoutGoogleContainer {
-      display: none !important;
-      visibility: hidden !important;
-      width: 0 !important;
-      height: 0 !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      position: absolute !important;
-      left: -9999px !important;
-    }
-    #googleSignInContainer {
-  display: flex !important;
-  width: 145px !important;
+
+/* TIZIMGA KIRGANDA GOOGLE TUGMASINI MAJBURAN YO'QOTISH */
+body.logged-in #googleSignInContainer,
+body.logged-in #mobileGoogleContainer,
+body.logged-in #checkoutGoogleContainer {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* ==========================================================================
+   19. GOOGLE PROFIL KAPSULASI (USER PROFILE CHIP) — TO'LIQ TUZATISH (FIX)
+   ========================================================================== */
+
+@media (min-width: 901px) {
+  html body #userProfileChip#userProfileChip#userProfileChip:not(.force-hide-auth),
+  html body .user-profile-chip.user-profile-chip.user-profile-chip:not(.force-hide-auth) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+    padding: 4px 6px 4px 5px !important;
+    height: 42px !important;
+    max-height: 42px !important;
+    max-width: 245px !important;
+    border-radius: 999px !important;
+    background: rgba(15, 44, 34, 0.95) !important;
+    border: 1.5px solid rgba(212, 175, 55, 0.65) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  html body .header.scrolled #userProfileChip#userProfileChip#userProfileChip:not(.force-hide-auth) {
+    background: var(--bg-card) !important;
+    border-color: var(--border-gold) !important;
+  }
+}
+
+html body #userProfileChip#userProfileChip#userProfileChip .user-info {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
   overflow: hidden !important;
+  max-width: 195px !important;
+}
+
+/* Avatar rasmni kichik 30x30px dumaloq qilish */
+html body #userProfileChip#userProfileChip#userProfileChip img#userAvatar,
+html body #userProfileChip#userProfileChip#userProfileChip .user-avatar,
+html body #userProfileChip#userProfileChip#userProfileChip img {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 1.5px solid #d4af37 !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Ism va telefon raqamni ustma-ust (2 qator) joylashtirish */
+html body #userProfileChip#userProfileChip#userProfileChip #userName#userName,
+html body #userProfileChip#userProfileChip#userProfileChip .user-name {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  max-width: 140px !important;
+  overflow: hidden !important;
+  line-height: 1.15 !important;
+  text-align: left !important;
+}
+
+html body #userProfileChip#userProfileChip#userProfileChip #userName#userName span,
+html body #userProfileChip#userProfileChip#userProfileChip .user-name span {
+  display: block !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+html body .header.scrolled #userProfileChip#userProfileChip#userProfileChip #userName#userName span,
+html body .header.scrolled #userProfileChip#userProfileChip#userProfileChip .user-name span {
+  color: var(--text-main) !important;
+}
+
+html body #userProfileChip#userProfileChip#userProfileChip #userName#userName small,
+html body #userProfileChip#userProfileChip#userProfileChip .user-name small {
+  display: flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 0.64rem !important;
+  color: #f3d889 !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  line-height: 1.1 !important;
+  margin-top: 2px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+/* O'ng chekkadagi chiqish (Logout) tugmasini oq to'rtburchakdan qizg'ish dumaloq shaklga o'tkazish */
+html body #userProfileChip#userProfileChip#userProfileChip button.btn-logout,
+html body #userProfileChip#userProfileChip#userProfileChip .btn-logout,
+html body #userProfileChip#userProfileChip#userProfileChip button {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 107, 107, 0.2) !important;
+  border: 1px solid rgba(255, 107, 107, 0.5) !important;
+  color: #ff6b6b !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.74rem !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+html body #userProfileChip#userProfileChip#userProfileChip button.btn-logout:hover,
+html body #userProfileChip#userProfileChip#userProfileChip .btn-logout:hover,
+html body #userProfileChip#userProfileChip#userProfileChip button:hover {
+  background: #ff6b6b !important;
+  color: #ffffff !important;
 }
