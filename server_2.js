@@ -9,7 +9,7 @@ const NEW_USER_CHAT_ID = '7225335915';
 // Telegram "Open" tugmasi bosilganda FAQAT JARAYON (Tracker) ochilishi uchun manzil:
 const WEBAPP_TRACKER_URL = process.env.WEBAPP_URL || 'https://iqbol2.vercel.app/?mode=tracker';
 
-// Asosiy qabul qiluvchi Admin/Chef ID (Bitta zakaz faqat 1 marta borishi uchun)
+// Faqat bitta asosiy ID (bitta zakazda 2 ta SMS bormasligi uchun)
 const STAFF_CHAT_IDS = new Set(['7225335915']);
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '500756304339-78rjnbeajcu4tg8aml1k14iov9vu5qjk.apps.googleusercontent.com';
@@ -27,7 +27,7 @@ let otpStore = {};
 let googleUserPhones = {}; 
 let paymentOrders = {}; 
 let activeOrders = {};  
-const sentOrderIds = new Set(); // Dublikat xabarlardan himoya
+const sentOrderIds = new Set(); // Dublikat (2 ta SMS) ketishidan 100% himoya
 const seenUsers = new Set();
 let botUsername = 'iqbol_reservations_bot';
 
@@ -64,9 +64,7 @@ function setupTelegramOpenButton() {
         menu_button: {
             type: 'web_app',
             text: 'Open',
-            web_app: {
-                url: WEBAPP_TRACKER_URL
-            }
+            web_app: { url: WEBAPP_TRACKER_URL }
         }
     });
 }
@@ -180,7 +178,7 @@ app.post('/api/auth/verify-otp', (req, res) => {
     res.json({ success: true, phone: formattedPhone, tgName: record.name });
 });
 
-// 3. NAQD BUYURTMA YARATISH (FAQAT 1 MARTA XABAR YUBORADI)
+// 3. NAQD BUYURTMA YARATISH (FAQAT 1 TA SMS BORADI)
 app.post('/api/order/create-cash', (req, res) => {
     const { orderId, name, phone, email, deliveryText, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
@@ -205,7 +203,7 @@ app.post('/api/order/create-cash', (req, res) => {
     res.json({ success: true, orderId, step: 'accepted', botUsername });
 });
 
-// 4. ONLAYN TO'LOVNI YARATISH (CLICK / PAYME / PAYNET)
+// 4. ONLAYN TO'LOVNI YARATISH (FAQAT 1 TA SMS BORADI)
 app.post('/api/payment/create', (req, res) => {
     const { orderId, name, phone, email, deliveryText, payMethod, orderLinesText, subtotalText, feeTitle, extraFeeText, totalText, note } = req.body;
     if (!orderId) return res.status(400).json({ success: false, message: 'Order ID kerak' });
@@ -238,7 +236,7 @@ app.post('/api/payment/create', (req, res) => {
     res.json({ success: true, orderId, status: 'pending', botUsername });
 });
 
-// 5. BUYURTMA HOLATINI TEKSHIRISH (POLLING)
+// 5. BUYURTMA HOLATINI TEKSHIRISH
 app.get('/api/payment/status/:orderId', (req, res) => {
     const { orderId } = req.params;
     const order = paymentOrders[orderId];
